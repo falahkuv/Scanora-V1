@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String        @id @default(uuid()) @db.Uuid
+  name      String
+  email     String        @unique
+  password  String
+  createdAt DateTime      @default(now()) @map("created_at")
+  scans     ScanHistory[]
+  inventory Inventory[]
+
+  @@map("users")
+}
+
+model ScanHistory {
+  id             String      @id @default(uuid()) @db.Uuid
+  userId         String      @db.Uuid @map("user_id")
+  fruitType      String      @map("fruit_type")
+  condition      String
+  freshnessScore Float       @map("freshness_score")
+  imageUrl       String?     @map("image_url")
+  scannedAt      DateTime    @default(now()) @map("scanned_at")
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  inventoryItems Inventory[]
+
+  @@map("scan_history")
+}
+
+model Inventory {
+  id         String      @id @default(uuid()) @db.Uuid
+  userId     String      @db.Uuid @map("user_id")
+  scanId     String?     @db.Uuid @map("scan_id")
+  fruitType  String      @map("fruit_type")
+  condition  String
+  addedAt    DateTime    @default(now()) @map("added_at")
+  reminderAt DateTime?   @map("reminder_at")
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scan       ScanHistory? @relation(fields: [scanId], references: [id], onDelete: SetNull)
+
+  @@map("inventory")
+}
