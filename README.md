@@ -29,6 +29,17 @@ RESTful API backend for Scanora (AI-powered fruit freshness detection web app).
 - Production:
   - `npm start`
 
+## Run the AI service (FastAPI)
+
+1. Ensure the model file exists:
+  - `fastapi/fruit_model.keras`
+2. Activate the Python venv:
+  - `source .venv/bin/activate`
+3. Start the FastAPI service:
+  - `python fastapi/api_main.py`
+4. Verify it is running:
+  - Open `http://localhost:8000`
+
 ## API Response Format
 
 All endpoints return:
@@ -40,6 +51,14 @@ All endpoints return:
   "data": {}
 }
 ```
+
+## Testing
+
+1. Create a test env file (optional but recommended):
+  - `cp .env.example .env.test`
+  - Update `DATABASE_URL` to a test database.
+2. Run the tests:
+  - `npm test`
 
 ## Endpoints
 
@@ -59,4 +78,4 @@ All endpoints return:
 ## Notes
 
 - Protected routes require `Authorization: Bearer <token>`
-- `POST /api/scan` returns a mock response until the AI service is connected
+- `POST /api/scan` forwards images to the FastAPI service at `FASTAPI_URL`

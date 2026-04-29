@@ -93,22 +93,24 @@
       "name": "Scan",
       "item": [
         {
-          "name": "Create Scan (Mock)",
+          "name": "Create Scan",
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Authorization",
                 "value": "Bearer {{token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
               }
             ],
             "body": {
-              "mode": "raw",
-              "raw": "{\n  \"image_url\": \"https://example.com/image.jpg\"\n}"
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": ""
+                }
+              ]
             },
             "url": {
               "raw": "{{baseUrl}}/api/scan",

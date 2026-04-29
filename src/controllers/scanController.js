@@ -1,28 +1,97 @@
+const axios = require("axios");
+const FormData = require("form-data");
 const { prisma } = require("../config/prisma");
 const asyncHandler = require("../middleware/asyncHandler");
 const { toScanResponse } = require("../services/formatService");
 const { sendSuccess } = require("../services/responseService");
 
+const FASTAPI_URL = process.env.FASTAPI_URL || "http://localhost:8000";
+
+const isFastApiUnavailable = (error) => {
+  const codes = new Set(["ECONNREFUSED", "ECONNABORTED", "ETIMEDOUT"]);
+  return codes.has(error.code) || !error.response;
+};
+
 const createScan = asyncHandler(async (req, res) => {
-  const mockResult = {
-    fruitType: "apple",
-    condition: "ripe",
-    freshnessScore: 0.87,
-    imageUrl: req.body.image_url || null
-  };
+  if (!req.file) {
+    return res.status(400).json({
+      success: false,
+      message: "Image file is required",
+      data: null
+    });
+  }
+
+  const form = new FormData();
+  form.append("file", req.file.buffer, {
+    filename: req.file.originalname,
+    contentType: req.file.mimetype
+  });
+
+  let prediction;
+
+  const startedAt = Date.now();
+
+  try {
+    const response = await axios.post(`${FASTAPI_URL}/predict`, form, {
+      headers: {
+        ...form.getHeaders()
+      },
+      timeout: 10000
+    });
+
+    prediction = response.data;
+    console.info(
+      `FastAPI predict success (${Date.now() - startedAt}ms): ${req.file.originalname}`
+    );
+  } catch (error) {
+    if (isFastApiUnavailable(error)) {
+      console.error(
+        `FastAPI unavailable: ${error.code || "NO_RESPONSE"} ${FASTAPI_URL}`
+      );
+      return res.status(503).json({
+        success: false,
+        message:
+          "AI model service is currently unavailable. Please try again later.",
+        data: null
+      });
+    }
+
+    console.error(
+      `FastAPI error: ${error.response?.status || "UNKNOWN"} ${FASTAPI_URL}`
+    );
+    return res.status(502).json({
+      success: false,
+      message:
+        error.response?.data?.detail ||
+        "Failed to get prediction from AI service",
+      data: null
+    });
+  }
+
+  const fruitType = prediction?.prediction?.product?.toLowerCase() || "unknown";
+  const condition = prediction?.prediction?.condition || "unknown";
+  const freshnessScore = prediction?.freshness_index ?? 0;
 
   const scan = await prisma.scanHistory.create({
     data: {
       userId: req.user.userId,
-      fruitType: mockResult.fruitType,
-      condition: mockResult.condition,
-      freshnessScore: mockResult.freshnessScore,
-      imageUrl: mockResult.imageUrl
+      fruitType,
+      condition,
+      freshnessScore,
+      imageUrl: null
     }
   });
 
-  return sendSuccess(res, "Mock response - AI model not yet connected", {
-    ...toScanResponse(scan)
+  return sendSuccess(res, "Scan successful", {
+    scan_id: scan.id,
+    fruit_type: scan.fruitType,
+    condition: scan.condition,
+    freshness_score: scan.freshnessScore,
+    confidence: {
+      product_confidence: prediction?.confidence?.product_confidence ?? 0,
+      condition_confidence: prediction?.confidence?.condition_confidence ?? 0
+    },
+    scanned_at: scan.scannedAt
   });
 });
 
