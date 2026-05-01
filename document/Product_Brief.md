@@ -96,7 +96,23 @@ cd frontend
 npm run dev
 ```
 
-## 8. Next Iterations (Backlog)
+## 8. Iteration History & Recap
+
+### ✅ Iteration 1 (UI/UX Foundation)
+*   Setup React, Vite, dan Tailwind CSS v4.
+*   Pembuatan struktur *Monorepo* (Frontend, Express Backend, FastAPI).
+*   Desain responsif *mobile-first* (max-width `md`).
+*   Pembuatan komponen inti: `BottomNav`, `Home`, `Inventory`, dan kerangka `ScannerSheet`.
+*   Konfigurasi warna kustom (Scanora Green, Ripe/Unripe/Rotten) dan font Inter.
+
+### ✅ Iteration 2 (API Wiring & Device Camera)
+*   **Camera Integration:** Menggunakan `navigator.mediaDevices.getUserMedia` untuk kamera asli dan file input untuk Galeri.
+*   **AI Integration:** Menghubungkan kamera ke API FastAPI melalui backend Express untuk memindai gambar secara *real-time*.
+*   **Database Wiring:** Menghubungkan UI Inventori dan Riwayat dengan data asli dari database Postgres.
+*   **No-Auth MVP:** Implementasi sistem *silent authentication* (UUID `device_id`) agar *frontend* tetap kompatibel dengan token JWT backend.
+*   **UI Polish:** Penambahan toggle Flash, notch safety (`pt-12`), indikator loading, dan penyesuaian teks panduan kamera.
+
+## 9. Next Iterations (Backlog)
 
 ### Iterasi 3 — Polish & Detailing
 *   Tombol hapus item di Riwayat Scan dan Inventori.

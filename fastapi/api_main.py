@@ -1,10 +1,13 @@
+import os
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+
 from fastapi import FastAPI, File, UploadFile, HTTPException
 import tensorflow as tf
 import numpy as np
 import io
 from PIL import Image
 import uvicorn
-import os
 
 app = FastAPI(title="Fruit Freshness API", description="API untuk mendeteksi tipe dan kesegaran buah")
 
@@ -27,6 +30,9 @@ class SpatialAttentionLayer(layers.Layer):
     def __init__(self, **kwargs):
         super(SpatialAttentionLayer, self).__init__(**kwargs)
         self.conv = layers.Conv2D(1, kernel_size=7, padding="same", activation="sigmoid")
+
+    def build(self, input_shape):
+        super(SpatialAttentionLayer, self).build(input_shape)
 
     def call(self, inputs):
         avg_pool = tf.reduce_mean(inputs, axis=-1, keepdims=True)
