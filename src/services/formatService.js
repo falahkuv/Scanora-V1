@@ -22,7 +22,8 @@ const toInventoryResponse = (item) => ({
   fruit_type: item.fruitType,
   condition: item.condition,
   added_at: item.addedAt,
-  reminder_at: item.reminderAt
+  reminder_at: item.reminderAt,
+  image_url: item.scan?.imageUrl || null
 });
 
 module.exports = {

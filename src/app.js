@@ -4,6 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
+const path = require("path");
 
 const authRoutes = require("./routes/authRoutes");
 const scanRoutes = require("./routes/scanRoutes");
@@ -22,6 +23,7 @@ app.use("/health", healthRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/scan", scanRoutes);
 app.use("/api/inventory", inventoryRoutes);
+app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 app.use((req, res) => {
   res.status(404).json({

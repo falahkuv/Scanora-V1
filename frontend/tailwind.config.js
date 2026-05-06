@@ -14,7 +14,7 @@ export default {
         'status-rotten': '#ef4444', // Red 500
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+        sans: ['Nunito', 'sans-serif'],
       }
     },
   },

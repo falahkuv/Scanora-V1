@@ -1,5 +1,7 @@
 const axios = require("axios");
 const FormData = require("form-data");
+const fs = require("fs");
+const path = require("path");
 const { prisma } = require("../config/prisma");
 const asyncHandler = require("../middleware/asyncHandler");
 const { toScanResponse } = require("../services/formatService");
@@ -80,6 +82,19 @@ const createScan = asyncHandler(async (req, res) => {
       freshnessScore,
       imageUrl: null
     }
+  });
+
+  const uploadsDir = path.join(__dirname, "../../uploads");
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+  const ext = req.file.originalname.split(".").pop() || "jpg";
+  const fileName = `${scan.id}.${ext}`;
+  fs.writeFileSync(path.join(uploadsDir, fileName), req.file.buffer);
+
+  await prisma.scanHistory.update({
+    where: { id: scan.id },
+    data: { imageUrl: `/uploads/${fileName}` }
   });
 
   return sendSuccess(res, "Scan successful", {

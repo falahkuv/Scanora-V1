@@ -20,7 +20,7 @@ function App() {
     <Router>
       <div className="min-h-screen bg-gray-50 flex flex-col max-w-md mx-auto relative shadow-xl overflow-hidden">
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto w-full">
+        <main className="flex-1 overflow-y-auto no-scrollbar w-full">
           <Routes>
             <Route path="/" element={<Home onOpenScanner={() => setIsScannerOpen(true)} />} />
             <Route path="/inventory" element={<Inventory />} />

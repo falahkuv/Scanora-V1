@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, Zap, ZapOff, Image as ImageIcon, ChevronUp, ChevronDown, Check } from 'lucide-react';
+import { X, HelpCircle, ImageIcon, RefreshCw, Zap, ZapOff, CheckCircle, ChevronUp, ChevronDown, Check, Camera } from 'lucide-react';
 import api from '../api';
 
 const ScannerSheet = ({ isOpen, onClose }) => {
@@ -9,6 +9,11 @@ const ScannerSheet = ({ isOpen, onClose }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [isFlashOn, setIsFlashOn] = useState(false);
   const [flashSupported, setFlashSupported] = useState(false);
+  const [capturedImage, setCapturedImage] = useState(null);
+  const [toastMsg, setToastMsg] = useState('');
+
+  const [touchStartLoc, setTouchStartLoc] = useState(null);
+  const [touchEndLoc, setTouchEndLoc] = useState(null);
 
   const videoRef = useRef(null);
   const streamRef = useRef(null);
@@ -62,6 +67,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
       setScanState('camera');
       setResult(null);
       setErrorMsg('');
+      setCapturedImage(null);
       startCamera();
     } else {
       stopCamera();
@@ -104,12 +110,18 @@ const ScannerSheet = ({ isOpen, onClose }) => {
     const ctx = canvas.getContext('2d');
     ctx.drawImage(videoRef.current, 0, 0);
 
-    canvas.toBlob((blob) => processBlob(blob), 'image/jpeg', 0.8);
+    canvas.toBlob((blob) => {
+      const url = URL.createObjectURL(blob);
+      setCapturedImage(url);
+      processBlob(blob);
+    }, 'image/jpeg', 0.8);
   };
 
   const handleGalleryChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const url = URL.createObjectURL(file);
+    setCapturedImage(url);
     processBlob(file);
   };
 
@@ -124,12 +136,34 @@ const ScannerSheet = ({ isOpen, onClose }) => {
         scan_id: result.scan_id,
         reminder_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
       });
-      onClose();
+      setScanState('camera');
+      setCapturedImage(null);
+      setResult(null);
+      startCamera();
+      setToastMsg(`Berhasil disimpan: ${result.fruit_type.charAt(0).toUpperCase() + result.fruit_type.slice(1)} ${getFruitEmoji(result.fruit_type)}`);
+      setTimeout(() => setToastMsg(''), 3000);
     } catch (err) {
       console.error('Failed to save', err);
       alert('Gagal menyimpan ke inventori.');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const onTouchStart = (e) => {
+    setTouchEndLoc(null);
+    setTouchStartLoc(e.targetTouches[0].clientY);
+  };
+
+  const onTouchMove = (e) => setTouchEndLoc(e.targetTouches[0].clientY);
+
+  const onTouchEnd = () => {
+    if (!touchStartLoc || !touchEndLoc) return;
+    const distance = touchStartLoc - touchEndLoc;
+    if (distance > 50 && scanState === 'half-result') {
+      setScanState('full-result');
+    } else if (distance < -50 && scanState === 'full-result') {
+      setScanState('half-result');
     }
   };
 
@@ -173,22 +207,30 @@ const ScannerSheet = ({ isOpen, onClose }) => {
             ref={videoRef}
             autoPlay
             playsInline
-            className={`object-cover w-full h-full ${scanState !== 'camera' && scanState !== 'scanning' ? 'hidden' : ''}`}
+            className={`object-cover w-full h-full ${scanState !== 'camera' && scanState !== 'scanning' ? 'hidden' : ''} ${capturedImage ? 'hidden' : ''}`}
           />
+          {capturedImage && (
+            <img src={capturedImage} alt="Captured" className="object-cover w-full h-full absolute inset-0 z-0" />
+          )}
 
           {/* Viewfinder + Hint Label */}
-          {scanState === 'camera' && !errorMsg && (
+          {scanState === 'camera' && !errorMsg && !capturedImage && (
             <>
-              <div className="absolute w-64 h-64 border-2 border-white/30 rounded-3xl z-10 pointer-events-none">
-                <div className="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-white rounded-tl-3xl"></div>
-                <div className="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-white rounded-tr-3xl"></div>
-                <div className="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-white rounded-bl-3xl"></div>
-                <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-white rounded-br-3xl"></div>
+              <div 
+                className="absolute w-72 h-72 z-10 pointer-events-none rounded-[2.5rem]" 
+                style={{ boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.4)' }}
+              >
+                <svg className="absolute inset-0 w-full h-full" style={{ filter: 'drop-shadow(0 0 10px rgba(16,185,129,0.9))' }} viewBox="0 0 288 288" fill="none">
+                  <path d="M 3 64 L 3 40 Q 3 3 40 3 L 64 3" stroke="white" strokeWidth="6" strokeLinecap="round" />
+                  <path d="M 285 64 L 285 40 Q 285 3 248 3 L 224 3" stroke="white" strokeWidth="6" strokeLinecap="round" />
+                  <path d="M 3 224 L 3 248 Q 3 285 40 285 L 64 285" stroke="white" strokeWidth="6" strokeLinecap="round" />
+                  <path d="M 285 224 L 285 248 Q 285 285 248 285 L 224 285" stroke="white" strokeWidth="6" strokeLinecap="round" />
+                </svg>
               </div>
               {/* Hint label below viewfinder */}
-              <div className="absolute z-10 pointer-events-none" style={{ top: 'calc(50% + 142px)' }}>
-                <p className="text-white/80 text-xs font-medium bg-black/40 backdrop-blur-sm px-4 py-1.5 rounded-full">
-                  Arahkan ke buah: Apel, Jeruk, atau Pisang
+              <div className="absolute z-10 pointer-events-none" style={{ top: 'calc(50% + 160px)' }}>
+                <p className="text-white/90 text-xs font-medium bg-black/60 backdrop-blur-md px-5 py-2 rounded-full">
+                  Arahkan ke buah
                 </p>
               </div>
             </>
@@ -216,25 +258,31 @@ const ScannerSheet = ({ isOpen, onClose }) => {
           )}
         </div>
 
-        {/* Top Controls — pt-12 as notch-safe padding */}
-        <div className="absolute top-0 left-0 right-0 px-6 pt-12 pb-4 flex justify-between items-center bg-gradient-to-b from-black/60 to-transparent z-30">
+        {/* Top Controls */}
+        <div className="absolute top-0 left-0 right-0 px-6 pt-8 pb-4 flex justify-between items-center bg-gradient-to-b from-black/60 to-transparent z-30">
           <button
-            onClick={onClose}
-            className="w-10 h-10 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white"
+            onClick={() => {
+              if (scanState === 'half-result' || scanState === 'full-result' || scanState === 'scanning') {
+                setScanState('camera');
+                setResult(null);
+                setCapturedImage(null);
+                startCamera();
+              } else {
+                onClose();
+              }
+            }}
+            className="w-12 h-12 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-black/60 active:scale-95 transition-all"
           >
-            <X size={20} />
+            <X size={24} />
           </button>
 
-          {/* Flash button — only shown when flash is supported and camera is active */}
-          {flashSupported && scanState === 'camera' && (
-            <button
-              onClick={toggleFlash}
-              className={`w-10 h-10 backdrop-blur-md rounded-full flex items-center justify-center transition-colors ${isFlashOn ? 'bg-yellow-400 text-gray-900' : 'bg-black/40 text-white'
-                }`}
-            >
-              {isFlashOn ? <Zap size={20} fill="currentColor" /> : <ZapOff size={20} />}
-            </button>
-          )}
+          <div className="flex items-center justify-center">
+             <img src="/logo.png?v=2" alt="Scanora" style={{ height: '64px' }} className="object-contain drop-shadow-md" />
+          </div>
+
+          <button className="w-12 h-12 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-black/60 active:scale-95 transition-all">
+            <HelpCircle size={24} />
+          </button>
         </div>
 
         {/* Bottom Camera Controls */}
@@ -244,29 +292,51 @@ const ScannerSheet = ({ isOpen, onClose }) => {
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={scanState === 'scanning'}
-              className="w-12 h-12 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white disabled:opacity-40 active:bg-white/20 transition-colors"
-              title="Upload dari Galeri"
+              className="w-16 h-16 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white disabled:opacity-40 hover:bg-black/60 active:scale-95 transition-all"
+              title="Pilih dari Galeri"
             >
-              <ImageIcon size={22} />
+              <ImageIcon size={28} />
             </button>
 
             {/* Shutter Button */}
             <button
               onClick={handleCapture}
               disabled={scanState === 'scanning' || !!errorMsg}
-              className="w-20 h-20 rounded-full border-4 border-white/50 flex items-center justify-center disabled:opacity-40"
+              className="w-24 h-24 rounded-full border-4 border-white/50 flex items-center justify-center disabled:opacity-40"
             >
-              <div className="w-16 h-16 bg-white rounded-full transition-transform active:scale-90 shadow-lg"></div>
+              <div className="w-20 h-20 bg-white rounded-full transition-transform active:scale-90 shadow-lg flex items-center justify-center">
+                <Camera size={32} className="text-gray-400" />
+              </div>
             </button>
 
-            {/* Spacer to mirror gallery button */}
-            <div className="w-12 h-12" />
+            {/* Flip Camera Button */}
+            <button
+              onClick={() => {}}
+              disabled={scanState === 'scanning'}
+              className="w-16 h-16 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white disabled:opacity-40 hover:bg-black/60 active:scale-95 transition-all"
+              title="Ganti Kamera"
+            >
+              <RefreshCw size={28} />
+            </button>
+          </div>
+        )}
+
+        {/* Toast Message */}
+        {toastMsg && (
+          <div className="absolute top-24 left-0 right-0 flex justify-center z-50 animate-bounce">
+            <div className="bg-white text-gray-800 px-6 py-3 rounded-full text-sm font-semibold shadow-2xl flex items-center gap-2 border border-gray-100">
+              <CheckCircle className="text-scanora-green" size={20} /> {toastMsg}
+            </div>
           </div>
         )}
       </div>
 
       {/* Bottom Sheet Results */}
-      <div className={`bg-white rounded-t-3xl transition-all duration-300 ease-in-out absolute bottom-0 left-0 right-0 max-w-md mx-auto flex flex-col z-40 shadow-[0_-10px_40px_rgba(0,0,0,0.3)] ${scanState === 'half-result' ? 'h-[45%]' :
+      <div 
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+        className={`bg-white rounded-t-3xl transition-all duration-300 ease-in-out absolute bottom-0 left-0 right-0 max-w-md mx-auto flex flex-col z-40 shadow-[0_-10px_40px_rgba(0,0,0,0.3)] ${scanState === 'half-result' ? 'h-[45%]' :
         scanState === 'full-result' ? 'h-[85%]' :
           'h-0 opacity-0 pointer-events-none'
         }`}>
@@ -290,7 +360,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
               <p className="text-gray-500 text-sm mb-6">{errorMsg}</p>
               <div className="flex gap-3">
                 <button
-                  onClick={() => { setErrorMsg(''); setScanState('camera'); startCamera(); }}
+                  onClick={() => { setErrorMsg(''); setScanState('camera'); setCapturedImage(null); startCamera(); }}
                   className="px-5 py-2 bg-gray-100 rounded-full text-gray-700 font-medium text-sm"
                 >
                   Coba Kamera
@@ -357,14 +427,14 @@ const ScannerSheet = ({ isOpen, onClose }) => {
                 <div className="flex gap-3">
                   <button
                     onClick={() => setScanState('half-result')}
-                    className="flex-1 py-3.5 bg-gray-100 text-gray-700 font-semibold rounded-xl flex items-center justify-center gap-2 active:bg-gray-200 transition-colors"
+                    className="flex-1 min-h-[44px] py-3.5 bg-gray-100 text-gray-700 font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-gray-200 active:scale-95 transition-all"
                   >
                     <ChevronDown size={18} /> Tutup
                   </button>
                   <button
                     onClick={handleSaveToInventory}
                     disabled={isSaving}
-                    className="flex-1 py-3.5 bg-scanora-green text-white font-semibold rounded-xl shadow-lg shadow-scanora-green/30 flex items-center justify-center gap-2 active:bg-scanora-dark transition-colors disabled:opacity-70"
+                    className="flex-1 min-h-[44px] py-3.5 bg-scanora-green text-white font-semibold rounded-xl shadow-lg shadow-scanora-green/30 flex items-center justify-center gap-2 hover:bg-scanora-dark active:scale-95 transition-all disabled:opacity-70"
                   >
                     <Check size={18} />
                     {isSaving ? 'Menyimpan...' : 'Simpan'}

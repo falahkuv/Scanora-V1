@@ -6,7 +6,8 @@ const { sendSuccess } = require("../services/responseService");
 const getInventory = asyncHandler(async (req, res) => {
   const items = await prisma.inventory.findMany({
     where: { userId: req.user.userId },
-    orderBy: { addedAt: "desc" }
+    orderBy: { addedAt: "desc" },
+    include: { scan: true }
   });
 
   return sendSuccess(
