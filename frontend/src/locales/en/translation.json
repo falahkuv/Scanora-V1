@@ -1,0 +1,11 @@
+{
+  "profile": {
+    "title": "Profile & Settings",
+    "greeting": "Hello, Buddy!",
+    "dark_mode": "Dark Mode",
+    "dark_mode_desc": "Change application theme",
+    "language": "Language",
+    "language_desc": "Change application language",
+    "logout": "Logout"
+  }
+}

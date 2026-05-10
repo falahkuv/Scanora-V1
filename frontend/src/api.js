@@ -2,7 +2,7 @@ import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
 });
 
 // Setup silent auth using device_id
@@ -22,12 +22,12 @@ export const initializeAuth = async () => {
 
     try {
       // Try to login first
-      const loginRes = await axios.post('/api/auth/login', { email, password });
+      const loginRes = await api.post('/auth/login', { email, password });
       token = loginRes.data.data.token;
     } catch (err) {
       // If login fails, try to register
       try {
-        const regRes = await axios.post('/api/auth/register', { name, email, password });
+        const regRes = await api.post('/auth/register', { name, email, password });
         token = regRes.data.data.token;
       } catch (regErr) {
         console.error("Failed to silently authenticate", regErr);

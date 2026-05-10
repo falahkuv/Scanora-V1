@@ -1,3 +1,5 @@
+const API_BASE_URL = process.env.API_BASE_URL || '';
+
 const toUserResponse = (user) => ({
   id: user.id,
   name: user.name,
@@ -11,7 +13,7 @@ const toScanResponse = (scan) => ({
   fruit_type: scan.fruitType,
   condition: scan.condition,
   freshness_score: scan.freshnessScore,
-  image_url: scan.imageUrl,
+  image_url: scan.imageUrl ? `${API_BASE_URL}${scan.imageUrl}` : null,
   scanned_at: scan.scannedAt
 });
 
@@ -23,7 +25,7 @@ const toInventoryResponse = (item) => ({
   condition: item.condition,
   added_at: item.addedAt,
   reminder_at: item.reminderAt,
-  image_url: item.scan?.imageUrl || null
+  image_url: item.scan?.imageUrl ? `${API_BASE_URL}${item.scan.imageUrl}` : null
 });
 
 module.exports = {

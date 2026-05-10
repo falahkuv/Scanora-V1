@@ -1,0 +1,11 @@
+{
+  "profile": {
+    "title": "Profile & Pengaturan",
+    "greeting": "Halo, Sobat!",
+    "dark_mode": "Dark Mode",
+    "dark_mode_desc": "Ubah tema aplikasi",
+    "language": "Bahasa",
+    "language_desc": "Ubah bahasa aplikasi",
+    "logout": "Keluar (Logout)"
+  }
+}
