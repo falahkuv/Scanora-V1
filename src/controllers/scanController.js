@@ -72,7 +72,7 @@ const createScan = asyncHandler(async (req, res) => {
 
   const fruitType = prediction?.prediction?.product?.toLowerCase() || "unknown";
   const condition = prediction?.prediction?.condition || "unknown";
-  const freshnessScore = prediction?.freshness_index ?? 0;
+  const freshnessScore = prediction?.freshness_score ?? prediction?.freshness_index ?? 0;
 
   const scan = await prisma.scanHistory.create({
     data: {
