@@ -108,14 +108,14 @@ async def predict(file: UploadFile = File(...)):
         
         if condition == "unripe":
             verdict = "Mentah"
-            freshness_score = 65 + (confidence_cond * 35)
+            freshness_score = 65 + (confidence_cond * 0.35)
         elif condition == "ripe":
             verdict = "Matang"
-            freshness_score = 65 + (confidence_cond * 35)
+            freshness_score = 65 + (confidence_cond * 0.35)
         elif condition == "rotten":
             verdict = "Busuk"
             # Skor tidak akan 0 (minimal 25%). Semakin yakin model itu busuk, skornya semakin turun.
-            freshness_score = 50 - (confidence_cond * 25)
+            freshness_score = 50 - (confidence_cond * 0.25)
         else:
             verdict = "Unknown"
             freshness_score = 0.0

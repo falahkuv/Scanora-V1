@@ -186,8 +186,9 @@ const ScannerSheet = ({ isOpen, onClose }) => {
   };
 
   const condColor = getConditionColor(result?.condition);
-  const score = result?.freshness_score ?? 0;
-  const dashOffset = 283 - (score * 283);
+  const scoreValue = typeof result?.freshness_score === 'number' ? result.freshness_score : 0;
+  const scoreRatio = Math.max(0, Math.min(1, scoreValue / 100));
+  const dashOffset = 283 - (scoreRatio * 283);
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black max-w-md mx-auto overflow-hidden">
@@ -417,7 +418,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
                   <h3 className="font-semibold text-gray-800 mb-2">💡 Informasi AI</h3>
                   <p className="text-sm text-gray-600 leading-relaxed">
                     AI kami mendeteksi <strong className="capitalize">{result.fruit_type}</strong> dengan kondisi <strong>{result.condition}</strong>.
-                    Skor kesegaran: <strong>{Math.round(result.freshness_score * 100)}%</strong>.
+                    Skor kesegaran: <strong>{Math.round(scoreValue)}%</strong>.
                     {result.condition === 'ripe' && ' Cocok untuk segera dikonsumsi atau diolah hari ini!'}
                     {result.condition === 'rotten' && ' Sayangnya buah ini sudah tidak layak konsumsi.'}
                     {result.condition === 'unripe' && ' Simpan dalam suhu ruangan agar cepat matang.'}
