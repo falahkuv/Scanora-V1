@@ -46,6 +46,7 @@ try:
 except Exception as e:
     print(f"Warning: Model could not limit be loaded. {e}")
 
+@app.head("/")
 @app.get("/")
 def home():
     return {"message": "Fruit Freshness ML API Is Running!"}

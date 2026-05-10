@@ -2,6 +2,19 @@
 
 Semua perubahan yang mencolok pada project Scanora akan didokumentasikan di dalam file ini.
 
+## [v1.3.0] - 2026-05-11
+
+### Added
+- Integrasi backend Node.js dengan **Supabase Storage** untuk membuat penyimpanan gambar hasil *scan* menjadi permanen, menggantikan sistem penyimpanan sementara (*ephemeral*) dari Render.
+- Endpoint `HEAD /` di server FastAPI agar berhasil merespons dan lolos sistem pengecekan jaringan (*health check*) yang ketat dari platform Render.
+
+### Fixed
+- Memperbaiki *error* `502 Bad Gateway` pada server FastAPI dengan menyelipkan *header* `Content-Length` pada Axios untuk mengatasi penolakan *chunked Request* dari *proxy* Render.
+- Menyelesaikan masalah gambar gagal muat (404/alt text) di sisi frontend Vercel dengan menyimpan *URL Absolute* utuh ke dalam *database* agar letak server gambar tetap akurat.
+
+### Changed
+- Memperbarui konfigurasi alamat *Port* Uvicorn (`api_main.py`) pada FastAPI agar secara dinamis menyesuaikan dan membaca dari *Environment Variable* `PORT` yang diberikan cloud.
+
 ## [v1.2.0] - 2026-05-10
 
 ### Added

@@ -3,6 +3,7 @@ const FormData = require("form-data");
 const fs = require("fs");
 const path = require("path");
 const { prisma } = require("../config/prisma");
+const { supabase } = require("../config/supabase");
 const asyncHandler = require("../middleware/asyncHandler");
 const { toScanResponse } = require("../services/formatService");
 const { sendSuccess } = require("../services/responseService");
@@ -36,7 +37,8 @@ const createScan = asyncHandler(async (req, res) => {
   try {
     const response = await axios.post(`${FASTAPI_URL}/predict`, form, {
       headers: {
-        ...form.getHeaders()
+        ...form.getHeaders(),
+        "Content-Length": form.getLengthSync()
       },
       timeout: 10000
     });
@@ -84,17 +86,47 @@ const createScan = asyncHandler(async (req, res) => {
     }
   });
 
-  const uploadsDir = path.join(__dirname, "../../uploads");
-  if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
-  }
   const ext = req.file.originalname.split(".").pop() || "jpg";
   const fileName = `${scan.id}.${ext}`;
-  fs.writeFileSync(path.join(uploadsDir, fileName), req.file.buffer);
+  
+  let imageUrl = null;
+
+  if (process.env.SUPABASE_URL && process.env.SUPABASE_KEY && supabase) {
+    // Upload to Supabase Storage
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('scanora-images')
+      .upload(`uploads/${fileName}`, req.file.buffer, {
+        contentType: req.file.mimetype,
+        upsert: true
+      });
+
+    if (uploadError) {
+      console.error("Supabase upload error:", uploadError);
+      // Fallback to local
+      const uploadsDir = path.join(__dirname, "../../uploads");
+      if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+      fs.writeFileSync(path.join(uploadsDir, fileName), req.file.buffer);
+      const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+      imageUrl = `${protocol}://${req.get("host")}/uploads/${fileName}`;
+    } else {
+      // Get public URL
+      const { data: publicUrlData } = supabase.storage
+        .from('scanora-images')
+        .getPublicUrl(`uploads/${fileName}`);
+      imageUrl = publicUrlData.publicUrl;
+    }
+  } else {
+    // Local storage fallback
+    const uploadsDir = path.join(__dirname, "../../uploads");
+    if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+    fs.writeFileSync(path.join(uploadsDir, fileName), req.file.buffer);
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+    imageUrl = `${protocol}://${req.get("host")}/uploads/${fileName}`;
+  }
 
   await prisma.scanHistory.update({
     where: { id: scan.id },
-    data: { imageUrl: `/uploads/${fileName}` }
+    data: { imageUrl }
   });
 
   return sendSuccess(res, "Scan successful", {
