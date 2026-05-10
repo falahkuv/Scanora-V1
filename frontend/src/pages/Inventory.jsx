@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Clock, Package, X, Trash2 } from 'lucide-react';
+import { Search, History, Boxes, X, Trash2, Apple, Banana, Citrus } from 'lucide-react';
 import api from '../api';
 
 const getFruitIcon = (type) => {
@@ -125,13 +125,13 @@ const Inventory = () => {
             onClick={() => setActiveTab('inventory')}
             className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all active:scale-95 min-h-[44px] ${activeTab === 'inventory' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}
           >
-            <Package size={16} /> Inventori
+            <Boxes size={16} /> Inventori ({inventoryData.length})
           </button>
           <button 
             onClick={() => setActiveTab('history')}
             className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all active:scale-95 min-h-[44px] ${activeTab === 'history' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}
           >
-            <Clock size={16} /> Riwayat
+            <History size={16} /> Riwayat ({historyData.length})
           </button>
         </div>
       </div>
@@ -146,19 +146,19 @@ const Inventory = () => {
             onClick={() => setActiveTab('inventory')}
             className={`flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-full transition-all active:scale-95 ${activeTab === 'inventory' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
           >
-            <Package size={16} /> Inventori
+            <Boxes size={16} /> Inventori ({inventoryData.length})
           </button>
           <button 
             onClick={() => setActiveTab('history')}
             className={`flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-full transition-all active:scale-95 ${activeTab === 'history' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
           >
-            <Clock size={16} /> Riwayat
+            <History size={16} /> Riwayat ({historyData.length})
           </button>
         </div>
       </div>
 
       {/* Content Area */}
-      <div className="p-6">
+      <div className="p-6 flex-1 flex flex-col">
         {loading ? (
           <div className="text-center py-10 text-gray-400">Memuat data...</div>
         ) : activeTab === 'inventory' ? (
@@ -190,7 +190,17 @@ const Inventory = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-10 text-gray-400 text-sm">Inventori kamu masih kosong.</div>
+            <div className="flex-1 flex flex-col items-center justify-center py-16 px-4 text-center">
+              <div className="flex gap-4 mb-6 items-center">
+                <Apple size={48} className="text-red-main/40" strokeWidth={1.5} />
+                <Banana size={48} className="text-yellow-main/40" strokeWidth={1.5} />
+                <Citrus size={46} className="text-orange-main/40 -scale-x-100 -scale-y-100" strokeWidth={1.5} />
+              </div>
+              <h3 className="text-lg font-bold text-gray-800 mb-2">Inventori kamu masih kosong</h3>
+              <p className="text-sm text-gray-500 leading-relaxed max-w-[260px]">
+                Kalau kamu simpan ke Inventori maka aplikasi akan bisa memberi kamu notifikasi pengingat.
+              </p>
+            </div>
           )
         ) : (
           <div className="space-y-3">
@@ -216,7 +226,15 @@ const Inventory = () => {
                 </span>
               </div>
             )) : (
-              <div className="text-center py-10 text-gray-400 text-sm">Belum ada riwayat scan.</div>
+              <div className="flex-1 flex flex-col items-center justify-center py-16 px-4 text-center">
+                <div className="mb-6 bg-gray-50 rounded-full">
+                  <History size={48} className="text-gray-300" strokeWidth={1.5} />
+                </div>
+                <h3 className="text-lg font-bold text-gray-800 mb-2">Belum ada riwayat scan</h3>
+                <p className="text-sm text-gray-500 leading-relaxed max-w-[260px]">
+                  Setiap hasil scan buah yang dilakukan akan tersimpan ke sini.
+                </p>
+              </div>
             )}
           </div>
         )}

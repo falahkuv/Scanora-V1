@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { User, AlertCircle, ChevronRight } from 'lucide-react';
+import { User, AlertCircle, ChevronRight, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import api from '../api';
 
 const getFruitIcon = (type) => {
@@ -18,8 +19,10 @@ const calculateDaysLeft = (reminderAt) => {
 };
 
 const Home = ({ onOpenScanner }) => {
+  const navigate = useNavigate();
   const [urgentItems, setUrgentItems] = useState([]);
   const [savedCount, setSavedCount] = useState(0);
+  const [selectedItem, setSelectedItem] = useState(null);
 
   useEffect(() => {
     const fetchHomeData = async () => {
@@ -45,29 +48,36 @@ const Home = ({ onOpenScanner }) => {
   }, []);
 
   return (
-    <div className="p-6 pb-32">
+    <div className="p-6 pb-32 bg-gray-50 dark:bg-gray-900 transition-colors min-h-screen">
       {/* Header */}
       <header className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Halo, Sobat!</h1>
-          <p className="text-sm text-gray-500">Ayo selamatkan makanan hari ini.</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Halo, Sobat!</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Ayo selamatkan makanan hari ini.</p>
         </div>
-        <div className="w-12 h-12 bg-scanora-green/10 rounded-full flex items-center justify-center text-scanora-green">
+        <button 
+          onClick={() => navigate('/profile')}
+          className="w-12 h-12 bg-scanora-green/10 rounded-full flex items-center justify-center text-scanora-green hover:bg-scanora-green/20 active:scale-95 transition-all"
+        >
           <User size={24} />
-        </div>
+        </button>
       </header>
 
       {/* Urgent Action Highlight */}
       <section className="mb-8">
         <div className="flex items-center gap-2 mb-4">
           <AlertCircle className="text-status-ripe" size={20} />
-          <h2 className="text-lg font-semibold text-gray-800">Segera Konsumsi</h2>
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Segera Konsumsi ({urgentItems.length})</h2>
         </div>
         
         {urgentItems.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-3 max-h-[340px] overflow-y-auto no-scrollbar pb-2 pr-1">
             {urgentItems.map(item => (
-              <div key={item.id} className="bg-white rounded-2xl p-4 flex items-center gap-4 shadow-sm border border-gray-100">
+              <div 
+                key={item.id} 
+                onClick={() => setSelectedItem(item)}
+                className="bg-white dark:bg-gray-800 rounded-2xl p-4 flex items-center gap-4 shadow-sm border border-gray-100 dark:border-gray-700 cursor-pointer active:scale-95 transition-all"
+              >
                 <div className="w-14 h-14 bg-amber-50 rounded-xl flex items-center justify-center text-3xl">
                   {getFruitIcon(item.fruit_type)}
                 </div>
@@ -78,7 +88,7 @@ const Home = ({ onOpenScanner }) => {
                     <span className="text-xs text-gray-500">Sisa {item.daysLeft} hari</span>
                   </div>
                 </div>
-                <button className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:text-scanora-green hover:bg-scanora-green/10 transition-colors">
+                <button className="w-8 h-8 rounded-full bg-gray-50 dark:bg-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-300 hover:text-scanora-green hover:bg-scanora-green/10 transition-colors">
                   <ChevronRight size={20} />
                 </button>
               </div>
@@ -107,6 +117,57 @@ const Home = ({ onOpenScanner }) => {
           </div>
         </div>
       </section>
+      {/* Detail Dialog Modal */}
+      {selectedItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl transform transition-all animate-slide-up">
+            <div className="relative aspect-video bg-gray-100 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+              {selectedItem.image_url ? (
+                <img src={selectedItem.image_url} alt={selectedItem.fruit_type} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-6xl drop-shadow-md">{getFruitIcon(selectedItem.fruit_type)}</span>
+              )}
+              <button 
+                onClick={() => setSelectedItem(null)}
+                className="absolute top-4 right-4 w-10 h-10 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 active:scale-95 transition-all"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white capitalize flex items-center gap-2">
+                    {selectedItem.fruit_type} {getFruitIcon(selectedItem.fruit_type)}
+                  </h2>
+                </div>
+                <span className={`text-xs font-bold px-3 py-1.5 rounded-full uppercase ${
+                  selectedItem.condition === 'ripe' ? 'text-amber-700 bg-amber-100' :
+                  selectedItem.condition === 'rotten' ? 'text-red-700 bg-red-100' :
+                  'text-gray-700 bg-gray-100 dark:text-gray-300 dark:bg-gray-700'
+                }`}>
+                  {selectedItem.condition}
+                </span>
+              </div>
+              
+              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-2xl p-4 mb-6 border border-gray-100 dark:border-gray-600">
+                <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200 mb-1">Informasi</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                  Buah ini terdeteksi sebagai {selectedItem.fruit_type} dalam kondisi {selectedItem.condition}.
+                  {selectedItem.reminder_at ? ` Sisa waktu optimal: ${calculateDaysLeft(selectedItem.reminder_at)} hari.` : ''}
+                </p>
+              </div>
+
+              <button 
+                onClick={() => setSelectedItem(null)}
+                className="w-full min-h-[44px] bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-semibold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95 transition-all"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
