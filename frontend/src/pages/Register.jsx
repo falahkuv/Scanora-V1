@@ -1,8 +1,39 @@
+import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Leaf } from 'lucide-react';
+import api from '../api';
 
 const Register = () => {
   const navigate = useNavigate();
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setErrorMessage('');
+    setIsSubmitting(true);
+
+    try {
+      const response = await api.post('/auth/register', { name, email, password });
+      const token = response.data?.data?.token;
+
+      if (!token) {
+        throw new Error('Token tidak ditemukan');
+      }
+
+      localStorage.setItem('token', token);
+      api.defaults.headers.common.Authorization = `Bearer ${token}`;
+      navigate('/');
+    } catch (error) {
+      const message = error.response?.data?.message || 'Registrasi gagal. Coba lagi.';
+      setErrorMessage(message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col justify-center px-6 py-6 transition-colors">
@@ -14,37 +45,53 @@ const Register = () => {
       <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-2">Daftar Akun</h2>
       <p className="text-center text-gray-500 dark:text-gray-400 mb-8">Bergabung dan selamatkan makanan hari ini!</p>
 
-      <div className="space-y-4">
+      <form className="space-y-4" onSubmit={handleSubmit}>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nama Panggilan</label>
-          <input 
-            type="text" 
+          <input
+            type="text"
             placeholder="Sobat Scanora"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
             className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-scanora-green transition-colors"
+            required
           />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
-          <input 
-            type="email" 
+          <input
+            type="email"
             placeholder="sobat@scanora.app"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
             className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-scanora-green transition-colors"
+            required
           />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
-          <input 
-            type="password" 
+          <input
+            type="password"
             placeholder="••••••••"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
             className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-scanora-green transition-colors"
+            required
           />
         </div>
 
-        <button 
-          onClick={() => navigate('/')}
-          className="w-full py-3.5 bg-scanora-green hover:bg-scanora-dark text-white rounded-xl font-bold shadow-lg shadow-scanora-green/30 transition-all active:scale-95 mt-4"
+        {errorMessage ? (
+          <div className="text-sm text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+            {errorMessage}
+          </div>
+        ) : null}
+
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full py-3.5 bg-scanora-green hover:bg-scanora-dark text-white rounded-xl font-bold shadow-lg shadow-scanora-green/30 transition-all active:scale-95 mt-4 disabled:opacity-70 disabled:cursor-not-allowed"
         >
-          Buat Akun
+          {isSubmitting ? 'Memproses...' : 'Buat Akun'}
         </button>
 
         <div className="relative flex py-4 items-center">
@@ -65,7 +112,7 @@ const Register = () => {
           </svg>
           Daftar dengan Google
         </button>
-      </div>
+      </form>
 
       <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-8">
         Sudah punya akun? <Link to="/login" className="text-scanora-green font-bold">Masuk di sini</Link>
