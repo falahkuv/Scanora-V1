@@ -70,10 +70,13 @@ const Inventory = () => {
       observer.observe(observerTarget.current);
     }
 
+    window.addEventListener('scanora:inventoryUpdated', fetchData);
+
     return () => {
       if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
       if (undoIntervalRef.current) clearInterval(undoIntervalRef.current);
       observer.disconnect();
+      window.removeEventListener('scanora:inventoryUpdated', fetchData);
     };
   }, []);
 

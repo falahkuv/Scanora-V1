@@ -151,6 +151,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
       setResult(null);
       startCamera();
       setToastMsg(`Berhasil disimpan: ${result.fruit_type.charAt(0).toUpperCase() + result.fruit_type.slice(1)} ${getFruitEmoji(result.fruit_type)}`);
+      window.dispatchEvent(new Event('scanora:inventoryUpdated'));
       setTimeout(() => setToastMsg(''), 3000);
     } catch (err) {
       console.error('Failed to save', err);

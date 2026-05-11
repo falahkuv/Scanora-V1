@@ -48,6 +48,8 @@ const Home = ({ onOpenScanner }) => {
       }
     };
     fetchHomeData();
+    window.addEventListener('scanora:inventoryUpdated', fetchHomeData);
+    return () => window.removeEventListener('scanora:inventoryUpdated', fetchHomeData);
   }, []);
 
   return (
