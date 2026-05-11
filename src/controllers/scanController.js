@@ -86,6 +86,15 @@ const createScan = asyncHandler(async (req, res) => {
   }
 
   const fruitType = prediction?.prediction?.product?.toLowerCase() || "unknown";
+  
+  if (fruitType === "unknown" || fruitType === "tidak dikenali") {
+    return res.status(400).json({
+      success: false,
+      message: "Objek tidak dikenali, silakan foto ulang buah Anda.",
+      data: null
+    });
+  }
+
   const condition = prediction?.prediction?.condition || "unknown";
   const freshnessScore = prediction?.freshness_score ?? prediction?.freshness_index ?? 0;
 

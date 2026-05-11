@@ -144,7 +144,6 @@ const ScannerSheet = ({ isOpen, onClose }) => {
         fruit_type: result.fruit_type,
         condition: result.condition,
         scan_id: result.scan_id,
-        reminder_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
       });
       setScanState('camera');
       setCapturedImage(null);

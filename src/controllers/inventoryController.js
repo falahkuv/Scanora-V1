@@ -2,6 +2,7 @@ const { prisma } = require("../config/prisma");
 const asyncHandler = require("../middleware/asyncHandler");
 const { toInventoryResponse } = require("../services/formatService");
 const { sendSuccess } = require("../services/responseService");
+const { getFreshnessData } = require("../services/freshnessService");
 
 const getInventory = asyncHandler(async (req, res) => {
   const items = await prisma.inventory.findMany({
@@ -10,15 +11,37 @@ const getInventory = asyncHandler(async (req, res) => {
     include: { scan: true }
   });
 
-  return sendSuccess(
-    res,
-    "Inventory retrieved",
-    items.map(toInventoryResponse)
-  );
+  const enriched = items.map(item => {
+    const base = toInventoryResponse(item);
+    const rawScore = item.scan?.freshnessScore ?? 0;
+    const { freshnessScoreInitial, freshnessScoreLatest } = getFreshnessData(
+      item.fruitType,
+      item.condition,
+      rawScore,
+      item.addedAt
+    );
+    return {
+      ...base,
+      freshness_score_initial: freshnessScoreInitial,
+      freshness_score_latest: freshnessScoreLatest,
+    };
+  });
+
+  return sendSuccess(res, "Inventory retrieved", enriched);
 });
 
 const addInventory = asyncHandler(async (req, res) => {
-  const { fruit_type, condition, scan_id, reminder_at } = req.body;
+  const { fruit_type, condition, scan_id } = req.body;
+
+  // Fetch freshness score from scan if available
+  let freshnessScore = 0.75; // safe default
+  if (scan_id) {
+    const scan = await prisma.scanHistory.findUnique({ where: { id: scan_id } });
+    if (scan) freshnessScore = scan.freshnessScore;
+  }
+
+  // Auto-calculate reminder_at based on fruit type, condition, and freshness score
+  const { reminderAt } = getFreshnessData(fruit_type, condition, freshnessScore, new Date());
 
   const item = await prisma.inventory.create({
     data: {
@@ -26,11 +49,17 @@ const addInventory = asyncHandler(async (req, res) => {
       fruitType: fruit_type,
       condition,
       scanId: scan_id || null,
-      reminderAt: reminder_at ? new Date(reminder_at) : null
-    }
+      reminderAt: reminderAt || null,
+    },
+    include: { scan: true }
   });
 
-  return sendSuccess(res, "Inventory item added", toInventoryResponse(item), 201);
+  const base = toInventoryResponse(item);
+  return sendSuccess(res, "Inventory item added", {
+    ...base,
+    freshness_score_initial: freshnessScore,
+    freshness_score_latest: freshnessScore,
+  }, 201);
 });
 
 const updateReminder = asyncHandler(async (req, res) => {

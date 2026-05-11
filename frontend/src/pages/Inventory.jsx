@@ -1,74 +1,240 @@
-import React, { useState, useEffect } from 'react';
-import { Search, History, Boxes, X, Trash2, Apple, Banana, Citrus } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { History, Boxes, X, Trash2, Apple, Banana, Citrus, Pencil, ChevronRight, CalendarCheck, CalendarX } from 'lucide-react';
 import api from '../api';
 
-const getFruitIcon = (type) => {
-  const t = type?.toLowerCase() || '';
-  if (t.includes('pisang') || t.includes('banana')) return '🍌';
-  if (t.includes('apel') || t.includes('apple')) return '🍎';
-  if (t.includes('jeruk') || t.includes('orange')) return '🍊';
-  return '🍎'; // default fallback
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const normalizeFruit = (type) => {
+  const t = (type || '').toLowerCase();
+  if (t.includes('pisang') || t.includes('banana')) return 'banana';
+  if (t.includes('apel') || t.includes('apple')) return 'apple';
+  if (t.includes('jeruk') || t.includes('orange')) return 'orange';
+  return 'apple';
+};
+
+const getMascotSrc = (fruitType, condition) => {
+  const fruit = normalizeFruit(fruitType);
+  const cond = (condition || 'ripe').toLowerCase();
+  return `/mascots/${fruit}_${cond}.png`;
+};
+
+const getFruitLabel = (type) => {
+  const t = (type || '').toLowerCase();
+  if (t.includes('pisang') || t.includes('banana')) return 'Pisang';
+  if (t.includes('apel') || t.includes('apple')) return 'Apel';
+  if (t.includes('jeruk') || t.includes('orange')) return 'Jeruk';
+  return type;
+};
+
+const getConditionLabel = (condition) => {
+  const c = (condition || '').toLowerCase();
+  if (c === 'unripe') return 'Unripe';
+  if (c === 'ripe') return 'Ripe';
+  if (c === 'rotten') return 'Rotten';
+  return condition;
+};
+
+const getConditionBadgeStyle = (condition) => {
+  const c = (condition || '').toLowerCase();
+  if (c === 'unripe') return 'bg-teal-100 text-teal-700'; // Cyan/Teal like in mockup
+  if (c === 'ripe') return 'bg-green-100 text-green-700'; // Like freshness score
+  if (c === 'rotten') return 'bg-red-100 text-red-700';
+  return 'bg-gray-100 text-gray-600';
 };
 
 const calculateDaysLeft = (reminderAt) => {
-  if (!reminderAt) return '-';
+  if (!reminderAt) return null;
   const diff = new Date(reminderAt) - new Date();
-  const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-  return days > 0 ? days : 0;
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
 };
 
-const formatDate = (dateString) => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+/**
+ * Returns countdown display config based on condition + daysLeft.
+ * - unripe: always green, "Matang X Hari Lagi!"
+ * - ripe/rotten: color-coded by days left
+ */
+const getCountdownConfig = (condition, daysLeft, label) => {
+  const cond = (condition || '').toLowerCase();
+
+  if (cond === 'rotten' || daysLeft === null) {
+    return { bg: 'bg-gray-700', text: 'text-white', btnText: 'Kedaluwarsa' };
+  }
+
+  if (cond === 'unripe') {
+    return {
+      bg: 'bg-scanora-green', text: 'text-white',
+      btnText: daysLeft > 0 ? `Matang ${daysLeft} Hari Lagi!` : 'Siap Matang!',
+    };
+  }
+
+  // ripe — color by time left
+  if (daysLeft <= 0) return { bg: 'bg-gray-700', text: 'text-white', btnText: 'Kedaluwarsa' };
+  if (daysLeft === 1) return { bg: 'bg-red-500', text: 'text-white', btnText: 'Sisa 1 Hari Lagi!' };
+  if (daysLeft === 2) return { bg: 'bg-orange-400', text: 'text-white', btnText: 'Sisa 2 Hari Lagi!' };
+  return { bg: 'bg-scanora-green', text: 'text-white', btnText: `Sisa ${daysLeft} Hari Lagi!` };
 };
+
+/** Short month: "11 Mei 2026" */
+const formatShortDate = (dateStr) => {
+  if (!dateStr) return '-';
+  const d = new Date(dateStr);
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+};
+
+/** Captured date: "27 Mei" */
+const formatCapturedDate = (dateStr) => {
+  if (!dateStr) return '-';
+  const d = new Date(dateStr);
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  return `${d.getDate()} ${months[d.getMonth()]}`;
+};
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  return d.toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+};
+
+/** Percent badge for freshness score */
+const ScoreBadge = ({ score, className = "py-1 text-[11px]" }) => {
+  const pct = Math.round((score ?? 0) * 100);
+  const bg = pct >= 70 ? 'bg-green-100' : pct > 0 ? 'bg-orange-100' : 'bg-red-800';
+  const text = pct >= 70 ? 'text-green-700' : pct > 0 ? 'text-orange-700' : 'text-white';
+  return (
+    <div className={`px-2 rounded w-full text-center font-bold flex items-center justify-center ${bg} ${text} ${className}`}>
+      {pct}%
+    </div>
+  );
+};
+
+// ─── Card Component ────────────────────────────────────────────────────────────
+
+const InventoryCard = ({ item, onClick }) => {
+  const daysLeft = calculateDaysLeft(item.reminder_at);
+  const countdown = getCountdownConfig(item.condition, daysLeft, item.condition);
+  const labelText = item.condition === 'unripe' ? 'Perkiraan Matang:' : 'Baik Sebelum:';
+
+  // Sky/grass background gradient for the card header
+  const headerBg = 'bg-gradient-to-b from-sky-200 via-sky-100 to-green-200';
+
+  return (
+    <div
+      onClick={onClick}
+      className="bg-white p-2 rounded-2xl shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:-translate-y-0.5 active:scale-95 transition-all flex flex-col"
+    >
+      <div className="relative">
+        {/* ── Top half: image area ── */}
+        <div className={`relative ${headerBg} flex-shrink-0 rounded-xl overflow-hidden aspect-square`}>
+          {/* Condition Badge */}
+          <span className={`absolute top-2 left-2 px-2.5 py-1 z-20 rounded-md text-[11px] font-bold shadow-sm ${getConditionBadgeStyle(item.condition)}`}>
+            {getConditionLabel(item.condition)}
+          </span>
+
+          {/* Captured date */}
+          <span className="absolute top-2 right-2 px-2 py-1 z-20 bg-white/90 backdrop-blur rounded-md text-[11px] font-bold text-gray-700 shadow-sm">
+            {formatCapturedDate(item.added_at)}
+          </span>
+
+          {/* Real photo (full width) */}
+          {item.image_url ? (
+            <img
+              src={item.image_url}
+              alt={item.fruit_type}
+              className="absolute inset-0 w-full h-full object-cover z-0"
+            />
+          ) : (
+            <div className={`absolute inset-0 w-full h-full z-0 ${headerBg}`} />
+          )}
+        </div>
+
+        {/* Mascot (bottom-right outside overflow-hidden) */}
+        <img
+          src={getMascotSrc(item.fruit_type, item.condition)}
+          alt=""
+          className="absolute -bottom-8 right-1 h-16 object-contain drop-shadow-md z-20"
+          onError={(e) => { e.target.style.display = 'none'; }}
+        />
+      </div>
+
+      {/* ── Bottom half: info ── */}
+      <div className="px-2 pt-1 pb-1 flex flex-col gap-1.5 flex-1 mt-1">
+        {/* Fruit name */}
+        <h3 className="font-bold text-gray-900 text-lg leading-tight capitalize">
+          {getFruitLabel(item.fruit_type)}
+        </h3>
+
+        {/* Label + date (with icons) */}
+        <div className="flex items-center gap-1.5">
+          {item.condition === 'unripe' ? (
+             <CalendarCheck size={14} className="text-scanora-green" />
+          ) : (
+             <CalendarX size={14} className={item.condition === 'rotten' ? "text-red-500" : "text-gray-400"} />
+          )}
+          <span className="text-xs font-semibold text-gray-700">
+            {item.reminder_at ? formatShortDate(item.reminder_at) : '-'}
+          </span>
+        </div>
+
+        {/* Countdown & Freshness Score Row (80:20) */}
+        <div className="flex gap-2 mt-1">
+          <div className="w-[80%]">
+            <div className={`w-full h-full flex items-center justify-center rounded-md py-1.5 text-[11px] font-bold ${countdown.bg} ${countdown.text}`}>
+              {countdown.btnText}
+            </div>
+          </div>
+          <div className="w-[20%]">
+            <ScoreBadge score={item.freshness_score_latest ?? item.freshness_score_initial} className="h-full py-1.5 text-[10px]" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Main Page ─────────────────────────────────────────────────────────────────
 
 const Inventory = () => {
-  const [activeTab, setActiveTab] = useState('inventory'); // 'inventory' | 'history'
+  const [activeTab, setActiveTab] = useState('inventory');
   const [inventoryData, setInventoryData] = useState([]);
   const [historyData, setHistoryData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState(null);
 
-  // Undo State
+  // Undo state
   const [undoItem, setUndoItem] = useState(null);
   const [undoProgress, setUndoProgress] = useState(0);
   const undoTimeoutRef = React.useRef(null);
   const undoIntervalRef = React.useRef(null);
 
-  // Scroll visibility for floating tab
+  // Floating tab
   const [showFloating, setShowFloating] = useState(false);
   const observerTarget = React.useRef(null);
 
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [invRes, histRes] = await Promise.all([
+        api.get('/inventory'),
+        api.get('/scan/history'),
+      ]);
+      if (invRes.data.success) setInventoryData(invRes.data.data);
+      if (histRes.data.success) setHistoryData(histRes.data.data);
+    } catch (err) {
+      console.error('Failed to fetch inventory data', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [invRes, histRes] = await Promise.all([
-          api.get('/inventory'),
-          api.get('/scan/history')
-        ]);
-        if (invRes.data.success) setInventoryData(invRes.data.data);
-        if (histRes.data.success) setHistoryData(histRes.data.data);
-      } catch (err) {
-        console.error("Failed to fetch inventory data", err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchData();
 
-    // Setup intersection observer
     const observer = new IntersectionObserver(
-      (entries) => {
-        setShowFloating(!entries[0].isIntersecting);
-      },
+      (entries) => setShowFloating(!entries[0].isIntersecting),
       { root: null, threshold: 0 }
     );
-
-    if (observerTarget.current) {
-      observer.observe(observerTarget.current);
-    }
+    if (observerTarget.current) observer.observe(observerTarget.current);
 
     window.addEventListener('scanora:inventoryUpdated', fetchData);
 
@@ -78,59 +244,49 @@ const Inventory = () => {
       observer.disconnect();
       window.removeEventListener('scanora:inventoryUpdated', fetchData);
     };
-  }, []);
+  }, [fetchData]);
 
   const handleDeleteHistory = (item) => {
-    // Optimistic UI update
     setHistoryData(prev => prev.filter(i => i.id !== item.id));
     setSelectedItem(null);
     setUndoItem(item);
     setUndoProgress(100);
 
-    // Clear any existing timeout
     if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
     if (undoIntervalRef.current) clearInterval(undoIntervalRef.current);
 
-    // Progress bar animation (4s = 40 steps of 100ms)
     undoIntervalRef.current = setInterval(() => {
       setUndoProgress(prev => Math.max(0, prev - 2.5));
     }, 100);
 
-    // Actual API delete after 4 seconds
     undoTimeoutRef.current = setTimeout(async () => {
       clearInterval(undoIntervalRef.current);
       setUndoItem(null);
-      try {
-        await api.delete(`/scan/history/${item.id}`);
-      } catch (err) {
-        console.error(err);
-      }
+      try { await api.delete(`/scan/history/${item.id}`); } catch (err) { console.error(err); }
     }, 4000);
   };
 
   const handleUndo = () => {
     if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
     if (undoIntervalRef.current) clearInterval(undoIntervalRef.current);
-    
-    setHistoryData(prev => {
-      const newData = [undoItem, ...prev].sort((a, b) => new Date(b.scanned_at) - new Date(a.scanned_at));
-      return newData;
-    });
+    setHistoryData(prev =>
+      [undoItem, ...prev].sort((a, b) => new Date(b.scanned_at) - new Date(a.scanned_at))
+    );
     setUndoItem(null);
   };
 
   return (
     <div className="flex flex-col h-full bg-gray-50 pb-32 no-scrollbar">
-      {/* Header fixed at top */}
+      {/* Sticky Header */}
       <div className="bg-white px-6 pt-6 pb-4 shadow-sm z-10 sticky top-0 border-b border-gray-100">
         <div className="bg-gray-100 p-1 rounded-xl flex relative">
-          <button 
+          <button
             onClick={() => setActiveTab('inventory')}
             className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all active:scale-95 min-h-[44px] ${activeTab === 'inventory' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}
           >
             <Boxes size={16} /> Inventori ({inventoryData.length})
           </button>
-          <button 
+          <button
             onClick={() => setActiveTab('history')}
             className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all active:scale-95 min-h-[44px] ${activeTab === 'history' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}
           >
@@ -139,65 +295,37 @@ const Inventory = () => {
         </div>
       </div>
 
-      {/* Target for intersection observer to know when we scrolled past header */}
       <div ref={observerTarget} className="h-1 w-full" />
 
       {/* Floating Tab Switcher */}
       <div className={`fixed left-0 right-0 z-30 flex justify-center transition-all duration-300 ease-out ${showFloating ? 'bottom-32 translate-y-0 opacity-100 pointer-events-auto' : 'bottom-28 translate-y-10 opacity-0 pointer-events-none'}`}>
         <div className="bg-gray-100/90 backdrop-blur-md p-1.5 rounded-full flex gap-1 shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-gray-200">
-          <button 
-            onClick={() => setActiveTab('inventory')}
-            className={`flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-full transition-all active:scale-95 ${activeTab === 'inventory' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
-          >
+          <button onClick={() => setActiveTab('inventory')} className={`flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-full transition-all active:scale-95 ${activeTab === 'inventory' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>
             <Boxes size={16} /> Inventori ({inventoryData.length})
           </button>
-          <button 
-            onClick={() => setActiveTab('history')}
-            className={`flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-full transition-all active:scale-95 ${activeTab === 'history' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
-          >
+          <button onClick={() => setActiveTab('history')} className={`flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-full transition-all active:scale-95 ${activeTab === 'history' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>
             <History size={16} /> Riwayat ({historyData.length})
           </button>
         </div>
       </div>
 
-      {/* Content Area */}
-      <div className="p-6 flex-1 flex flex-col">
+      {/* Content */}
+      <div className="p-4 flex-1 flex flex-col">
         {loading ? (
           <div className="text-center py-10 text-gray-400">Memuat data...</div>
         ) : activeTab === 'inventory' ? (
           inventoryData.length > 0 ? (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               {inventoryData.map(item => (
-                <div 
-                  key={item.id} 
-                  onClick={() => setSelectedItem(item)}
-                  className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center cursor-pointer hover:shadow-md hover:-translate-y-1 active:scale-95 transition-all"
-                >
-                  <div className="w-full aspect-square bg-gray-100 rounded-xl mb-3 flex items-center justify-center overflow-hidden">
-                    {item.image_url ? (
-                      <img src={item.image_url} alt={item.fruit_type} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-5xl drop-shadow-sm">{getFruitIcon(item.fruit_type)}</span>
-                    )}
-                  </div>
-                  <h3 className="font-semibold text-gray-900 capitalize">{item.fruit_type} {getFruitIcon(item.fruit_type)}</h3>
-                  <span className={`text-[10px] uppercase font-bold px-2 py-1 rounded-full mt-1 mb-2 ${
-                    item.condition === 'ripe' ? 'bg-amber-100 text-amber-700' :
-                    item.condition === 'unripe' ? 'bg-gray-100 text-gray-600' :
-                    'bg-red-100 text-red-700'
-                  }`}>
-                    {item.condition}
-                  </span>
-                  <p className="text-xs text-gray-500">Sisa {calculateDaysLeft(item.reminder_at)} hari</p>
-                </div>
+                <InventoryCard key={item.id} item={item} onClick={() => setSelectedItem(item)} />
               ))}
             </div>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center py-16 px-4 text-center">
               <div className="flex gap-4 mb-6 items-center">
-                <Apple size={48} className="text-red-main/40" strokeWidth={1.5} />
-                <Banana size={48} className="text-yellow-main/40" strokeWidth={1.5} />
-                <Citrus size={46} className="text-orange-main/40 -scale-x-100 -scale-y-100" strokeWidth={1.5} />
+                <Apple size={48} className="text-red-400/40" strokeWidth={1.5} />
+                <Banana size={48} className="text-yellow-400/40" strokeWidth={1.5} />
+                <Citrus size={46} className="text-orange-400/40 -scale-x-100 -scale-y-100" strokeWidth={1.5} />
               </div>
               <h3 className="text-lg font-bold text-gray-800 mb-2">Inventori kamu masih kosong</h3>
               <p className="text-sm text-gray-500 leading-relaxed max-w-[260px]">
@@ -208,31 +336,28 @@ const Inventory = () => {
         ) : (
           <div className="space-y-3">
             {historyData.length > 0 ? historyData.map(item => (
-              <div 
-                key={item.id} 
+              <div
+                key={item.id}
                 onClick={() => setSelectedItem(item)}
                 className="bg-white p-4 rounded-2xl flex items-center gap-4 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:-translate-y-0.5 active:scale-95 transition-all"
               >
-                <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-2xl">
-                  {getFruitIcon(item.fruit_type)}
+                <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
+                  {item.image_url
+                    ? <img src={item.image_url} alt={item.fruit_type} className="w-full h-full object-cover" />
+                    : <img src={getMascotSrc(item.fruit_type, item.condition)} alt="" className="w-8 h-8 object-contain" onError={e => e.target.style.display = 'none'} />
+                  }
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 capitalize">{item.fruit_type}</h3>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-gray-900 capitalize">{getFruitLabel(item.fruit_type)}</h3>
                   <p className="text-xs text-gray-400">{formatDate(item.scanned_at)}</p>
                 </div>
-                <span className={`text-xs font-semibold px-2 py-1 rounded uppercase ${
-                  item.condition === 'ripe' ? 'text-amber-600 bg-amber-50' :
-                  item.condition === 'rotten' ? 'text-red-600 bg-red-50' :
-                  'text-gray-600 bg-gray-50'
-                }`}>
-                  {item.condition}
+                <span className={`text-xs font-semibold px-2 py-1 rounded-full uppercase flex-shrink-0 ${getConditionBadgeStyle(item.condition)}`}>
+                  {getConditionLabel(item.condition)}
                 </span>
               </div>
             )) : (
               <div className="flex-1 flex flex-col items-center justify-center py-16 px-4 text-center">
-                <div className="mb-6 bg-gray-50 rounded-full">
-                  <History size={48} className="text-gray-300" strokeWidth={1.5} />
-                </div>
+                <History size={48} className="text-gray-300 mb-6" strokeWidth={1.5} />
                 <h3 className="text-lg font-bold text-gray-800 mb-2">Belum ada riwayat scan</h3>
                 <p className="text-sm text-gray-500 leading-relaxed max-w-[260px]">
                   Setiap hasil scan buah yang dilakukan akan tersimpan ke sini.
@@ -243,103 +368,126 @@ const Inventory = () => {
         )}
       </div>
 
-      {/* Detail Dialog Modal */}
+      {/* ── Detail Modal ── */}
       {selectedItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl transform transition-all animate-slide-up">
-            <div className="relative aspect-video bg-gray-100 flex items-center justify-center overflow-hidden">
-              {selectedItem.image_url ? (
-                <img src={selectedItem.image_url} alt={selectedItem.fruit_type} className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-6xl drop-shadow-md">{getFruitIcon(selectedItem.fruit_type)}</span>
-              )}
-              <button 
+          <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl transform transition-all animate-slide-up">
+            {/* Image banner */}
+            <div className="relative aspect-video bg-gradient-to-b from-sky-200 to-green-200 flex items-center justify-center overflow-hidden">
+              {selectedItem.image_url
+                ? <img src={selectedItem.image_url} alt={selectedItem.fruit_type} className="w-full h-full object-cover" />
+                : <img src={getMascotSrc(selectedItem.fruit_type, selectedItem.condition)} alt="" className="h-32 object-contain drop-shadow-lg" />
+              }
+              <button
                 onClick={() => setSelectedItem(null)}
                 className="absolute top-4 right-4 w-10 h-10 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 active:scale-95 transition-all"
               >
                 <X size={18} />
               </button>
             </div>
-            <div className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 capitalize flex items-center gap-2">
-                    {selectedItem.fruit_type} {getFruitIcon(selectedItem.fruit_type)}
-                  </h2>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {formatDate(selectedItem.added_at || selectedItem.scanned_at)}
-                  </p>
-                </div>
-                <span className={`text-xs font-bold px-3 py-1.5 rounded-full uppercase ${
-                  selectedItem.condition === 'ripe' ? 'text-amber-700 bg-amber-100' :
-                  selectedItem.condition === 'rotten' ? 'text-red-700 bg-red-100' :
-                  'text-gray-700 bg-gray-100'
-                }`}>
-                  {selectedItem.condition}
+
+            <div className="p-5">
+              {/* Name + badge hug */}
+              <div className="flex items-center gap-3 mb-4">
+                <h2 className="text-2xl font-bold text-gray-900 capitalize leading-none">
+                  {getFruitLabel(selectedItem.fruit_type)}
+                </h2>
+                <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase leading-none ${getConditionBadgeStyle(selectedItem.condition)}`}>
+                  {getConditionLabel(selectedItem.condition)}
                 </span>
               </div>
-              
-              <div className="bg-gray-50 rounded-2xl p-4 mb-6 border border-gray-100">
-                <h3 className="text-sm font-semibold text-gray-800 mb-1">Informasi</h3>
-                <p className="text-sm text-gray-600 leading-relaxed">
-                  Buah ini terdeteksi sebagai {selectedItem.fruit_type} dalam kondisi {selectedItem.condition}.
-                  {selectedItem.reminder_at ? ` Sisa waktu optimal: ${calculateDaysLeft(selectedItem.reminder_at)} hari.` : ''}
-                </p>
+
+              {/* Date + countdown row */}
+              {(() => {
+                const daysLeft = calculateDaysLeft(selectedItem.reminder_at);
+                const countdown = getCountdownConfig(selectedItem.condition, daysLeft, selectedItem.condition);
+                const labelText = selectedItem.condition === 'unripe' ? 'Perkiraan Matang:' : 'Baik Sebelum:';
+                return (
+                  <div className="flex items-center justify-between mb-5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] text-gray-500 font-medium">{labelText}</span>
+                      <span className="text-sm font-bold text-gray-800">{formatShortDate(selectedItem.reminder_at)}</span>
+                    </div>
+                    <div className={`px-4 py-2 rounded-md text-sm font-bold ${countdown.bg} ${countdown.text}`}>
+                      {countdown.btnText}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Freshness bar */}
+              <div className="mb-6 bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2 font-bold text-center">Perubahan Freshness Score</p>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <ScoreBadge score={selectedItem.freshness_score_initial} className="py-2 text-sm" />
+                  </div>
+                  <div className="flex -space-x-2">
+                    <ChevronRight size={20} className="text-gray-400 animate-pulse" />
+                    <ChevronRight size={20} className="text-gray-400 animate-pulse" style={{ animationDelay: '0.3s' }} />
+                  </div>
+                  <div className="flex-1">
+                    <ScoreBadge score={selectedItem.freshness_score_latest ?? selectedItem.freshness_score_initial} className="py-2 text-sm" />
+                  </div>
+                </div>
               </div>
 
+              {/* Actions */}
               {activeTab === 'inventory' ? (
-                <div className="space-y-3">
+                <div className="flex gap-2">
+                  <button
+                    onClick={async () => {
+                      try {
+                        await api.delete(`/inventory/${selectedItem.id}`);
+                        setInventoryData(prev => prev.filter(i => i.id !== selectedItem.id));
+                        setSelectedItem(null);
+                      } catch (err) { console.error(err); }
+                    }}
+                    className="flex-1 min-h-[44px] bg-scanora-green text-white font-semibold rounded-xl hover:bg-scanora-dark active:scale-95 transition-all text-sm"
+                  >
+                    Sudah Dikonsumsi
+                  </button>
                   <button 
                     onClick={async () => {
                       try {
                         await api.delete(`/inventory/${selectedItem.id}`);
                         setInventoryData(prev => prev.filter(i => i.id !== selectedItem.id));
                         setSelectedItem(null);
-                      } catch(err) { console.error(err); }
+                      } catch (err) { console.error(err); }
                     }}
-                    className="w-full min-h-[44px] bg-scanora-green text-white font-semibold rounded-xl hover:bg-scanora-dark active:scale-95 transition-all"
+                    className="flex-1 min-h-[44px] bg-red-100 text-red-600 font-semibold rounded-xl hover:bg-red-200 active:scale-95 transition-all text-sm"
                   >
-                    Sudah aing makan
-                  </button>
-                  <button 
-                    onClick={() => setSelectedItem(null)}
-                    className="w-full min-h-[44px] bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 active:scale-95 transition-all"
-                  >
-                    Tutup
+                    Sudah Dibuang
                   </button>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  <button 
+                <div className="space-y-2">
+                  <button
                     onClick={async () => {
                       try {
                         await api.post('/inventory', {
                           fruit_type: selectedItem.fruit_type,
                           condition: selectedItem.condition,
                           scan_id: selectedItem.id,
-                          reminder_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
                         });
                         setSelectedItem(null);
-                        // Refresh inventory silently
-                        api.get('/inventory').then(res => setInventoryData(res.data.data));
-                      } catch(err) { console.error(err); }
+                        fetchData();
+                        window.dispatchEvent(new Event('scanora:inventoryUpdated'));
+                      } catch (err) { console.error(err); }
                     }}
                     className="w-full min-h-[44px] bg-scanora-green text-white font-semibold rounded-xl hover:bg-scanora-dark active:scale-95 transition-all"
                   >
                     Masukkan ke Inventori
                   </button>
                   <div className="flex gap-2">
-                    <button 
+                    <button
                       onClick={() => handleDeleteHistory(selectedItem)}
                       className="w-[20%] min-h-[44px] bg-red-100 text-red-600 rounded-xl flex items-center justify-center hover:bg-red-200 active:scale-95 transition-all"
                       title="Hapus dari Riwayat"
                     >
                       <Trash2 size={20} />
                     </button>
-                    <button 
-                      onClick={() => setSelectedItem(null)}
-                      className="w-[80%] min-h-[44px] bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 active:scale-95 transition-all"
-                    >
+                    <button onClick={() => setSelectedItem(null)} className="w-[80%] min-h-[44px] bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 active:scale-95 transition-all">
                       Tutup
                     </button>
                   </div>
@@ -355,18 +503,10 @@ const Inventory = () => {
         <div className="fixed bottom-28 left-4 right-4 z-50 bg-white text-gray-900 p-4 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] flex flex-col gap-2 border border-gray-100 animate-fade-in-down">
           <div className="flex justify-between items-center px-1">
             <span className="text-sm font-medium">Riwayat item dihapus</span>
-            <button 
-              onClick={handleUndo}
-              className="text-scanora-green font-bold text-sm uppercase tracking-wide hover:text-green-500 active:scale-95 transition-all"
-            >
-              Undo
-            </button>
+            <button onClick={handleUndo} className="text-scanora-green font-bold text-sm uppercase tracking-wide hover:text-green-500 active:scale-95 transition-all">Undo</button>
           </div>
           <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden mt-1">
-            <div 
-              className="h-full bg-scanora-green transition-all duration-100 ease-linear"
-              style={{ width: `${undoProgress}%` }}
-            />
+            <div className="h-full bg-scanora-green transition-all duration-100 ease-linear" style={{ width: `${undoProgress}%` }} />
           </div>
         </div>
       )}
