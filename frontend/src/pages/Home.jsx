@@ -24,6 +24,9 @@ const Home = ({ onOpenScanner }) => {
   const [savedCount, setSavedCount] = useState(0);
   const [selectedItem, setSelectedItem] = useState(null);
 
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const firstName = user.name ? user.name.split(' ')[0] : 'Sobat';
+
   useEffect(() => {
     const fetchHomeData = async () => {
       try {
@@ -52,7 +55,7 @@ const Home = ({ onOpenScanner }) => {
       {/* Header */}
       <header className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Halo, Sobat!</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Halo, {firstName}!</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">Ayo selamatkan makanan hari ini.</p>
         </div>
         <button 

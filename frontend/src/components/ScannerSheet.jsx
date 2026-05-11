@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, HelpCircle, ImageIcon, RefreshCw, Zap, ZapOff, CheckCircle, ChevronUp, ChevronDown, Check, Camera } from 'lucide-react';
+import imageCompression from 'browser-image-compression';
 import api from '../api';
 
 const ScannerSheet = ({ isOpen, onClose }) => {
@@ -79,10 +80,19 @@ const ScannerSheet = ({ isOpen, onClose }) => {
     setScanState('scanning');
     stopCamera();
 
-    const formData = new FormData();
-    formData.append('file', blob, 'scan.jpg');
-
     try {
+      const options = {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 800,
+        useWebWorker: true,
+      };
+      
+      const fileToCompress = blob instanceof File ? blob : new File([blob], 'scan.jpg', { type: 'image/jpeg' });
+      const compressedFile = await imageCompression(fileToCompress, options);
+
+      const formData = new FormData();
+      formData.append('file', compressedFile, 'scan.jpg');
+
       const response = await api.post('/scan', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
@@ -95,8 +105,8 @@ const ScannerSheet = ({ isOpen, onClose }) => {
         setScanState('half-result');
       }
     } catch (err) {
-      console.error('API error:', err);
-      setErrorMsg('Koneksi ke AI gagal. Pastikan server FastAPI menyala.');
+      console.error('API or Compression error:', err);
+      setErrorMsg('Proses gagal. Pastikan server API menyala.');
       setScanState('half-result');
     }
   };

@@ -10,6 +10,10 @@ const Profile = () => {
     return localStorage.getItem('theme') === 'dark';
   });
 
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const firstName = user.name ? user.name.split(' ')[0] : 'Sobat';
+  const joinDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }) : 'sekarang';
+
   useEffect(() => {
     if (isDark) {
       document.documentElement.classList.add('dark');
@@ -40,12 +44,15 @@ const Profile = () => {
       </div>
 
       <div className="p-6">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 mb-6 flex flex-col items-center shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
-          <div className="w-20 h-20 bg-scanora-green/10 rounded-full flex items-center justify-center text-scanora-green mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 mb-6 flex flex-row items-center gap-5 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+          <div className="w-20 h-20 bg-scanora-green/10 rounded-full flex-shrink-0 flex items-center justify-center text-scanora-green">
             <User size={40} />
           </div>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">{t('profile.greeting')}</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400">sobat@scanora.app</p>
+          <div className="flex flex-col overflow-hidden">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white truncate">{firstName}</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 truncate mb-1.5">{user.email || 'sobat@scanora.app'}</p>
+            <p className="text-xs font-medium text-scanora-green bg-scanora-green/10 w-fit px-2.5 py-1 rounded-md">Sobat Scanora sejak {joinDate}</p>
+          </div>
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-6 transition-colors">

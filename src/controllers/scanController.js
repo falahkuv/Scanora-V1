@@ -2,6 +2,7 @@ const axios = require("axios");
 const FormData = require("form-data");
 const fs = require("fs");
 const path = require("path");
+const sharp = require("sharp");
 const { prisma } = require("../config/prisma");
 const { supabase } = require("../config/supabase");
 const asyncHandler = require("../middleware/asyncHandler");
@@ -24,10 +25,22 @@ const createScan = asyncHandler(async (req, res) => {
     });
   }
 
+  // Compress image using sharp
+  let compressedBuffer;
+  try {
+    compressedBuffer = await sharp(req.file.buffer)
+      .resize(800, 800, { fit: 'inside', withoutEnlargement: true })
+      .jpeg({ quality: 80 })
+      .toBuffer();
+  } catch (error) {
+    console.error("Image compression error:", error);
+    compressedBuffer = req.file.buffer; // Fallback to original buffer
+  }
+
   const form = new FormData();
-  form.append("file", req.file.buffer, {
-    filename: req.file.originalname,
-    contentType: req.file.mimetype
+  form.append("file", compressedBuffer, {
+    filename: req.file.originalname.replace(/\.[^/.]+$/, "") + ".jpg",
+    contentType: "image/jpeg"
   });
 
   let prediction;
@@ -86,7 +99,7 @@ const createScan = asyncHandler(async (req, res) => {
     }
   });
 
-  const ext = req.file.originalname.split(".").pop() || "jpg";
+  const ext = "jpg";
   const fileName = `${scan.id}.${ext}`;
   
   let imageUrl = null;
@@ -95,8 +108,8 @@ const createScan = asyncHandler(async (req, res) => {
     // Upload to Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('scanora-images')
-      .upload(`uploads/${fileName}`, req.file.buffer, {
-        contentType: req.file.mimetype,
+      .upload(`uploads/${fileName}`, compressedBuffer, {
+        contentType: "image/jpeg",
         upsert: true
       });
 
@@ -105,7 +118,7 @@ const createScan = asyncHandler(async (req, res) => {
       // Fallback to local
       const uploadsDir = path.join(__dirname, "../../uploads");
       if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-      fs.writeFileSync(path.join(uploadsDir, fileName), req.file.buffer);
+      fs.writeFileSync(path.join(uploadsDir, fileName), compressedBuffer);
       const protocol = req.headers['x-forwarded-proto'] || req.protocol;
       imageUrl = `${protocol}://${req.get("host")}/uploads/${fileName}`;
     } else {
@@ -119,7 +132,7 @@ const createScan = asyncHandler(async (req, res) => {
     // Local storage fallback
     const uploadsDir = path.join(__dirname, "../../uploads");
     if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
-    fs.writeFileSync(path.join(uploadsDir, fileName), req.file.buffer);
+    fs.writeFileSync(path.join(uploadsDir, fileName), compressedBuffer);
     const protocol = req.headers['x-forwarded-proto'] || req.protocol;
     imageUrl = `${protocol}://${req.get("host")}/uploads/${fileName}`;
   }

@@ -14,7 +14,7 @@ const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
 
-app.use(helmet());
+app.use(helmet({ crossOriginResourcePolicy: false }));
 app.use(cors());
 app.use(express.json({ limit: "5mb" }));
 app.use(morgan("dev"));

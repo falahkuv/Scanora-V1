@@ -19,7 +19,8 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    fallbackLng: 'id', // Default to Indonesian
+    lng: localStorage.getItem('i18nextLng') || 'id', // Default to Indonesian
+    fallbackLng: 'id',
     debug: false,
     interpolation: {
       escapeValue: false, // React already safes from xss

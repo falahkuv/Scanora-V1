@@ -24,6 +24,9 @@ const Login = () => {
       }
 
       localStorage.setItem('token', token);
+      if (response.data?.data?.user) {
+        localStorage.setItem('user', JSON.stringify(response.data.data.user));
+      }
       api.defaults.headers.common.Authorization = `Bearer ${token}`;
       navigate('/');
     } catch (error) {

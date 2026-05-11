@@ -63,3 +63,22 @@
 - [ ] Melakukan deployment dashboard ke Streamlit Cloud agar dapat diakses secara publik.
 - [ ] Mengimplementasikan A/B Testing menggunakan Python.
 - [ ] Membuat laporan teknis komprehensif mulai dari tahap Problem Discovery hingga hasil akhir proyek dalam format PDF.
+
+---
+
+## 🚫 Tindakan yang Dilarang
+
+**Untuk FS:**
+- Menggunakan web generator untuk membuat aplikasi front-end maupun back-end.
+
+**Untuk AI:**
+- Menggunakan model yang sudah tersedia dari TensorFlow Hub atau sumber serupa.
+- Menggunakan model langsung dari layanan API seperti ChatGPT API, Gemini API, dan sejenisnya.
+- Menggunakan AutoML untuk membuat model AI diskriminatif (Vertex AI hanya diperbolehkan untuk use case Generative AI).
+
+**Untuk DS:**
+- Menggunakan dataset yang sudah siap pakai tanpa melakukan proses pembersihan data secara manual.
+- Melakukan analisis data tanpa memberikan penjelasan dalam bentuk markdown atau teks.
+- Menarik kesimpulan tanpa didukung oleh visualisasi data.
+- Menghasilkan format dataset akhir yang belum siap digunakan pada tahap pemodelan.
+- Menyertakan informasi target ke dalam fitur training (data leakage).
