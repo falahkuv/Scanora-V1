@@ -1,4 +1,5 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 import tensorflow as tf
 import numpy as np
 import io
@@ -7,6 +8,15 @@ import uvicorn
 import os
 
 app = FastAPI(title="Fruit Freshness API", description="API untuk mendeteksi tipe dan kesegaran buah")
+
+# Tambahkan CORS agar bisa dipanggil dari domain mana saja (Vercel/Render)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Path ke model hasil training
 MODEL_PATH = "fruit_model.keras" # atau path yang absolut ke model Anda

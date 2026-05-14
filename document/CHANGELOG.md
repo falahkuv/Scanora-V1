@@ -2,6 +2,24 @@
 
 Semua perubahan yang mencolok pada project Scanora akan didokumentasikan di dalam file ini.
 
+## [v1.5.3] - 2026-05-15
+
+### Added
+- **Migrasi Machine Learning**: Memindahkan *service* FastAPI dari Render ke **Hugging Face Spaces**. Perubahan ini meningkatkan spesifikasi server secara signifikan (dari 512MB RAM menjadi 16GB RAM) sehingga proses inferensi AI menjadi jauh lebih cepat dan stabil.
+- **Metode Penyimpanan Baru**: Menambahkan opsi penyimpanan spesifik saat menyimpan ke Inventori dari Riwayat: **"Suhu Ruang"** (Orange) dan **"Suhu Dingin"** (Teal/Tosca) untuk manajemen buah yang lebih akurat.
+- **Dockerfile & CORS**: Menambahkan konfigurasi `Dockerfile` untuk deployment di Hugging Face serta mengaktifkan `CORSMiddleware` di `api_main.py` untuk mengizinkan akses dari domain frontend.
+
+### Changed
+- **Standardisasi Detail Modal**: Menyeragamkan tampilan *Detail Pop-up* di seluruh halaman (Beranda, Inventori, dan Riwayat) agar pengalaman pengguna lebih konsisten.
+- **Layout Countdown**: Memindahkan posisi *badge countdown* (misal: "Sisa 12 Hari Lagi") ke bawah kotak "Perubahan Freshness Score" dengan format lebar penuh (*full-width*).
+- **Pembaruan Visual Loading**: Mengganti icon *loading spinner* standar dengan icon **SquareCompact** yang berputar saat proses analisis AI berlangsung.
+- **Refinement Scanner UI**: Menyesuaikan letak kotak pointer pemindai sedikit lebih ke atas (`translateY(-60px)`) serta mempercepat animasi *Pulse* pada icon *Chevron* di Detail Modal.
+- **Penyempurnaan Label**: Memperpendek label informasi pada *Inventory Card* menjadi hanya **"Matang:"** dan **"Busuk:"** untuk estetika yang lebih bersih.
+- **Feedback Objek Tidak Dikenali**: Memperbarui antarmuka ketika AI gagal mengenali buah dengan Header **"Objek Tidak Dikenali"**, deskripsi yang lebih instruktif, dan icon **HelpCircle** berwarna abu-abu netral.
+
+### Fixed
+- Memperbaiki masalah `502 Bad Gateway` yang disebabkan oleh *cold start* server Render dengan melakukan migrasi ke infrastruktur yang lebih kuat.
+
 ## [v1.5.0] - 2026-05-14
 
 ### Added

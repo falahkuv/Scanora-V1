@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, HelpCircle, ImageIcon, RefreshCw, Zap, ZapOff, CheckCircle, ChevronUp, ChevronDown, Check, Camera } from 'lucide-react';
+import { X, HelpCircle, ImageIcon, RefreshCw, Zap, ZapOff, CheckCircle, ChevronUp, ChevronDown, Check, Camera, SquareCompact } from 'lucide-react';
 import imageCompression from 'browser-image-compression';
 import api from '../api';
 
@@ -263,7 +263,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
           {/* Scanning overlay */}
           {scanState === 'scanning' && (
             <div className="absolute inset-0 bg-black/60 z-20 flex flex-col items-center justify-center gap-4">
-              <div className="w-16 h-16 border-4 border-scanora-green border-t-transparent rounded-full animate-spin"></div>
+              <SquareCompact className="w-16 h-16 text-scanora-green animate-spin" strokeWidth={1.5} />
               <p className="text-white font-medium animate-pulse">Menganalisis dengan AI...</p>
             </div>
           )}
@@ -380,11 +380,23 @@ const ScannerSheet = ({ isOpen, onClose }) => {
         <div className="px-6 pb-6 flex-1 overflow-y-auto">
           {errorMsg && scanState !== 'camera' && scanState !== 'scanning' ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
-              <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mb-4">
-                <X size={32} />
-              </div>
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Gagal Memindai</h2>
-              <p className="text-gray-500 text-sm mb-6">{errorMsg}</p>
+              {errorMsg.toLowerCase().includes("tidak dikenali") ? (
+                <>
+                  <div className="w-16 h-16 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mb-4">
+                    <HelpCircle size={32} />
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-900 mb-2">Objek Tidak Dikenali</h2>
+                  <p className="text-gray-500 text-sm mb-6">Silakan foto ulang buah Anda dengan kondisi yang lebih jelas.</p>
+                </>
+              ) : (
+                <>
+                  <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mb-4">
+                    <X size={32} />
+                  </div>
+                  <h2 className="text-xl font-bold text-gray-900 mb-2">Gagal Memindai</h2>
+                  <p className="text-gray-500 text-sm mb-6">{errorMsg}</p>
+                </>
+              )}
               <div className="flex gap-3">
                 <button
                   onClick={() => { setErrorMsg(''); setScanState('camera'); setCapturedImage(null); startCamera(); }}
