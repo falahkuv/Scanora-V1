@@ -6,6 +6,7 @@ import Inventory from './pages/Inventory';
 import Profile from './pages/Profile';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Onboarding from './pages/Onboarding';
 import ScannerSheet from './components/ScannerSheet';
 import LoadingScreen from './components/LoadingScreen';
 import { initializeAuth } from './api';
@@ -29,6 +30,7 @@ function App() {
             <Route path="/" element={<Home onOpenScanner={() => setIsScannerOpen(true)} />} />
             <Route path="/inventory" element={<Inventory />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="*" element={<Navigate to="/" replace />} />
@@ -39,6 +41,7 @@ function App() {
           <Route path="/login" element={null} />
           <Route path="/register" element={null} />
           <Route path="/profile" element={null} />
+          <Route path="/onboarding" element={null} />
           <Route path="*" element={<BottomNav onOpenScanner={() => setIsScannerOpen(true)} />} />
         </Routes>
 

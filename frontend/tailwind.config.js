@@ -7,6 +7,21 @@ export default {
   darkMode: 'class',
   theme: {
     extend: {
+      keyframes: {
+        'page-in': {
+          '0%': { opacity: '0', transform: 'translateY(18px) scale(0.98)' },
+          '60%': { opacity: '1', transform: 'translateY(-2px) scale(1.01)' },
+          '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+        },
+        'floaty': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-6px)' },
+        },
+      },
+      animation: {
+        'page-in': 'page-in 500ms cubic-bezier(0.22, 1, 0.36, 1)',
+        'floaty': 'floaty 3s ease-in-out infinite',
+      },
       colors: {
         'scanora-green': '#10b981', // Emerald Green 500
         'scanora-dark': '#064e3b',  // Emerald Green 900

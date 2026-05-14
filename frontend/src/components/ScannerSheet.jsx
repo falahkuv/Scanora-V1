@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, HelpCircle, ImageIcon, RefreshCw, Zap, ZapOff, CheckCircle, ChevronUp, ChevronDown, Check, Camera, SquareCompact } from 'lucide-react';
+import { X, HelpCircle, ImageIcon, RefreshCw, Zap, ZapOff, CheckCircle, ChevronUp, ChevronDown, Check, Camera } from 'lucide-react';
 import imageCompression from 'browser-image-compression';
 import api from '../api';
 
@@ -263,7 +263,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
           {/* Scanning overlay */}
           {scanState === 'scanning' && (
             <div className="absolute inset-0 bg-black/60 z-20 flex flex-col items-center justify-center gap-4">
-              <SquareCompact className="w-16 h-16 text-scanora-green animate-spin" strokeWidth={1.5} />
+              <RefreshCw className="w-16 h-16 text-scanora-green animate-spin" strokeWidth={1.5} />
               <p className="text-white font-medium animate-pulse">Menganalisis dengan AI...</p>
             </div>
           )}
