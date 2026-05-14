@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { History, Boxes, X, Trash2, Apple, Banana, Citrus, Pencil, ChevronRight, CalendarCheck, CalendarX } from 'lucide-react';
+import { History, Boxes, X, Trash2, Apple, Banana, Citrus, ChevronRight, CalendarCheck, CalendarX, ImageOff, Utensils } from 'lucide-react';
 import api from '../api';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -53,25 +53,29 @@ const calculateDaysLeft = (reminderAt) => {
  * - unripe: always green, "Matang X Hari Lagi!"
  * - ripe/rotten: color-coded by days left
  */
-const getCountdownConfig = (condition, daysLeft, label) => {
+const getCountdownConfig = (condition, daysLeft) => {
   const cond = (condition || '').toLowerCase();
+  const isExpired = cond === 'rotten' || daysLeft === null || daysLeft < 0;
 
-  if (cond === 'rotten' || daysLeft === null) {
-    return { bg: 'bg-gray-700', text: 'text-white', btnText: 'Kedaluwarsa' };
+  if (isExpired) {
+    return { bg: 'bg-gray-100', text: 'text-gray-500', btnText: 'Tidak Layak', isExpired: true };
   }
 
   if (cond === 'unripe') {
-    return {
-      bg: 'bg-scanora-green', text: 'text-white',
-      btnText: daysLeft > 0 ? `Matang ${daysLeft} Hari Lagi!` : 'Siap Matang!',
-    };
+    return { bg: 'bg-scanora-green', text: 'text-white', btnText: daysLeft > 0 ? `Matang ${daysLeft} Hari Lagi` : 'Siap Matang', isExpired: false };
   }
 
-  // ripe — color by time left
-  if (daysLeft <= 0) return { bg: 'bg-gray-700', text: 'text-white', btnText: 'Kedaluwarsa' };
-  if (daysLeft === 1) return { bg: 'bg-red-500', text: 'text-white', btnText: 'Sisa 1 Hari Lagi!' };
-  if (daysLeft === 2) return { bg: 'bg-orange-400', text: 'text-white', btnText: 'Sisa 2 Hari Lagi!' };
-  return { bg: 'bg-scanora-green', text: 'text-white', btnText: `Sisa ${daysLeft} Hari Lagi!` };
+  if (daysLeft === 0) {
+    return { bg: 'bg-[#e02224]', text: 'text-white', btnText: `Hari ini!`, isExpired: false };
+  }
+  if (daysLeft === 1) {
+    return { bg: 'bg-[#e02224]', text: 'text-white', btnText: `Sisa 1 Hari Lagi`, isExpired: false };
+  }
+  if (daysLeft > 1) {
+    return { bg: 'bg-orange-400', text: 'text-white', btnText: `Sisa ${daysLeft} Hari Lagi`, isExpired: false };
+  }
+
+  return { bg: 'bg-gray-100', text: 'text-gray-500', btnText: 'Kedaluwarsa', isExpired: true };
 };
 
 /** Short month: "11 Mei 2026" */
@@ -112,8 +116,8 @@ const ScoreBadge = ({ score, className = "py-1 text-[11px]" }) => {
 
 const InventoryCard = ({ item, onClick }) => {
   const daysLeft = calculateDaysLeft(item.reminder_at);
-  const countdown = getCountdownConfig(item.condition, daysLeft, item.condition);
-  const labelText = item.condition === 'unripe' ? 'Perkiraan Matang:' : 'Baik Sebelum:';
+  const countdown = getCountdownConfig(item.condition, daysLeft);
+  const labelText = item.condition === 'unripe' ? 'Matang saat:' : 'Batas layak:';
 
   // Sky/grass background gradient for the card header
   const headerBg = 'bg-gradient-to-b from-sky-200 via-sky-100 to-green-200';
@@ -121,7 +125,7 @@ const InventoryCard = ({ item, onClick }) => {
   return (
     <div
       onClick={onClick}
-      className="bg-white p-2 rounded-2xl shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:-translate-y-0.5 active:scale-95 transition-all flex flex-col"
+      className={`bg-white p-2 rounded-2xl shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:-translate-y-0.5 active:scale-95 transition-all flex flex-col relative ${countdown.isExpired ? 'opacity-60 bg-gray-100 brightness-[0.95]' : ''}`}
     >
       <div className="relative">
         {/* ── Top half: image area ── */}
@@ -142,10 +146,20 @@ const InventoryCard = ({ item, onClick }) => {
               src={item.image_url}
               alt={item.fruit_type}
               className="absolute inset-0 w-full h-full object-cover z-0"
+              onError={(e) => {
+                e.target.style.display = 'none';
+                e.target.nextSibling.style.display = 'flex';
+              }}
             />
-          ) : (
-            <div className={`absolute inset-0 w-full h-full z-0 ${headerBg}`} />
-          )}
+          ) : null}
+          {/* Broken image fallback */}
+          <div
+            className={`absolute inset-0 w-full h-full z-0 bg-gray-100 flex items-center justify-center flex-col gap-1`}
+            style={{ display: item.image_url ? 'none' : 'flex' }}
+          >
+            <ImageOff size={40} className="text-gray-400" strokeWidth={1.5} />
+            <span className="text-xs font-medium text-gray-400 text-center leading-tight px-2 mt-1">Gambar tidak ditemukan</span>
+          </div>
         </div>
 
         {/* Mascot (bottom-right outside overflow-hidden) */}
@@ -165,14 +179,14 @@ const InventoryCard = ({ item, onClick }) => {
         </h3>
 
         {/* Label + date (with icons) */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 mt-[0.5rem]">
           {item.condition === 'unripe' ? (
-             <CalendarCheck size={14} className="text-scanora-green" />
+             <CalendarCheck size={14} className="text-gray-400" />
           ) : (
-             <CalendarX size={14} className={item.condition === 'rotten' ? "text-red-500" : "text-gray-400"} />
+             <CalendarX size={14} className="text-gray-400" />
           )}
-          <span className="text-xs font-semibold text-gray-700">
-            {item.reminder_at ? formatShortDate(item.reminder_at) : '-'}
+          <span className="text-xs font-semibold text-gray-500">
+            {labelText} {item.reminder_at ? formatShortDate(item.reminder_at) : '-'}
           </span>
         </div>
 
@@ -312,7 +326,35 @@ const Inventory = () => {
       {/* Content */}
       <div className="p-4 flex-1 flex flex-col">
         {loading ? (
-          <div className="text-center py-10 text-gray-400">Memuat data...</div>
+          activeTab === 'inventory' ? (
+            // Skeleton — Inventory grid
+            <div className="grid grid-cols-2 gap-3">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+                  <div className="aspect-square bg-gray-100 animate-pulse" />
+                  <div className="p-2 space-y-2">
+                    <div className="h-4 w-3/4 bg-gray-100 rounded animate-pulse" />
+                    <div className="h-3 w-1/2 bg-gray-100 rounded animate-pulse" />
+                    <div className="h-7 w-full bg-gray-100 rounded animate-pulse" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            // Skeleton — History list
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="bg-white p-4 rounded-2xl flex items-center gap-4 shadow-sm border border-gray-100">
+                  <div className="w-12 h-12 bg-gray-100 rounded-xl flex-shrink-0 animate-pulse" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-2/3 bg-gray-100 rounded animate-pulse" />
+                    <div className="h-3 w-1/3 bg-gray-100 rounded animate-pulse" />
+                  </div>
+                  <div className="w-16 h-6 bg-gray-100 rounded-full animate-pulse" />
+                </div>
+              ))}
+            </div>
+          )
         ) : activeTab === 'inventory' ? (
           inventoryData.length > 0 ? (
             <div className="grid grid-cols-2 gap-3">
@@ -342,16 +384,23 @@ const Inventory = () => {
                 className="bg-white p-4 rounded-2xl flex items-center gap-4 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:-translate-y-0.5 active:scale-95 transition-all"
               >
                 <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
-                  {item.image_url
-                    ? <img src={item.image_url} alt={item.fruit_type} className="w-full h-full object-cover" />
-                    : <img src={getMascotSrc(item.fruit_type, item.condition)} alt="" className="w-8 h-8 object-contain" onError={e => e.target.style.display = 'none'} />
-                  }
+                  {item.image_url ? (
+                    <img
+                      src={item.image_url}
+                      alt={item.fruit_type}
+                      className="w-full h-full object-cover"
+                      onError={(e) => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }}
+                    />
+                  ) : null}
+                  <div className="w-full h-full items-center justify-center" style={{ display: item.image_url ? 'none' : 'flex' }}>
+                    <ImageOff size={20} className="text-gray-300" strokeWidth={1.5} />
+                  </div>
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-gray-900 capitalize">{getFruitLabel(item.fruit_type)}</h3>
                   <p className="text-xs text-gray-400">{formatDate(item.scanned_at)}</p>
                 </div>
-                <span className={`text-xs font-semibold px-2 py-1 rounded-full uppercase flex-shrink-0 ${getConditionBadgeStyle(item.condition)}`}>
+                <span className={`text-xs font-semibold px-0 py-1 rounded-full uppercase flex-shrink-0 text-center min-w-[72px] ${getConditionBadgeStyle(item.condition)}`}>
                   {getConditionLabel(item.condition)}
                 </span>
               </div>
@@ -374,10 +423,21 @@ const Inventory = () => {
           <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl transform transition-all animate-slide-up">
             {/* Image banner */}
             <div className="relative aspect-video bg-gradient-to-b from-sky-200 to-green-200 flex items-center justify-center overflow-hidden">
-              {selectedItem.image_url
-                ? <img src={selectedItem.image_url} alt={selectedItem.fruit_type} className="w-full h-full object-cover" />
-                : <img src={getMascotSrc(selectedItem.fruit_type, selectedItem.condition)} alt="" className="h-32 object-contain drop-shadow-lg" />
-              }
+              {selectedItem.image_url ? (
+                <img
+                  src={selectedItem.image_url}
+                  alt={selectedItem.fruit_type}
+                  className="w-full h-full object-cover"
+                  onError={(e) => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }}
+                />
+              ) : null}
+              <div
+                className="w-full h-full items-center justify-center flex-col gap-2 bg-gray-100"
+                style={{ display: selectedItem.image_url ? 'none' : 'flex' }}
+              >
+                <ImageOff size={64} className="text-gray-400" strokeWidth={1.5} />
+                <span className="text-lg font-medium text-gray-400">Gambar tidak ditemukan</span>
+              </div>
               <button
                 onClick={() => setSelectedItem(null)}
                 className="absolute top-4 right-4 w-10 h-10 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 active:scale-95 transition-all"
@@ -401,12 +461,18 @@ const Inventory = () => {
               {(() => {
                 const daysLeft = calculateDaysLeft(selectedItem.reminder_at);
                 const countdown = getCountdownConfig(selectedItem.condition, daysLeft, selectedItem.condition);
-                const labelText = selectedItem.condition === 'unripe' ? 'Perkiraan Matang:' : 'Baik Sebelum:';
+                const labelText = selectedItem.condition === 'unripe' ? 'Matang saat:' : 'Batas layak:';
                 return (
                   <div className="flex items-center justify-between mb-5">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] text-gray-500 font-medium">{labelText}</span>
-                      <span className="text-sm font-bold text-gray-800">{formatShortDate(selectedItem.reminder_at)}</span>
+                      {selectedItem.condition === 'unripe' ? (
+                        <CalendarCheck size={16} className="text-gray-400" />
+                      ) : (
+                        <CalendarX size={16} className="text-gray-400" />
+                      )}
+                      <span className="text-sm text-gray-500 font-bold">
+                        {labelText} {formatShortDate(selectedItem.reminder_at)}
+                      </span>
                     </div>
                     <div className={`px-4 py-2 rounded-md text-sm font-bold ${countdown.bg} ${countdown.text}`}>
                       {countdown.btnText}
@@ -438,26 +504,26 @@ const Inventory = () => {
                   <button
                     onClick={async () => {
                       try {
-                        await api.delete(`/inventory/${selectedItem.id}`);
+                        await api.delete(`/inventory/${selectedItem.id}`, { data: { outcome: 'discarded' } });
                         setInventoryData(prev => prev.filter(i => i.id !== selectedItem.id));
                         setSelectedItem(null);
                       } catch (err) { console.error(err); }
                     }}
-                    className="flex-1 min-h-[44px] bg-scanora-green text-white font-semibold rounded-xl hover:bg-scanora-dark active:scale-95 transition-all text-sm"
+                    className="flex-1 min-h-[44px] bg-red-100 text-red-600 font-semibold rounded-xl hover:bg-red-200 active:scale-95 transition-all text-sm flex items-center justify-center gap-2"
                   >
-                    Sudah Dikonsumsi
+                    <Trash2 size={16} /> Dibuang
                   </button>
-                  <button 
+                  <button
                     onClick={async () => {
                       try {
-                        await api.delete(`/inventory/${selectedItem.id}`);
+                        await api.delete(`/inventory/${selectedItem.id}`, { data: { outcome: 'consumed' } });
                         setInventoryData(prev => prev.filter(i => i.id !== selectedItem.id));
                         setSelectedItem(null);
                       } catch (err) { console.error(err); }
                     }}
-                    className="flex-1 min-h-[44px] bg-red-100 text-red-600 font-semibold rounded-xl hover:bg-red-200 active:scale-95 transition-all text-sm"
+                    className="flex-1 min-h-[44px] bg-scanora-green text-white font-semibold rounded-xl hover:bg-scanora-dark active:scale-95 transition-all text-sm flex items-center justify-center gap-2"
                   >
-                    Sudah Dibuang
+                    <Utensils size={16} /> Dikonsumsi
                   </button>
                 </div>
               ) : (

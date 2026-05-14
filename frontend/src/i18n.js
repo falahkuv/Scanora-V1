@@ -1,6 +1,5 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import LanguageDetector from 'i18next-browser-languagedetector';
 
 import translationEN from './locales/en/translation.json';
 import translationID from './locales/id/translation.json';
@@ -14,16 +13,19 @@ const resources = {
   },
 };
 
+// Baca dari localStorage. Kalau belum pernah disimpan, default ke Bahasa Indonesia.
+const savedLang = localStorage.getItem('i18nextLng');
+const activeLang = savedLang === 'en' ? 'en' : 'id';
+
 i18n
-  .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     resources,
-    lng: localStorage.getItem('i18nextLng') || 'id', // Default to Indonesian
+    lng: activeLang,
     fallbackLng: 'id',
     debug: false,
     interpolation: {
-      escapeValue: false, // React already safes from xss
+      escapeValue: false,
     },
   });
 

@@ -11,8 +11,9 @@ const Profile = () => {
   });
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const firstName = user.name ? user.name.split(' ')[0] : 'Sobat';
-  const joinDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }) : 'sekarang';
+  const firstName = user.name || 'Sobat Scanora';
+  const joinDateStr = user.created_at || user.createdAt;
+  const joinDate = joinDateStr ? new Date(joinDateStr).toLocaleDateString('en-GB') : 'sekarang';
 
   useEffect(() => {
     if (isDark) {

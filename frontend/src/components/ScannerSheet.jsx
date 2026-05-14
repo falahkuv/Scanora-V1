@@ -12,6 +12,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
   const [flashSupported, setFlashSupported] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
   const [toastMsg, setToastMsg] = useState('');
+  const [facingMode, setFacingMode] = useState('environment');
 
   const [touchStartLoc, setTouchStartLoc] = useState(null);
   const [touchEndLoc, setTouchEndLoc] = useState(null);
@@ -23,7 +24,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' }
+        video: { facingMode }
       });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -74,7 +75,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
       stopCamera();
     }
     return () => stopCamera();
-  }, [isOpen]);
+  }, [isOpen, facingMode]);
 
   const processBlob = async (blob) => {
     setScanState('scanning');
@@ -218,6 +219,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
             ref={videoRef}
             autoPlay
             playsInline
+            style={{ transform: facingMode === 'user' ? 'scaleX(-1)' : 'none' }}
             className={`object-cover w-full h-full ${scanState !== 'camera' && scanState !== 'scanning' ? 'hidden' : ''} ${capturedImage ? 'hidden' : ''}`}
           />
           {capturedImage && (
@@ -227,15 +229,18 @@ const ScannerSheet = ({ isOpen, onClose }) => {
           {/* Viewfinder + Hint Label */}
           {scanState === 'camera' && !errorMsg && !capturedImage && (
             <>
+              {/* Dark overlay mask */}
               <div 
                 className="absolute w-72 h-72 z-10 pointer-events-none rounded-[2.5rem]" 
                 style={{ boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.4)' }}
-              >
-                <svg className="absolute inset-0 w-full h-full" style={{ filter: 'drop-shadow(0 0 10px rgba(16,185,129,0.9))' }} viewBox="0 0 288 288" fill="none">
-                  <path d="M 3 64 L 3 40 Q 3 3 40 3 L 64 3" stroke="white" strokeWidth="6" strokeLinecap="round" />
-                  <path d="M 285 64 L 285 40 Q 285 3 248 3 L 224 3" stroke="white" strokeWidth="6" strokeLinecap="round" />
-                  <path d="M 3 224 L 3 248 Q 3 285 40 285 L 64 285" stroke="white" strokeWidth="6" strokeLinecap="round" />
-                  <path d="M 285 224 L 285 248 Q 285 285 248 285 L 224 285" stroke="white" strokeWidth="6" strokeLinecap="round" />
+              />
+              {/* Glowing Outer Border */}
+              <div className="absolute w-[304px] h-[304px] z-20 pointer-events-none">
+                <svg className="w-full h-full" style={{ filter: 'drop-shadow(0 0 12px rgba(16,185,129,1)) drop-shadow(0 0 4px rgba(255,255,255,0.5))' }} viewBox="0 0 304 304" fill="none">
+                  <path d="M 8 72 L 8 44 Q 8 8 44 8 L 72 8" stroke="white" strokeWidth="6" strokeLinecap="round" />
+                  <path d="M 296 72 L 296 44 Q 296 8 260 8 L 232 8" stroke="white" strokeWidth="6" strokeLinecap="round" />
+                  <path d="M 8 232 L 8 260 Q 8 296 44 296 L 72 296" stroke="white" strokeWidth="6" strokeLinecap="round" />
+                  <path d="M 296 232 L 296 260 Q 296 296 260 296 L 232 296" stroke="white" strokeWidth="6" strokeLinecap="round" />
                 </svg>
               </div>
               {/* Hint label below viewfinder */}
@@ -288,7 +293,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
           </button>
 
           <div className="flex items-center justify-center">
-             <img src="/logo.png?v=2" alt="Scanora" style={{ height: '64px' }} className="object-contain drop-shadow-md" />
+             <img src="/logo-long.png" alt="Scanora" className="h-20 object-contain drop-shadow-md" />
           </div>
 
           <button className="w-12 h-12 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-black/60 active:scale-95 transition-all">
@@ -322,7 +327,10 @@ const ScannerSheet = ({ isOpen, onClose }) => {
 
             {/* Flip Camera Button */}
             <button
-              onClick={() => {}}
+              onClick={() => {
+                stopCamera();
+                setFacingMode(prev => prev === 'environment' ? 'user' : 'environment');
+              }}
               disabled={scanState === 'scanning'}
               className="w-16 h-16 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white disabled:opacity-40 hover:bg-black/60 active:scale-95 transition-all"
               title="Ganti Kamera"

@@ -8,6 +8,7 @@ const router = express.Router();
 const fruitTypes = ["apple", "banana", "orange"];
 const conditions = ["unripe", "ripe", "rotten"];
 
+router.get("/summary", authenticateToken, inventoryController.getInventorySummary);
 router.get("/", authenticateToken, inventoryController.getInventory);
 router.post(
 	"/",

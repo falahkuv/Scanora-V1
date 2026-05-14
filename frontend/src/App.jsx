@@ -7,6 +7,7 @@ import Profile from './pages/Profile';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ScannerSheet from './components/ScannerSheet';
+import LoadingScreen from './components/LoadingScreen';
 import { initializeAuth } from './api';
 
 function App() {
@@ -17,7 +18,7 @@ function App() {
     initializeAuth().then(() => setIsAuthReady(true));
   }, []);
 
-  if (!isAuthReady) return <div className="min-h-screen flex items-center justify-center bg-gray-50 text-scanora-green">Memuat...</div>;
+  if (!isAuthReady) return <LoadingScreen />;
 
   return (
     <Router>
