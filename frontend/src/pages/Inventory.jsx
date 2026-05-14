@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { History, Salad, X, Trash2, Apple, Banana, Citrus, ChevronRight, CalendarCheck, CalendarX, ImageOff, Utensils } from 'lucide-react';
+import { History, Salad, X, Trash2, Apple, Banana, Citrus, ChevronRight, CalendarCheck, CalendarX, ImageOff, Utensils, Package, Refrigerator } from 'lucide-react';
 import api from '../api';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -117,7 +117,7 @@ const ScoreBadge = ({ score, className = "py-1 text-[11px]" }) => {
 const InventoryCard = ({ item, onClick }) => {
   const daysLeft = calculateDaysLeft(item.reminder_at);
   const countdown = getCountdownConfig(item.condition, daysLeft);
-  const labelText = item.condition === 'unripe' ? 'Matang saat:' : 'Batas layak:';
+  const labelText = item.condition === 'unripe' ? 'Matang:' : 'Busuk:';
 
   // Sky/grass background gradient for the card header
   const headerBg = 'bg-gradient-to-b from-sky-200 via-sky-100 to-green-200';
@@ -457,45 +457,45 @@ const Inventory = () => {
                 </span>
               </div>
 
-              {/* Date + countdown row */}
-              {(() => {
-                const daysLeft = calculateDaysLeft(selectedItem.reminder_at);
-                const countdown = getCountdownConfig(selectedItem.condition, daysLeft, selectedItem.condition);
-                const labelText = selectedItem.condition === 'unripe' ? 'Matang saat:' : 'Batas layak:';
-                return (
-                  <div className="flex items-center justify-between mb-5">
-                    <div className="flex items-center gap-1.5">
-                      {selectedItem.condition === 'unripe' ? (
-                        <CalendarCheck size={16} className="text-gray-400" />
-                      ) : (
-                        <CalendarX size={16} className="text-gray-400" />
-                      )}
-                      <span className="text-sm text-gray-500 font-bold">
-                        {labelText} {formatShortDate(selectedItem.reminder_at)}
-                      </span>
-                    </div>
-                    <div className={`px-4 py-2 rounded-md text-sm font-bold ${countdown.bg} ${countdown.text}`}>
-                      {countdown.btnText}
-                    </div>
-                  </div>
-                );
-              })()}
+              {/* Date row */}
+              <div className="flex items-center gap-1.5 mb-5">
+                {selectedItem.condition === 'unripe' ? (
+                  <CalendarCheck size={16} className="text-gray-400" />
+                ) : (
+                  <CalendarX size={16} className="text-gray-400" />
+                )}
+                <span className="text-sm text-gray-500 font-bold">
+                  {selectedItem.condition === 'unripe' ? 'Matang saat:' : 'Batas layak:'} {formatShortDate(selectedItem.reminder_at)}
+                </span>
+              </div>
 
-              {/* Freshness bar */}
-              <div className="mb-6 bg-gray-50 rounded-2xl p-4 border border-gray-100">
-                <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2 font-bold text-center">Perubahan Freshness Score</p>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1">
-                    <ScoreBadge score={selectedItem.freshness_score_initial} className="py-2 text-sm" />
-                  </div>
-                  <div className="flex -space-x-2">
-                    <ChevronRight size={20} className="text-gray-400 animate-pulse" />
-                    <ChevronRight size={20} className="text-gray-400 animate-pulse" style={{ animationDelay: '0.3s' }} />
-                  </div>
-                  <div className="flex-1">
-                    <ScoreBadge score={selectedItem.freshness_score_latest ?? selectedItem.freshness_score_initial} className="py-2 text-sm" />
+              {/* Freshness bar & Countdown */}
+              <div className="mb-6">
+                <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-2">
+                  <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2 font-bold text-center">Perubahan Freshness Score</p>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1">
+                      <ScoreBadge score={selectedItem.freshness_score_initial} className="py-2 text-sm" />
+                    </div>
+                    <div className="flex -space-x-2">
+                      <ChevronRight size={20} className="text-gray-400 animate-pulse" style={{ animationDuration: '0.8s' }} />
+                      <ChevronRight size={20} className="text-gray-400 animate-pulse" style={{ animationDuration: '0.8s', animationDelay: '0.2s' }} />
+                    </div>
+                    <div className="flex-1">
+                      <ScoreBadge score={selectedItem.freshness_score_latest ?? selectedItem.freshness_score_initial} className="py-2 text-sm" />
+                    </div>
                   </div>
                 </div>
+
+                {(() => {
+                  const daysLeft = calculateDaysLeft(selectedItem.reminder_at);
+                  const countdown = getCountdownConfig(selectedItem.condition, daysLeft, selectedItem.condition);
+                  return (
+                    <div className={`px-4 py-3 rounded-xl text-center text-sm font-bold w-full ${countdown.bg} ${countdown.text}`}>
+                      {countdown.btnText}
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Actions */}
@@ -528,23 +528,33 @@ const Inventory = () => {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <button
-                    onClick={async () => {
-                      try {
-                        await api.post('/inventory', {
-                          fruit_type: selectedItem.fruit_type,
-                          condition: selectedItem.condition,
-                          scan_id: selectedItem.id,
-                        });
-                        setSelectedItem(null);
-                        fetchData();
-                        window.dispatchEvent(new Event('scanora:inventoryUpdated'));
-                      } catch (err) { console.error(err); }
-                    }}
-                    className="w-full min-h-[44px] bg-scanora-green text-white font-semibold rounded-xl hover:bg-scanora-dark active:scale-95 transition-all"
-                  >
-                    Masukkan ke Inventori
-                  </button>
+                  <div className="mb-4">
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-2 text-center">Simpan ke Inventori</p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={async () => {
+                          try {
+                            await api.post('/inventory', { fruit_type: selectedItem.fruit_type, condition: selectedItem.condition, scan_id: selectedItem.id });
+                            setSelectedItem(null); fetchData(); window.dispatchEvent(new Event('scanora:inventoryUpdated'));
+                          } catch (err) { console.error(err); }
+                        }}
+                        className="flex-1 min-h-[44px] bg-orange-100 text-orange-700 font-bold rounded-xl flex items-center justify-center gap-1 hover:bg-orange-200 active:scale-95 transition-all text-[13px]"
+                      >
+                        <Package size={16} /> Suhu Ruang
+                      </button>
+                      <button
+                        onClick={async () => {
+                          try {
+                            await api.post('/inventory', { fruit_type: selectedItem.fruit_type, condition: selectedItem.condition, scan_id: selectedItem.id });
+                            setSelectedItem(null); fetchData(); window.dispatchEvent(new Event('scanora:inventoryUpdated'));
+                          } catch (err) { console.error(err); }
+                        }}
+                        className="flex-1 min-h-[44px] bg-teal-100 text-teal-700 font-bold rounded-xl flex items-center justify-center gap-1 hover:bg-teal-200 active:scale-95 transition-all text-[13px]"
+                      >
+                        <Refrigerator size={16} /> Suhu Dingin
+                      </button>
+                    </div>
+                  </div>
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleDeleteHistory(selectedItem)}

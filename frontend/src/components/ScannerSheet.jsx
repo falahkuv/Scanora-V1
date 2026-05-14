@@ -94,9 +94,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
       const formData = new FormData();
       formData.append('file', compressedFile, 'scan.jpg');
 
-      const response = await api.post('/scan', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      const response = await api.post('/scan', formData);
 
       if (response.data.success) {
         setResult(response.data.data);
@@ -232,10 +230,10 @@ const ScannerSheet = ({ isOpen, onClose }) => {
               {/* Dark overlay mask */}
               <div 
                 className="absolute w-72 h-72 z-10 pointer-events-none rounded-[2.5rem]" 
-                style={{ boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.4)' }}
+                style={{ boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.4)', transform: 'translateY(-60px)' }}
               />
               {/* Glowing Outer Border */}
-              <div className="absolute w-[304px] h-[304px] z-20 pointer-events-none">
+              <div className="absolute w-[304px] h-[304px] z-20 pointer-events-none" style={{ transform: 'translateY(-60px)' }}>
                 <svg className="w-full h-full" style={{ filter: 'drop-shadow(0 0 12px rgba(16,185,129,1)) drop-shadow(0 0 4px rgba(255,255,255,0.5))' }} viewBox="0 0 304 304" fill="none">
                   <path d="M 8 72 L 8 44 Q 8 8 44 8 L 72 8" stroke="white" strokeWidth="6" strokeLinecap="round" />
                   <path d="M 296 72 L 296 44 Q 296 8 260 8 L 232 8" stroke="white" strokeWidth="6" strokeLinecap="round" />
@@ -244,7 +242,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
                 </svg>
               </div>
               {/* Hint label below viewfinder */}
-              <div className="absolute z-10 pointer-events-none" style={{ top: 'calc(50% + 160px)' }}>
+              <div className="absolute z-10 pointer-events-none" style={{ top: 'calc(50% + 100px)' }}>
                 <p className="text-white/90 text-xs font-medium bg-black/60 backdrop-blur-md px-5 py-2 rounded-full">
                   Arahkan ke buah
                 </p>

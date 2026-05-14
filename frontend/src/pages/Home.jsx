@@ -312,45 +312,45 @@ const Home = ({ onOpenScanner }) => {
                 </span>
               </div>
 
-              {/* Date + countdown row */}
-              {(() => {
-                const daysLeft = calculateDaysLeft(selectedItem.reminder_at);
-                const countdown = getCountdownConfig(selectedItem.condition, daysLeft);
-                const labelText = selectedItem.condition === 'unripe' ? 'Matang saat:' : 'Batas layak:';
-                return (
-                  <div className="flex items-center justify-between mb-5">
-                    <div className="flex items-center gap-1.5">
-                      {selectedItem.condition === 'unripe' ? (
-                        <CalendarCheck size={16} className="text-gray-400" />
-                      ) : (
-                        <CalendarX size={16} className="text-gray-400" />
-                      )}
-                      <span className="text-sm text-gray-500 font-bold">
-                        {labelText} {formatShortDate(selectedItem.reminder_at)}
-                      </span>
-                    </div>
-                    <div className={`px-4 py-2 rounded-md text-sm font-bold ${countdown.bg} ${countdown.text}`}>
-                      {countdown.btnText}
-                    </div>
-                  </div>
-                );
-              })()}
+              {/* Date row */}
+              <div className="flex items-center gap-1.5 mb-5">
+                {selectedItem.condition === 'unripe' ? (
+                  <CalendarCheck size={16} className="text-gray-400" />
+                ) : (
+                  <CalendarX size={16} className="text-gray-400" />
+                )}
+                <span className="text-sm text-gray-500 font-bold">
+                  {selectedItem.condition === 'unripe' ? 'Matang saat:' : 'Batas layak:'} {formatShortDate(selectedItem.reminder_at)}
+                </span>
+              </div>
 
-              {/* Freshness bar */}
-              <div className="mb-6 bg-gray-50 rounded-2xl p-4 border border-gray-100">
-                <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2 font-bold text-center">Perubahan Freshness Score</p>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1">
-                    <ScoreBadge score={selectedItem.freshness_score_initial} className="py-2 text-sm" />
-                  </div>
-                  <div className="flex -space-x-2">
-                    <ChevronRight size={20} className="text-gray-400 animate-pulse" />
-                    <ChevronRight size={20} className="text-gray-400 animate-pulse" style={{ animationDelay: '0.3s' }} />
-                  </div>
-                  <div className="flex-1">
-                    <ScoreBadge score={selectedItem.freshness_score_latest ?? selectedItem.freshness_score_initial} className="py-2 text-sm" />
+              {/* Freshness bar & Countdown */}
+              <div className="mb-6">
+                <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-2">
+                  <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2 font-bold text-center">Perubahan Freshness Score</p>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1">
+                      <ScoreBadge score={selectedItem.freshness_score_initial} className="py-2 text-sm" />
+                    </div>
+                    <div className="flex -space-x-2">
+                      <ChevronRight size={20} className="text-gray-400 animate-pulse" style={{ animationDuration: '0.8s' }} />
+                      <ChevronRight size={20} className="text-gray-400 animate-pulse" style={{ animationDuration: '0.8s', animationDelay: '0.2s' }} />
+                    </div>
+                    <div className="flex-1">
+                      <ScoreBadge score={selectedItem.freshness_score_latest ?? selectedItem.freshness_score_initial} className="py-2 text-sm" />
+                    </div>
                   </div>
                 </div>
+
+                {(() => {
+                  const daysLeft = calculateDaysLeft(selectedItem.reminder_at);
+                  const countdown = getCountdownConfig(selectedItem.condition, daysLeft);
+                  return (
+                    <div className={`px-4 py-3 rounded-xl text-center text-sm font-bold w-full ${countdown.bg} ${countdown.text}`}>
+                      {countdown.btnText}
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Actions */}
