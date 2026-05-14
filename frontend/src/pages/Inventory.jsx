@@ -102,7 +102,7 @@ const formatDate = (dateStr) => {
 
 /** Percent badge for freshness score */
 const ScoreBadge = ({ score, className = "py-1 text-[11px]" }) => {
-  const pct = Math.round((score ?? 0) * 100);
+  const pct = Math.round(score ?? 0);
   const bg = pct >= 70 ? 'bg-green-100' : pct > 0 ? 'bg-orange-100' : 'bg-red-800';
   const text = pct >= 70 ? 'text-green-700' : pct > 0 ? 'text-orange-700' : 'text-white';
   return (
@@ -457,46 +457,62 @@ const Inventory = () => {
                 </span>
               </div>
 
-              {/* Date row */}
-              <div className="flex items-center gap-1.5 mb-5">
-                {selectedItem.condition === 'unripe' ? (
-                  <CalendarCheck size={16} className="text-gray-400" />
-                ) : (
-                  <CalendarX size={16} className="text-gray-400" />
-                )}
-                <span className="text-sm text-gray-500 font-bold">
-                  {selectedItem.condition === 'unripe' ? 'Matang saat:' : 'Batas layak:'} {formatShortDate(selectedItem.reminder_at)}
-                </span>
-              </div>
+              {activeTab === 'inventory' ? (
+                <>
+                  {/* Date row */}
+                  <div className="flex items-center gap-1.5 mb-5">
+                    {selectedItem.condition === 'unripe' ? (
+                      <CalendarCheck size={16} className="text-gray-400" />
+                    ) : (
+                      <CalendarX size={16} className="text-gray-400" />
+                    )}
+                    <span className="text-sm text-gray-500 font-bold">
+                      {selectedItem.condition === 'unripe' ? 'Matang saat:' : 'Batas layak:'} {formatShortDate(selectedItem.reminder_at)}
+                    </span>
+                  </div>
 
-              {/* Freshness bar & Countdown */}
-              <div className="mb-6">
-                <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-2">
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2 font-bold text-center">Perubahan Freshness Score</p>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1">
-                      <ScoreBadge score={selectedItem.freshness_score_initial} className="py-2 text-sm" />
+                  {/* Freshness bar & Countdown */}
+                  <div className="mb-6">
+                    <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-2">
+                      <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2 font-bold text-center">Perubahan Freshness Score</p>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1">
+                          <ScoreBadge score={selectedItem.freshness_score_initial} className="py-2 text-sm" />
+                        </div>
+                        <div className="flex -space-x-2">
+                          <ChevronRight size={20} className="text-gray-400 animate-pulse" style={{ animationDuration: '0.8s' }} />
+                          <ChevronRight size={20} className="text-gray-400 animate-pulse" style={{ animationDuration: '0.8s', animationDelay: '0.2s' }} />
+                        </div>
+                        <div className="flex-1">
+                          <ScoreBadge score={selectedItem.freshness_score_latest ?? selectedItem.freshness_score_initial} className="py-2 text-sm" />
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex -space-x-2">
-                      <ChevronRight size={20} className="text-gray-400 animate-pulse" style={{ animationDuration: '0.8s' }} />
-                      <ChevronRight size={20} className="text-gray-400 animate-pulse" style={{ animationDuration: '0.8s', animationDelay: '0.2s' }} />
-                    </div>
-                    <div className="flex-1">
-                      <ScoreBadge score={selectedItem.freshness_score_latest ?? selectedItem.freshness_score_initial} className="py-2 text-sm" />
+
+                    {(() => {
+                      const daysLeft = calculateDaysLeft(selectedItem.reminder_at);
+                      const countdown = getCountdownConfig(selectedItem.condition, daysLeft, selectedItem.condition);
+                      return (
+                        <div className={`px-4 py-3 rounded-xl text-center text-sm font-bold w-full ${countdown.bg} ${countdown.text}`}>
+                          {countdown.btnText}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </>
+              ) : (
+                <div className="mb-6">
+                  <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                    <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2 font-bold text-center">Detail Scan</p>
+                    <div className="flex items-center justify-between text-sm text-gray-600">
+                      <span>{formatDate(selectedItem.scanned_at)}</span>
+                      <div className="min-w-[88px]">
+                        <ScoreBadge score={selectedItem.freshness_score} className="py-1.5 text-sm" />
+                      </div>
                     </div>
                   </div>
                 </div>
-
-                {(() => {
-                  const daysLeft = calculateDaysLeft(selectedItem.reminder_at);
-                  const countdown = getCountdownConfig(selectedItem.condition, daysLeft, selectedItem.condition);
-                  return (
-                    <div className={`px-4 py-3 rounded-xl text-center text-sm font-bold w-full ${countdown.bg} ${countdown.text}`}>
-                      {countdown.btnText}
-                    </div>
-                  );
-                })()}
-              </div>
+              )}
 
               {/* Actions */}
               {activeTab === 'inventory' ? (
@@ -527,46 +543,20 @@ const Inventory = () => {
                   </button>
                 </div>
               ) : (
-                <div className="space-y-2">
-                  <div className="mb-4">
-                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-2 text-center">Simpan ke Inventori</p>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={async () => {
-                          try {
-                            await api.post('/inventory', { fruit_type: selectedItem.fruit_type, condition: selectedItem.condition, scan_id: selectedItem.id, storage_type: 'room_temp' });
-                            setSelectedItem(null); fetchData(); window.dispatchEvent(new Event('scanora:inventoryUpdated'));
-                          } catch (err) { console.error(err); }
-                        }}
-                        className="flex-1 min-h-[44px] bg-orange-100 text-orange-700 font-bold rounded-xl flex items-center justify-center gap-1 hover:bg-orange-200 active:scale-95 transition-all text-[13px]"
-                      >
-                        <Package size={16} /> Suhu Ruang
-                      </button>
-                      <button
-                        onClick={async () => {
-                          try {
-                            await api.post('/inventory', { fruit_type: selectedItem.fruit_type, condition: selectedItem.condition, scan_id: selectedItem.id, storage_type: 'refrigerated' });
-                            setSelectedItem(null); fetchData(); window.dispatchEvent(new Event('scanora:inventoryUpdated'));
-                          } catch (err) { console.error(err); }
-                        }}
-                        className="flex-1 min-h-[44px] bg-teal-100 text-teal-700 font-bold rounded-xl flex items-center justify-center gap-1 hover:bg-teal-200 active:scale-95 transition-all text-[13px]"
-                      >
-                        <Refrigerator size={16} /> Suhu Dingin
-                      </button>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleDeleteHistory(selectedItem)}
-                      className="w-[20%] min-h-[44px] bg-red-100 text-red-600 rounded-xl flex items-center justify-center hover:bg-red-200 active:scale-95 transition-all"
-                      title="Hapus dari Riwayat"
-                    >
-                      <Trash2 size={20} />
-                    </button>
-                    <button onClick={() => setSelectedItem(null)} className="w-[80%] min-h-[44px] bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 active:scale-95 transition-all">
-                      Tutup
-                    </button>
-                  </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleDeleteHistory(selectedItem)}
+                    className="w-[20%] min-h-[44px] bg-red-100 text-red-600 rounded-xl flex items-center justify-center hover:bg-red-200 active:scale-95 transition-all"
+                    title="Hapus dari Riwayat"
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                  <button
+                    onClick={() => setSelectedItem(null)}
+                    className="w-[80%] min-h-[44px] bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 active:scale-95 transition-all"
+                  >
+                    Tutup
+                  </button>
                 </div>
               )}
             </div>

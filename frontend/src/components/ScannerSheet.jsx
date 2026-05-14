@@ -97,7 +97,16 @@ const ScannerSheet = ({ isOpen, onClose }) => {
       const response = await api.post('/scan', formData);
 
       if (response.data.success) {
-        setResult(response.data.data);
+        const data = response.data.data;
+        const fruitType = data?.fruit_type?.toLowerCase() || '';
+        const isValidFruit = ['apple', 'banana', 'orange', 'apel', 'pisang', 'jeruk'].includes(fruitType);
+        if (!isValidFruit) {
+          setResult(null);
+          setErrorMsg('Objek tidak dikenali, silakan foto ulang buah Anda.');
+          setScanState('half-result');
+          return;
+        }
+        setResult(data);
         setScanState('half-result');
       } else {
         setErrorMsg(response.data.message || 'Gagal memindai');
@@ -105,7 +114,8 @@ const ScannerSheet = ({ isOpen, onClose }) => {
       }
     } catch (err) {
       console.error('API or Compression error:', err);
-      setErrorMsg('Proses gagal. Pastikan server API menyala.');
+      const apiMessage = err.response?.data?.message;
+      setErrorMsg(apiMessage || 'Proses gagal. Pastikan server API menyala.');
       setScanState('half-result');
     }
   };

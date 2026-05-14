@@ -20,23 +20,18 @@
 // ─────────────────────────────────────────────────────────────────────────────
 const SHELF_LIFE_RULES = {
   banana: {
-    // Source: https://discover.texasrealfood.com/does-it-go-bad/do-bananas-go-bad
-    // Source: https://www.doesitgobad.com/banana-go-bad/
-    unripe: { min: 2, max: 5, label: "Perkiraan Matang" },
-    ripe:   { min: 1, max: 2, label: "Baik Sebelum" },
+    unripe: { min: 5, max: 5, label: "Perkiraan Matang" },
+    ripe:   { min: 2, max: 2, label: "Baik Sebelum" },
     rotten: { min: 0, max: 0, label: "Kedaluwarsa" },
   },
   apple: {
-    // Source: https://www.vinmec.com/eng/blog/how-long-does-an-apple-last-en
-    // Source: https://feelgoodpal.com/id/blog/how-long-do-apples-last/
-    unripe: { min: 1, max: 3, label: "Perkiraan Matang" },
-    ripe:   { min: 3, max: 5, label: "Baik Sebelum" },
+    unripe: { min: 3, max: 3, label: "Perkiraan Matang" },
+    ripe:   { min: 5, max: 5, label: "Baik Sebelum" },
     rotten: { min: 0, max: 0, label: "Kedaluwarsa" },
   },
   orange: {
-    // Source: https://discover.texasrealfood.com/does-it-go-bad/do-oranges-spoil
-    unripe: { min: 5, max: 7, label: "Perkiraan Matang" },
-    ripe:   { min: 7, max: 14, label: "Baik Sebelum" },
+    unripe: { min: 7, max: 7, label: "Perkiraan Matang" },
+    ripe:   { min: 14, max: 14, label: "Baik Sebelum" },
     rotten: { min: 0, max: 0, label: "Kedaluwarsa" },
   },
 };
@@ -62,9 +57,6 @@ const normalizeCondition = (condition, fruitType) => {
   if (["ripe", "matang"].includes(c)) cond = "ripe";
   if (["rotten", "busuk"].includes(c)) cond = "rotten";
   
-  if (cond === "unripe" && normalizeFruitType(fruitType) === "orange") {
-      return "rotten"; // Jeruk Unripe dihitung Rotten
-  }
   return cond;
 };
 
@@ -150,6 +142,8 @@ const calculateCurrentFreshnessScore = (initialScore, condition, fruitType, maxD
  *   freshnessScoreLatest: number,
  * }}
  */
+const toPercent = (value) => Math.round(value * 10000) / 100;
+
 const getFreshnessData = (fruitType, condition, rawFreshnessScore, addedAt) => {
   const scoreNormalized = normalizeFreshnessScore(rawFreshnessScore, condition, fruitType);
 
@@ -172,8 +166,8 @@ const getFreshnessData = (fruitType, condition, rawFreshnessScore, addedAt) => {
     reminderAt,
     maxDays,
     label,
-    freshnessScoreInitial: scoreNormalized,
-    freshnessScoreLatest,
+    freshnessScoreInitial: toPercent(scoreNormalized),
+    freshnessScoreLatest: toPercent(freshnessScoreLatest),
   };
 };
 

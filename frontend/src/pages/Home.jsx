@@ -50,7 +50,7 @@ const formatShortDate = (dateStr) => {
 };
 
 const ScoreBadge = ({ score, className = "py-1 text-[11px]" }) => {
-  const pct = Math.round((score ?? 0) * 100);
+  const pct = Math.round(score ?? 0);
   const bg = pct >= 70 ? 'bg-green-100' : pct > 0 ? 'bg-orange-100' : 'bg-red-800';
   const text = pct >= 70 ? 'text-green-700' : pct > 0 ? 'text-orange-700' : 'text-white';
   return (

@@ -47,13 +47,18 @@ const getInventorySummary = asyncHandler(async (req, res) => {
 const addInventory = asyncHandler(async (req, res) => {
   const { fruit_type, condition, scan_id } = req.body;
 
-  let freshnessScore = 0.75;
+  let freshnessScore = 75;
   if (scan_id) {
     const scan = await prisma.scanHistory.findUnique({ where: { id: scan_id } });
     if (scan) freshnessScore = scan.freshnessScore;
   }
 
-  const { reminderAt } = getFreshnessData(fruit_type, condition, freshnessScore, new Date());
+  const { reminderAt, freshnessScoreInitial, freshnessScoreLatest } = getFreshnessData(
+    fruit_type,
+    condition,
+    freshnessScore,
+    new Date()
+  );
 
   const item = await prisma.inventory.create({
     data: {
@@ -69,8 +74,8 @@ const addInventory = asyncHandler(async (req, res) => {
   const base = toInventoryResponse(item);
   return sendSuccess(res, "Inventory item added", {
     ...base,
-    freshness_score_initial: freshnessScore,
-    freshness_score_latest: freshnessScore,
+    freshness_score_initial: freshnessScoreInitial,
+    freshness_score_latest: freshnessScoreLatest,
   }, 201);
 });
 
