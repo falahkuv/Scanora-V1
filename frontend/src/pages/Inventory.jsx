@@ -534,7 +534,7 @@ const Inventory = () => {
                       <button
                         onClick={async () => {
                           try {
-                            await api.post('/inventory', { fruit_type: selectedItem.fruit_type, condition: selectedItem.condition, scan_id: selectedItem.id });
+                            await api.post('/inventory', { fruit_type: selectedItem.fruit_type, condition: selectedItem.condition, scan_id: selectedItem.id, storage_type: 'room_temp' });
                             setSelectedItem(null); fetchData(); window.dispatchEvent(new Event('scanora:inventoryUpdated'));
                           } catch (err) { console.error(err); }
                         }}
@@ -545,7 +545,7 @@ const Inventory = () => {
                       <button
                         onClick={async () => {
                           try {
-                            await api.post('/inventory', { fruit_type: selectedItem.fruit_type, condition: selectedItem.condition, scan_id: selectedItem.id });
+                            await api.post('/inventory', { fruit_type: selectedItem.fruit_type, condition: selectedItem.condition, scan_id: selectedItem.id, storage_type: 'refrigerated' });
                             setSelectedItem(null); fetchData(); window.dispatchEvent(new Event('scanora:inventoryUpdated'));
                           } catch (err) { console.error(err); }
                         }}

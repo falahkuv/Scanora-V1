@@ -48,7 +48,8 @@ const createScan = asyncHandler(async (req, res) => {
   const startedAt = Date.now();
 
   try {
-    const response = await axios.post(`${FASTAPI_URL}/predict`, form, {
+    const predictUrl = `${FASTAPI_URL.replace(/\/$/, '')}/predict`;
+    const response = await axios.post(predictUrl, form, {
       headers: {
         ...form.getHeaders(),
         "Content-Length": form.getLengthSync()

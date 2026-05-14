@@ -21,45 +21,45 @@ const LoadingScreen = () => {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-between bg-gradient-to-b from-scanora-dark via-[#065f46] to-scanora-green overflow-hidden">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-between bg-white overflow-hidden">
       {/* Background decorative blobs */}
-      <div className="absolute top-[-80px] right-[-80px] w-64 h-64 rounded-full bg-white/5 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-32 left-[-60px] w-48 h-48 rounded-full bg-white/5 blur-2xl pointer-events-none" />
+      <div className="absolute top-[-80px] right-[-80px] w-64 h-64 rounded-full bg-scanora-green/5 blur-3xl pointer-events-none" />
+      <div className="absolute bottom-32 left-[-60px] w-48 h-48 rounded-full bg-scanora-green/5 blur-2xl pointer-events-none" />
 
       {/* Center Content */}
       <div className="flex-1 flex flex-col items-center justify-center gap-8 px-12 w-full">
         {/* Logo */}
         <div className="relative">
-          <div className="w-28 h-28 rounded-3xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center shadow-2xl shadow-black/40">
+          <div className="w-40 h-40 rounded-[2.5rem] overflow-hidden flex items-center justify-center shadow-xl shadow-gray-200 bg-white">
             <img
               src="/logo-square.png"
               alt="Scanora"
-              className="w-20 h-20 object-contain drop-shadow-lg animate-[pulse_2s_ease-in-out_infinite]"
+              className="w-48 h-48 max-w-none object-cover animate-[pulse_2s_ease-in-out_infinite]"
             />
           </div>
           {/* Glow ring */}
-          <div className="absolute inset-0 rounded-3xl border-2 border-white/30 animate-[ping_2s_ease-out_infinite] opacity-20" />
+          <div className="absolute inset-0 rounded-[2.5rem] border-2 border-scanora-green/20 animate-[ping_2s_ease-out_infinite] opacity-30" />
         </div>
 
         {/* App name + tagline */}
         <div className="text-center">
-          <h1 className="text-4xl font-extrabold text-white tracking-tight drop-shadow-sm">
+          <h1 className="text-4xl font-extrabold text-scanora-dark tracking-tight">
             Scanora
           </h1>
-          <p className="text-white/70 text-sm mt-1.5 font-medium">
+          <p className="text-gray-500 text-sm mt-1.5 font-medium">
             Choose Better, Waste Less
           </p>
         </div>
 
         {/* Loading bar */}
         <div className="w-full max-w-[260px]">
-          <div className="w-full h-1.5 bg-white/20 rounded-full overflow-hidden">
+          <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden shadow-inner">
             <div
-              className="h-full bg-white rounded-full transition-all duration-300 ease-out shadow-[0_0_10px_rgba(255,255,255,0.6)]"
+              className="h-full bg-scanora-green rounded-full transition-all duration-300 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>
-          <p className="text-white/50 text-xs text-center mt-2.5 font-medium">
+          <p className="text-gray-400 text-xs text-center mt-2.5 font-medium">
             Menyiapkan sesi...
           </p>
         </div>
