@@ -12,7 +12,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
   const [flashSupported, setFlashSupported] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
   const [toastMsg, setToastMsg] = useState('');
-  const [facingMode, setFacingMode] = useState('environment');
+  const [facingMode, setFacingMode] = useState('user');
 
   const [touchStartLoc, setTouchStartLoc] = useState(null);
   const [touchEndLoc, setTouchEndLoc] = useState(null);

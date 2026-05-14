@@ -1,4 +1,4 @@
-import { Home, Boxes, Camera } from 'lucide-react';
+import { Home, Salad, Camera } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const BottomNav = ({ onOpenScanner }) => {
@@ -33,7 +33,7 @@ const BottomNav = ({ onOpenScanner }) => {
         onClick={() => navigate('/inventory')}
         className={`flex flex-col items-center gap-1 ${isActive('/inventory') ? 'text-scanora-green' : 'text-gray-400'}`}
       >
-        <Boxes size={24} strokeWidth={isActive('/inventory') ? 2.5 : 2} />
+        <Salad size={24} strokeWidth={isActive('/inventory') ? 2.5 : 2} />
         <span className="text-[10px] font-medium">Inventori</span>
       </button>
     </div>

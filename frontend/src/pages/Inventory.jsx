@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { History, Boxes, X, Trash2, Apple, Banana, Citrus, ChevronRight, CalendarCheck, CalendarX, ImageOff, Utensils } from 'lucide-react';
+import { History, Salad, X, Trash2, Apple, Banana, Citrus, ChevronRight, CalendarCheck, CalendarX, ImageOff, Utensils } from 'lucide-react';
 import api from '../api';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -298,7 +298,7 @@ const Inventory = () => {
             onClick={() => setActiveTab('inventory')}
             className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all active:scale-95 min-h-[44px] ${activeTab === 'inventory' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}
           >
-            <Boxes size={16} /> Inventori ({inventoryData.length})
+            <Salad size={16} /> Inventori ({inventoryData.length})
           </button>
           <button
             onClick={() => setActiveTab('history')}
@@ -315,7 +315,7 @@ const Inventory = () => {
       <div className={`fixed left-0 right-0 z-30 flex justify-center transition-all duration-300 ease-out ${showFloating ? 'bottom-32 translate-y-0 opacity-100 pointer-events-auto' : 'bottom-28 translate-y-10 opacity-0 pointer-events-none'}`}>
         <div className="bg-gray-100/90 backdrop-blur-md p-1.5 rounded-full flex gap-1 shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-gray-200">
           <button onClick={() => setActiveTab('inventory')} className={`flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-full transition-all active:scale-95 ${activeTab === 'inventory' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>
-            <Boxes size={16} /> Inventori ({inventoryData.length})
+            <Salad size={16} /> Inventori ({inventoryData.length})
           </button>
           <button onClick={() => setActiveTab('history')} className={`flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-full transition-all active:scale-95 ${activeTab === 'history' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>
             <History size={16} /> Riwayat ({historyData.length})
