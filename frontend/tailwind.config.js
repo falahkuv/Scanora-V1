@@ -13,6 +13,12 @@ export default {
           '60%': { opacity: '1', transform: 'translateY(-2px) scale(1.01)' },
           '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
         },
+        'swipe-swap': {
+          '0%': { opacity: '1', transform: 'translateX(0)' },
+          '35%': { opacity: '0', transform: 'translateX(-24px)' },
+          '45%': { opacity: '0', transform: 'translateX(28px)' },
+          '100%': { opacity: '1', transform: 'translateX(0)' },
+        },
         'floaty': {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-6px)' },
@@ -20,6 +26,7 @@ export default {
       },
       animation: {
         'page-in': 'page-in 500ms cubic-bezier(0.22, 1, 0.36, 1)',
+        'swipe-swap': 'swipe-swap 520ms cubic-bezier(0.22, 1, 0.36, 1)',
         'floaty': 'floaty 3s ease-in-out infinite',
       },
       colors: {
