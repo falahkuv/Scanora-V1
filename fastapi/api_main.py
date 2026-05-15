@@ -19,13 +19,13 @@ app.add_middleware(
 )
 
 # Path ke model hasil training
-MODEL_PATH = "fruit_model.keras" # atau path yang absolut ke model Anda
+MODEL_PATH = "fruit_model_revisi1.keras" # atau path yang absolut ke model Anda
 IMG_SIZE = (224, 224)
 
 
 # Mapping label - Sesuaikan dictionary ini dengan LabelEncoder aktual di dataset
-idx_to_product = {0: "Apple", 1: "Banana", 2: "Orange"} 
-idx_to_condition = {0: "ripe", 1: "rotten", 2: "unripe"} 
+idx_to_product = {0: "Apple", 1: "Banana", 2: "Orange", 3: "Others"}
+idx_to_condition = {0: "others", 1: "ripe", 2: "rotten", 3: "unripe"}
 
 # Mendifinisikan Custom Layer yang digunakan di model agar Keras bisa load dengan benar
 from tensorflow.keras import layers
@@ -49,49 +49,54 @@ class SpatialAttentionLayer(layers.Layer):
 model = None
 try:
     if os.path.exists(MODEL_PATH):
-        model = tf.keras.models.load_model(MODEL_PATH, custom_objects={'SpatialAttentionLayer': SpatialAttentionLayer})
+        model = tf.keras.models.load_model(
+            MODEL_PATH, 
+            custom_objects={'SpatialAttentionLayer': SpatialAttentionLayer}
+        )
         print("Model loaded successfully!")
     else:
         print(f"Model file not found at {MODEL_PATH}")
 except Exception as e:
-    print(f"Warning: Model could not limit be loaded. {e}")
+    print(f"Warning: Model could not be loaded. {e}")
 
-@app.head("/")
 @app.get("/")
 def home():
-    return {"message": "Fruit Freshness ML API Is Running!"}
+    return {"status": "running", "model": "EfficientNetV2B0", "classes": 4}
 
 def prepare_image(img_bytes):
     img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
     img = img.resize(IMG_SIZE)
-    img_array = tf.keras.preprocessing.image.img_to_array(img) / 255.0
-    img_array = np.expand_dims(img_array, axis=0) # shape: (1, 224, 224, 3)
+    img_array = tf.keras.preprocessing.image.img_to_array(img)
+    # PENTING: Normalisasi /255 dihapus karena EfficientNetV2 menanganinya secara internal
+    img_array = np.expand_dims(img_array, axis=0) 
     return img_array
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):
     if model is None:
-        raise HTTPException(status_code=500, detail="Model belum tersedia. Pastikan 'fruit_model.keras' ada dan di-load dengan benar.")
+        raise HTTPException(status_code=500, detail="Model belum ter-load.")
         
     if not file.filename.lower().endswith(('.png', '.jpg', '.jpeg')):
-        raise HTTPException(status_code=400, detail="Hanya mendukung file .png, .jpg, atau .jpeg")
+        raise HTTPException(status_code=400, detail="Format file tidak didukung.")
         
     try:
-        # Read the uploaded image
         contents = await file.read()
         img_array = prepare_image(contents)
         
-        # Lakukan inferensi (model mengembalikan list of outputs)
-        pred_prod, pred_cond = model.predict(img_array)
+        # Inferensi
+        pred_prod, pred_cond = model.predict(img_array, verbose=0)
         
-        # Ambil confidence tertinggi untuk klasifikasi produk
-        product_confidence = float(max(pred_prod[0]))
+        prod_idx = int(np.argmax(pred_prod[0]))
+        cond_idx = int(np.argmax(pred_cond[0]))
         
-        # Penanganan Gambar Sembarang (Out-of-Distribution)
-        # Model Softmax akan selalu menghasilkan total probabilitas 1.0 (100%)
-        # Untuk gambar sembarang, probabilitas biasanya tersebar merata (misal 33%, 33%, 34%)
-        # Jika confidence tertinggi di bawah threshold (misal 65%), kita tolak gambarnya
-        if product_confidence < 0.65:
+        product = idx_to_product.get(prod_idx, "Unknown")
+        condition = idx_to_condition.get(cond_idx, "others")
+        
+        product_confidence = float(np.max(pred_prod[0]))
+        condition_confidence = float(np.max(pred_cond[0]))
+
+        # 4. LOGIKA FILTER 'OTHERS' (Bukan Buah)
+        if product == "Others" or condition == "others" or product_confidence < 0.50:
             return {
                 "prediction": {
                     "product": "Tidak Dikenali",
@@ -104,28 +109,17 @@ async def predict(file: UploadFile = File(...)):
                 },
                 "freshness_score": 0.0
             }
-            
-        # Jika lolos threshold, ambil index dengan confidence tertinggi
-        prod_idx = int(np.argmax(pred_prod))
-        cond_idx = int(np.argmax(pred_cond))
-        
-        # Translate dari index ke tulisan label
-        product = idx_to_product.get(prod_idx, f"Product-{prod_idx}")
-        condition = idx_to_condition.get(cond_idx, f"Condition-{cond_idx}")
-        
-        # Kalkulasi Suggestion Verdict dan Freshness Score berdasarkan gambar
-        confidence_cond = float(max(pred_cond[0]))
-        
+
+        # 5. KALKULASI FRESHNESS SCORE (Untuk Buah Target)
         if condition == "unripe":
             verdict = "Mentah"
-            freshness_score = 65 + (confidence_cond * 0.35)
+            freshness_score = 100
         elif condition == "ripe":
-            verdict = "Matang"
-            freshness_score = 65 + (confidence_cond * 0.35)
+            verdict = "Matang/Segar"
+            freshness_score = 65 + (condition_confidence * 35)
         elif condition == "rotten":
             verdict = "Busuk"
-            # Skor tidak akan 0 (minimal 25%). Semakin yakin model itu busuk, skornya semakin turun.
-            freshness_score = 50 - (confidence_cond * 0.25)
+            freshness_score = 50 - (condition_confidence * 25)
         else:
             verdict = "Unknown"
             freshness_score = 0.0
@@ -138,9 +132,9 @@ async def predict(file: UploadFile = File(...)):
             },
             "confidence": {
                 "product_confidence": product_confidence,
-                "condition_confidence": confidence_cond
+                "condition_confidence": condition_confidence
             },
-            "freshness_score": round(freshness_score, 2)
+            "freshness_score": round(max(0, min(100, freshness_score)), 2)
         }
         
     except Exception as e:
