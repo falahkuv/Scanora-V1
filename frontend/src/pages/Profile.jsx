@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Moon, Sun, LogOut, ChevronLeft, User, Languages } from 'lucide-react';
+import { Moon, Sun, LogOut, ChevronLeft, User, Languages, Bell } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 const Profile = () => {
@@ -8,6 +8,9 @@ const Profile = () => {
   const { t, i18n } = useTranslation();
   const [isDark, setIsDark] = useState(() => {
     return localStorage.getItem('theme') === 'dark';
+  });
+  const [notifEnabled, setNotifEnabled] = useState(() => {
+    return localStorage.getItem('notificationsEnabled') === 'true'; // Default false unless allowed
   });
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -33,6 +36,25 @@ const Profile = () => {
   const toggleLanguage = () => {
     const newLang = i18n.language === 'en' ? 'id' : 'en';
     i18n.changeLanguage(newLang);
+  };
+
+  const toggleNotif = async () => {
+    if (!notifEnabled) {
+      if ('Notification' in window) {
+        const perm = await Notification.requestPermission();
+        if (perm === 'granted') {
+          setNotifEnabled(true);
+          localStorage.setItem('notificationsEnabled', 'true');
+        } else {
+          alert('Izin notifikasi ditolak. Silakan izinkan melalui pengaturan browser.');
+        }
+      } else {
+        alert('Browser ini tidak mendukung notifikasi.');
+      }
+    } else {
+      setNotifEnabled(false);
+      localStorage.setItem('notificationsEnabled', 'false');
+    }
   };
 
   return (
@@ -90,6 +112,24 @@ const Profile = () => {
               className="px-4 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-bold text-sm rounded-full active:scale-95 transition-all"
             >
               {i18n.language === 'en' ? 'EN' : 'ID'}
+            </button>
+          </div>
+
+          <div className="p-4 flex justify-between items-center border-b border-gray-100 dark:border-gray-700">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-purple-50 dark:bg-purple-900/30 rounded-full flex items-center justify-center text-purple-500">
+                <Bell size={20} />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 dark:text-white">{i18n.language === 'en' ? 'Push Notifications' : 'Notifikasi Push'}</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{i18n.language === 'en' ? 'Smart freshness reminders' : 'Pengingat pintar buah membusuk'}</p>
+              </div>
+            </div>
+            <button 
+              onClick={toggleNotif}
+              className={`w-12 h-6 rounded-full transition-colors relative flex items-center ${notifEnabled ? 'bg-scanora-green' : 'bg-gray-200 dark:bg-gray-600'}`}
+            >
+              <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform ${notifEnabled ? 'translate-x-6' : 'translate-x-1'}`}></div>
             </button>
           </div>
 

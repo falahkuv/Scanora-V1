@@ -17,6 +17,69 @@ function App() {
 
   useEffect(() => {
     initializeAuth().then(() => setIsAuthReady(true));
+
+    // ==========================================
+    // TESTING NOTIFICATIONS (Keyboard Triggers)
+    // ==========================================
+    const handleKeyDown = (e) => {
+      // "P" untuk minta izin notifikasi ke browser
+      if (e.key.toLowerCase() === 'p') {
+        if ('Notification' in window) {
+          Notification.requestPermission().then(perm => {
+            alert(`Status Izin Notifikasi: ${perm}`);
+          });
+        }
+        return;
+      }
+
+      // Simulasi tanggal simpan (misal 5 hari yang lalu)
+      const mockDate = new Date();
+      mockDate.setDate(mockDate.getDate() - 5);
+      const savedDateStr = mockDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long' });
+
+      const caseMap = {
+        '1': { 
+          title: "🥗 Jangan Lupa Apel🍎 Kamu!", 
+          body: `Mengingatkan: Apel🍎 yang kamu simpan sejak ${savedDateStr} tinggal 3 hari lagi sebelum mulai membusuk. Yuk, jadwalkan untuk dikonsumsi!` 
+        },
+        '2': { 
+          title: "⚠️ Pisang🍌 Hampir Busuk!", 
+          body: `Perhatian! Pisang🍌 yang kamu simpan sejak ${savedDateStr} sisa 1 hari lagi. Segera konsumsi atau olah menjadi jus hari ini!` 
+        },
+        '3': { 
+          title: "🚨 HARI TERAKHIR untuk Jeruk🍊!", 
+          body: `Jeruk🍊 yang kamu simpan sejak ${savedDateStr} diperkirakan sudah mencapai batas maksimal kesegarannya HARI INI. Konsumsi sekarang sebelum terbuang sia-sia!` 
+        },
+        '4': { 
+          title: "✨ Apel🍎 Matang Besok!", 
+          body: `Kabar gembira! Apel🍎 yang kamu simpan sejak ${savedDateStr} akan matang sempurna dalam 1 hari lagi. Siapkan resep favoritmu!` 
+        },
+        '5': { 
+          title: "😋 Pisang🍌 Sudah Matang!", 
+          body: `Hore! Pisang🍌 yang kamu simpan sejak ${savedDateStr} HARI INI sudah matang sempurna. Yuk, nikmati selagi rasanya paling manis!` 
+        }
+      };
+
+      if (caseMap[e.key]) {
+        const notifData = caseMap[e.key];
+        console.log(`[Testing] Menyiapkan Notifikasi Case ${e.key} dalam 3 detik...`);
+        // Munculkan toast kecil sebagai indikator di layar
+        const event = new CustomEvent('scanora:testNotif', { detail: `Memproses Notifikasi Case ${e.key}...` });
+        window.dispatchEvent(event);
+
+        setTimeout(() => {
+          if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification(notifData.title, { body: notifData.body });
+            console.log("Notifikasi berhasil dimunculkan!");
+          } else {
+            alert(`[Notifikasi Diblokir Browser - Izin Belum Granted]\n\nTitle: ${notifData.title}\nBody: ${notifData.body}\n\n*Tekan 'P' di keyboard untuk request permission.`);
+          }
+        }, 3000);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   if (!isAuthReady) return <LoadingScreen />;

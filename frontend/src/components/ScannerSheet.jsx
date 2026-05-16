@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, HelpCircle, ImageIcon, RefreshCw, Zap, ZapOff, CheckCircle, ChevronUp, ChevronDown, Check, Camera } from 'lucide-react';
+import { X, HelpCircle, ImageIcon, RefreshCw, Zap, ZapOff, CheckCircle, CircleX, ChevronDown, Check, Camera } from 'lucide-react';
 import imageCompression from 'browser-image-compression';
 import api from '../api';
 
@@ -11,7 +11,24 @@ const ScannerSheet = ({ isOpen, onClose }) => {
   const [isFlashOn, setIsFlashOn] = useState(false);
   const [flashSupported, setFlashSupported] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
-  const [toastMsg, setToastMsg] = useState('');
+  const [toast, setToast] = useState({ msg: '', type: 'success', show: false });
+
+  const closeCard = () => {
+    setScanState('closing');
+    setTimeout(() => {
+      setScanState('camera');
+      setResult(null);
+      setCapturedImage(null);
+      startCamera();
+    }, 300);
+  };
+
+  const showToast = (msg, type = 'success') => {
+    setToast({ msg, type, show: true });
+    setTimeout(() => {
+      setToast(prev => ({ ...prev, show: false }));
+    }, 3000);
+  };
   const [facingMode, setFacingMode] = useState('user');
 
   const [touchStartLoc, setTouchStartLoc] = useState(null);
@@ -79,6 +96,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
 
   const processBlob = async (blob) => {
     setScanState('scanning');
+    setErrorMsg(''); // Fix: Clear previous errors when starting a new scan
     stopCamera();
 
     try {
@@ -102,21 +120,32 @@ const ScannerSheet = ({ isOpen, onClose }) => {
         const isValidFruit = ['apple', 'banana', 'orange', 'apel', 'pisang', 'jeruk'].includes(fruitType);
         if (!isValidFruit) {
           setResult(null);
-          setErrorMsg('Objek tidak dikenali, silakan foto ulang buah Anda.');
-          setScanState('half-result');
+          showToast('Objek tidak dikenali, silakan coba lagi.', 'error');
+          setScanState('camera');
+          setCapturedImage(null);
+          startCamera();
           return;
         }
         setResult(data);
-        setScanState('half-result');
+        setScanState('full-result');
       } else {
         setErrorMsg(response.data.message || 'Gagal memindai');
-        setScanState('half-result');
+        setScanState('full-result');
       }
     } catch (err) {
       console.error('API or Compression error:', err);
       const apiMessage = err.response?.data?.message;
-      setErrorMsg(apiMessage || 'Proses gagal. Pastikan server API menyala.');
-      setScanState('half-result');
+      
+      if (apiMessage?.toLowerCase().includes("tidak dikenali")) {
+        setResult(null);
+        showToast('Objek tidak dikenali, silakan coba lagi.', 'error');
+        setScanState('camera');
+        setCapturedImage(null);
+        startCamera();
+      } else {
+        setErrorMsg(apiMessage || 'Proses gagal. Pastikan server API menyala.');
+        setScanState('full-result');
+      }
     }
   };
 
@@ -142,6 +171,8 @@ const ScannerSheet = ({ isOpen, onClose }) => {
     const url = URL.createObjectURL(file);
     setCapturedImage(url);
     processBlob(file);
+    // Clear input so the same file can be selected again
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleSaveToInventory = async () => {
@@ -158,9 +189,8 @@ const ScannerSheet = ({ isOpen, onClose }) => {
       setCapturedImage(null);
       setResult(null);
       startCamera();
-      setToastMsg(`Berhasil disimpan: ${result.fruit_type.charAt(0).toUpperCase() + result.fruit_type.slice(1)} ${getFruitEmoji(result.fruit_type)}`);
+      showToast(`Berhasil disimpan: ${result.fruit_type.charAt(0).toUpperCase() + result.fruit_type.slice(1)} ${getFruitEmoji(result.fruit_type)}`, 'success');
       window.dispatchEvent(new Event('scanora:inventoryUpdated'));
-      setTimeout(() => setToastMsg(''), 3000);
     } catch (err) {
       console.error('Failed to save', err);
       alert('Gagal menyimpan ke inventori.');
@@ -179,10 +209,8 @@ const ScannerSheet = ({ isOpen, onClose }) => {
   const onTouchEnd = () => {
     if (!touchStartLoc || !touchEndLoc) return;
     const distance = touchStartLoc - touchEndLoc;
-    if (distance > 50 && scanState === 'half-result') {
-      setScanState('full-result');
-    } else if (distance < -50 && scanState === 'full-result') {
-      setScanState('half-result');
+    if (distance < -50 && scanState === 'full-result') {
+      closeCard();
     }
   };
 
@@ -221,7 +249,14 @@ const ScannerSheet = ({ isOpen, onClose }) => {
       />
 
       {/* Camera Viewport */}
-      <div className="flex-1 relative">
+      <div 
+        className="flex-1 relative"
+        onClick={() => {
+          if (scanState === 'full-result') {
+            closeCard();
+          }
+        }}
+      >
         <div className="absolute inset-0 bg-gray-900 flex items-center justify-center overflow-hidden">
           <video
             ref={videoRef}
@@ -349,13 +384,20 @@ const ScannerSheet = ({ isOpen, onClose }) => {
         )}
 
         {/* Toast Message */}
-        {toastMsg && (
-          <div className="absolute top-24 left-0 right-0 flex justify-center z-50 animate-bounce">
+        <div 
+          className={`absolute left-0 right-0 flex justify-center z-50 transition-all duration-500 ease-in-out pointer-events-none ${
+            toast.show 
+              ? `opacity-100 ${toast.type === 'error' ? 'bottom-40 translate-y-0' : 'top-24 translate-y-0'}` 
+              : `opacity-0 ${toast.type === 'error' ? 'bottom-40 translate-y-4' : 'top-24 -translate-y-4'}`
+          }`}
+        >
+          {toast.msg && (
             <div className="bg-white text-gray-800 px-6 py-3 rounded-full text-sm font-semibold shadow-2xl flex items-center gap-2 border border-gray-100">
-              <CheckCircle className="text-scanora-green" size={20} /> {toastMsg}
+              {toast.type === 'success' ? <CheckCircle className="text-scanora-green" size={20} /> : <CircleX className="text-red-500" size={20} />} 
+              {toast.msg}
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Bottom Sheet Results */}
@@ -363,40 +405,29 @@ const ScannerSheet = ({ isOpen, onClose }) => {
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
-        className={`bg-white rounded-t-3xl transition-all duration-300 ease-in-out absolute bottom-0 left-0 right-0 max-w-md mx-auto flex flex-col z-40 shadow-[0_-10px_40px_rgba(0,0,0,0.3)] ${scanState === 'half-result' ? 'h-[45%]' :
-        scanState === 'full-result' ? 'h-[85%]' :
-          'h-0 opacity-0 pointer-events-none'
+        className={`bg-white rounded-t-3xl transition-all duration-300 ease-in-out absolute bottom-0 left-0 right-0 max-w-md mx-auto flex flex-col z-40 shadow-[0_-10px_40px_rgba(0,0,0,0.3)] ${
+        scanState === 'full-result' ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'
         }`}>
 
         {/* Drag Handle */}
         <div
-          className="w-full flex justify-center pt-3 pb-2 cursor-pointer"
-          onClick={() => setScanState(prev => prev === 'half-result' ? 'full-result' : 'half-result')}
+          className="w-full flex justify-center pt-4 pb-2 cursor-pointer"
+          onClick={() => {
+            if (scanState === 'full-result') closeCard();
+          }}
         >
           <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
         </div>
 
         {/* Content */}
-        <div className="px-6 pb-6 flex-1 overflow-y-auto">
+        <div className="px-6 pb-8 flex-1 overflow-y-auto">
           {errorMsg && scanState !== 'camera' && scanState !== 'scanning' ? (
-            <div className="flex flex-col items-center justify-center h-full text-center">
-              {errorMsg.toLowerCase().includes("tidak dikenali") ? (
-                <>
-                  <div className="w-16 h-16 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mb-4">
-                    <HelpCircle size={32} />
-                  </div>
-                  <h2 className="text-xl font-bold text-gray-900 mb-2">Objek Tidak Dikenali</h2>
-                  <p className="text-gray-500 text-sm mb-6">Silakan foto ulang buah Anda dengan kondisi yang lebih jelas.</p>
-                </>
-              ) : (
-                <>
-                  <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mb-4">
-                    <X size={32} />
-                  </div>
-                  <h2 className="text-xl font-bold text-gray-900 mb-2">Gagal Memindai</h2>
-                  <p className="text-gray-500 text-sm mb-6">{errorMsg}</p>
-                </>
-              )}
+            <div className="flex flex-col items-center justify-center h-full text-center py-6">
+              <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mb-4">
+                <X size={32} />
+              </div>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Gagal Memindai</h2>
+              <p className="text-gray-500 text-sm mb-6">{errorMsg}</p>
               <div className="flex gap-3">
                 <button
                   onClick={() => { setErrorMsg(''); setScanState('camera'); setCapturedImage(null); startCamera(); }}
@@ -414,46 +445,43 @@ const ScannerSheet = ({ isOpen, onClose }) => {
             </div>
           ) : result ? (
             <>
-              {/* Half View */}
-              <div className="flex flex-col items-center text-center mt-2">
-                <div className="w-24 h-24 mb-4 relative">
-                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="45" fill="none" stroke="#f3f4f6" strokeWidth="8" />
-                    <circle
-                      cx="50" cy="50" r="45" fill="none"
-                      stroke={condColor.stroke}
-                      strokeWidth="8"
-                      strokeDasharray="283"
-                      strokeDashoffset={dashOffset}
-                      strokeLinecap="round"
-                      className="transition-all duration-1000 ease-out"
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex items-center justify-center text-3xl">
-                    {getFruitEmoji(result.fruit_type)}
+              {/* Top Row: Info and Icon */}
+              <div className="flex items-center justify-between mt-2">
+                {/* Left Col: Fruit Name & Ripeness */}
+                <div className="flex flex-col text-left">
+                  <h2 className="text-3xl font-bold text-gray-900 capitalize">{result.fruit_type}</h2>
+                  <div className={`inline-flex items-center gap-2 mt-2 px-3 py-1.5 rounded-full font-semibold w-fit text-sm uppercase ${condColor.bg} ${condColor.text}`}>
+                    <span className={`w-2 h-2 rounded-full ${condColor.dot}`}></span>
+                    {result.condition}
                   </div>
                 </div>
 
-                <h2 className="text-2xl font-bold text-gray-900 capitalize">{result.fruit_type}</h2>
-                <div className={`inline-flex items-center gap-2 mt-2 px-3 py-1 rounded-full font-semibold text-sm uppercase ${condColor.bg} ${condColor.text}`}>
-                  <span className={`w-2 h-2 rounded-full ${condColor.dot}`}></span>
-                  {result.condition}
+                {/* Right Col: Freshness Score & Icon */}
+                <div className="flex flex-col items-center justify-center">
+                  <div className="w-20 h-20 relative">
+                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                      <circle cx="50" cy="50" r="45" fill="none" stroke="#f3f4f6" strokeWidth="8" />
+                      <circle
+                        cx="50" cy="50" r="45" fill="none"
+                        stroke={condColor.stroke}
+                        strokeWidth="8"
+                        strokeDasharray="283"
+                        strokeDashoffset={dashOffset}
+                        strokeLinecap="round"
+                        className="transition-all duration-1000 ease-out"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center text-3xl">
+                      {getFruitEmoji(result.fruit_type)}
+                    </div>
+                  </div>
                 </div>
-
-                {scanState === 'half-result' && (
-                  <button
-                    onClick={() => setScanState('full-result')}
-                    className="mt-5 flex items-center gap-1 text-sm font-medium text-gray-400 hover:text-scanora-green transition-colors"
-                  >
-                    Lihat Detail <ChevronUp size={16} />
-                  </button>
-                )}
               </div>
 
               {/* Full View */}
-              <div className={`mt-6 transition-opacity duration-300 ${scanState === 'full-result' ? 'opacity-100' : 'opacity-0 hidden'}`}>
+              <div className="mt-6">
                 <div className="bg-gray-50 rounded-2xl p-5 mb-6 border border-gray-100">
-                  <h3 className="font-semibold text-gray-800 mb-2">💡 Informasi AI</h3>
+                  <h3 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">💡 Informasi AI</h3>
                   <p className="text-sm text-gray-600 leading-relaxed">
                     AI kami mendeteksi <strong className="capitalize">{result.fruit_type}</strong> dengan kondisi <strong>{result.condition}</strong>.
                     Skor kesegaran: <strong>{Math.round(scoreValue)}%</strong>.
@@ -465,7 +493,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
 
                 <div className="flex gap-3">
                   <button
-                    onClick={() => setScanState('half-result')}
+                    onClick={closeCard}
                     className="flex-1 min-h-[44px] py-3.5 bg-gray-100 text-gray-700 font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-gray-200 active:scale-95 transition-all"
                   >
                     <ChevronDown size={18} /> Tutup

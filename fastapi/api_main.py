@@ -6,6 +6,8 @@ import io
 from PIL import Image
 import uvicorn
 import os
+import time
+from datetime import datetime, timezone, timedelta
 
 app = FastAPI(title="Fruit Freshness API", description="API untuk mendeteksi tipe dan kesegaran buah")
 
@@ -80,6 +82,7 @@ async def predict(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Format file tidak didukung.")
         
     try:
+        start_time = time.time()
         contents = await file.read()
         img_array = prepare_image(contents)
         
@@ -95,8 +98,14 @@ async def predict(file: UploadFile = File(...)):
         product_confidence = float(np.max(pred_prod[0]))
         condition_confidence = float(np.max(pred_cond[0]))
 
-        # 4. LOGIKA FILTER 'OTHERS' (Bukan Buah)
+        # Calculate latency and timestamp
+        latency_ms = (time.time() - start_time) * 1000
+        wib_tz = timezone(timedelta(hours=7))
+        timestamp = datetime.now(wib_tz).strftime('%Y-%m-%d %H:%M:%S WIB')
+
         if product == "Others" or condition == "others" or product_confidence < 0.50:
+            print(f"🚫 [REJECTED] Product: {product} ({product_confidence:.2f}) | Cond: {condition} ({condition_confidence:.2f}) | Time: {latency_ms:.0f}ms at [{timestamp}]")
+            
             return {
                 "prediction": {
                     "product": "Tidak Dikenali",
@@ -115,7 +124,7 @@ async def predict(file: UploadFile = File(...)):
             verdict = "Mentah"
             freshness_score = 100
         elif condition == "ripe":
-            verdict = "Matang/Segar"
+            verdict = "Matang"
             freshness_score = 65 + (condition_confidence * 35)
         elif condition == "rotten":
             verdict = "Busuk"
@@ -123,6 +132,10 @@ async def predict(file: UploadFile = File(...)):
         else:
             verdict = "Unknown"
             freshness_score = 0.0
+            
+        final_score = round(max(0, min(100, freshness_score)), 2)
+        
+        print(f"✅ [SUCCESS] Product: {product} ({product_confidence:.2f}) | Cond: {condition} ({condition_confidence:.2f}) | Score: {final_score}% | Time: {latency_ms:.0f}ms at [{timestamp}]")
             
         return {
             "prediction": {
@@ -134,7 +147,7 @@ async def predict(file: UploadFile = File(...)):
                 "product_confidence": product_confidence,
                 "condition_confidence": condition_confidence
             },
-            "freshness_score": round(max(0, min(100, freshness_score)), 2)
+            "freshness_score": final_score
         }
         
     except Exception as e:

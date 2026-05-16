@@ -2,6 +2,16 @@
 
 Semua perubahan yang mencolok pada project Scanora akan didokumentasikan di dalam file ini.
 
+## [v1.6.0] - 2026-05-16
+
+### Added
+- **Deteksi Objek Spesifik**: Menambahkan kemampuan model AI untuk mendeteksi (*determine*) objek yang tidak dikenali/tidak jelas secara lebih akurat (kategori "Others").
+- **Pembaruan Format Log**: Mengubah posisi *timestamp* (waktu WIB) pada log FastAPI (*SUCCESS* dan *REJECTED*) menjadi di bagian paling ujung format log.
+
+### Fixed
+- **Bug Fixes**: Memperbaiki dan menambal sejumlah isu yang ada, serta melakukan stabilisasi pada logika filter notifikasi dan koneksi antar layanan (Render & Hugging Face).
+
+
 ## [v1.5.3] - 2026-05-15
 
 ### Added
