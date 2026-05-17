@@ -14,6 +14,10 @@ import { initializeAuth } from './api';
 function App() {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isAuthReady, setIsAuthReady] = useState(false);
+  const [isSplashDone, setIsSplashDone] = useState(false);
+  const [isSplashVisible, setIsSplashVisible] = useState(true);
+  const [isSplashExiting, setIsSplashExiting] = useState(false);
+  const [isAppEntering, setIsAppEntering] = useState(false);
 
   useEffect(() => {
     initializeAuth().then(() => setIsAuthReady(true));
@@ -82,11 +86,11 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  if (!isAuthReady) return <LoadingScreen />;
-
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col max-w-md mx-auto relative shadow-xl overflow-hidden transition-colors">
+      <div
+        className={`min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col max-w-md mx-auto relative shadow-xl overflow-hidden transition-colors app-shell ${isAppEntering ? 'app-enter' : ''} ${isSplashVisible ? 'app-hidden' : ''}`}
+      >
         {/* Main Content Area */}
         <main className="flex-1 overflow-y-auto no-scrollbar w-full">
           <Routes>
@@ -111,6 +115,38 @@ function App() {
         {/* Scanner Overlay (Bottom Sheet) */}
         <ScannerSheet isOpen={isScannerOpen} onClose={() => setIsScannerOpen(false)} />
       </div>
+
+      {isSplashVisible ? (
+        <LoadingScreen
+          isAuthReady={isAuthReady}
+          isExiting={isSplashExiting}
+          onDone={() => {
+            setIsSplashExiting(true);
+            setIsSplashDone(true);
+            setTimeout(() => {
+              setIsSplashVisible(false);
+              setIsAppEntering(true);
+            }, 900);
+          }}
+        />
+      ) : null}
+
+      <style>{`
+        .app-hidden {
+          opacity: 0;
+          transform: translateY(24px);
+          pointer-events: none;
+        }
+
+        .app-enter {
+          animation: app-enter 900ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes app-enter {
+          from { opacity: 0; transform: translateY(24px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </Router>
   );
 }
