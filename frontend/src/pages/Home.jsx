@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { User, AlertCircle, X, Utensils, Trash2, Salad, Sprout, ImageOff, ChevronRight, CalendarCheck, CalendarX } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { User, AlertCircle, X, Utensils, Trash2, Salad, Sprout, ImageOff, ChevronRight, CalendarCheck, CalendarX, Bell, CalendarPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 
@@ -29,8 +29,8 @@ const getConditionLabel = (condition) => {
 
 const getConditionBadgeStyle = (condition) => {
   const c = (condition || '').toLowerCase();
-  if (c === 'unripe') return 'bg-teal-100 text-teal-700'; // Cyan/Teal like in mockup
-  if (c === 'ripe') return 'bg-green-100 text-green-700'; // Like freshness score
+  if (c === 'unripe') return 'bg-green-100 text-green-700';
+  if (c === 'ripe') return 'bg-orange-100 text-orange-700';
   if (c === 'rotten') return 'bg-red-100 text-red-700';
   return 'bg-gray-100 text-gray-600';
 };
@@ -60,6 +60,12 @@ const ScoreBadge = ({ score, className = "py-1 text-[11px]" }) => {
   );
 };
 
+const formatDate = (dateStr) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  return d.toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+};
+
 const getCountdownConfig = (condition, daysLeft) => {
   const cond = (condition || '').toLowerCase();
   const isExpired = cond === 'rotten' || daysLeft === null || daysLeft < 0;
@@ -85,15 +91,124 @@ const getCountdownConfig = (condition, daysLeft) => {
   return { bg: 'bg-gray-100', text: 'text-gray-500', btnText: 'Tidak Layak', isExpired: true };
 };
 
+const NotificationItem = ({ notif, onDelete }) => {
+  const [translateX, setTranslateX] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
+  const startXRef = useRef(0);
+  const currentXRef = useRef(0);
+
+  const handleTouchStart = (e) => {
+    startXRef.current = e.touches[0].clientX;
+    setIsSwiping(true);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isSwiping) return;
+    const currentX = e.touches[0].clientX;
+    const diff = currentX - startXRef.current;
+    if (diff < 0) { // Only allow swiping left
+      setTranslateX(diff);
+      currentXRef.current = diff;
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsSwiping(false);
+    if (currentXRef.current < -80) { // Threshold to delete
+      setTranslateX(-window.innerWidth); // Animate out
+      setTimeout(() => onDelete(notif.id), 300); // Delete after animation
+    } else {
+      setTranslateX(0); // Snap back
+    }
+  };
+
+  return (
+    <div className="relative mb-3 overflow-hidden rounded-2xl bg-red-100 dark:bg-red-900/40">
+      {/* Delete Background / Icon */}
+      <div className="absolute right-0 top-0 bottom-0 w-20 flex items-center justify-center text-red-600 dark:text-red-400">
+        <Trash2 size={24} />
+      </div>
+      
+      {/* Draggable Card */}
+      <div 
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        className="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm relative z-10 flex gap-4"
+        style={{ 
+          transform: `translateX(${translateX}px)`,
+          transition: isSwiping ? 'none' : 'transform 0.3s ease-out'
+        }}
+      >
+        <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${notif.isRead ? 'bg-transparent' : 'bg-scanora-green'}`} />
+        <div className="flex-1">
+          <h4 className="font-bold text-gray-900 dark:text-white text-sm">{notif.title}</h4>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">{notif.message}</p>
+          <span className="text-[10px] font-bold text-gray-400 mt-2 block">{notif.date}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Home = ({ onOpenScanner }) => {
   const navigate = useNavigate();
   const [urgentItems, setUrgentItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [impact, setImpact] = useState({ saved: '-', consumed: '-', discarded: '-' });
   const [loading, setLoading] = useState(true);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+
+  // ── Notification read-state helpers (persisted via localStorage) ──────────
+  const getReadIds = () => {
+    try { return new Set(JSON.parse(localStorage.getItem('scanora_read_notifs') || '[]')); }
+    catch { return new Set(); }
+  };
+  const saveReadIds = (ids) => {
+    localStorage.setItem('scanora_read_notifs', JSON.stringify([...ids]));
+  };
+  const markAllAsRead = (notifList) => {
+    const ids = getReadIds();
+    notifList.forEach(n => ids.add(n.id));
+    saveReadIds(ids);
+  };
+  // ─────────────────────────────────────────────────────────────────────────
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const firstName = user.name ? user.name.split(' ')[0] : 'Sobat';
+
+  // ── Request notification permission ──────────────────────────────────────
+  const ensureNotifPermission = async () => {
+    if (!('Notification' in window)) return false;
+    if (Notification.permission === 'granted') return true;
+    if (Notification.permission === 'denied') return false;
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') {
+      localStorage.setItem('notificationsEnabled', 'true');
+      return true;
+    }
+    return false;
+  };
+
+  const handleOpenNotifications = async () => {
+    // Ask permission if not yet decided
+    await ensureNotifPermission();
+    setShowNotifications(true);
+    // Mark all current notifs as read and persist
+    setNotifications(prev => {
+      const updated = prev.map(n => ({ ...n, isRead: true }));
+      markAllAsRead(updated);
+      return updated;
+    });
+  };
+
+  const handleClearAll = () => {
+    if (window.confirm('Apakah Anda yakin ingin menghapus semua notifikasi?')) {
+      markAllAsRead(notifications);
+      setNotifications([]);
+    }
+  };
 
   const fetchHomeData = async () => {
     try {
@@ -105,13 +220,78 @@ const Home = ({ onOpenScanner }) => {
 
       if (invRes.data.success) {
         const allItems = invRes.data.data;
+        
+        // Urgent items for main view
         const urgent = allItems
           .map(item => ({ ...item, daysLeft: calculateDaysLeft(item.reminder_at) }))
           .filter(item => item.condition === 'ripe')
           .sort((a, b) => a.daysLeft - b.daysLeft);
         setUrgentItems(urgent);
         setImpact(prev => ({ ...prev, saved: allItems.length }));
+
+        // --- DYNAMIC NOTIFICATIONS GENERATION ---
+        const readIds = getReadIds();
+        const newNotifs = [];
+        allItems.forEach(item => {
+           const dLeft = calculateDaysLeft(item.reminder_at);
+           // Only notify for items within 3 days (and not negative)
+           if (dLeft === null || dLeft > 3 || dLeft < 0) return;
+           
+           const fruitName = getFruitLabel(item.fruit_type);
+           let title = '';
+           let body = '';
+           
+           if (dLeft === 3 || dLeft === 2) {
+              title = `🥗 Jangan Lupa ${fruitName} Kamu!`;
+              body = `Mengingatkan: ${fruitName} kamu tinggal ${dLeft} hari lagi sebelum mulai membusuk. Yuk, jadwalkan untuk dikonsumsi!`;
+           } else if (dLeft === 1) {
+              title = `⚠️ ${fruitName} Hampir Busuk!`;
+              body = `Perhatian! ${fruitName} yang kamu simpan sisa 1 hari lagi. Segera konsumsi atau olah menjadi jus hari ini!`;
+           } else if (dLeft === 0) {
+              title = `🚨 HARI TERAKHIR untuk ${fruitName}!`;
+              body = `${fruitName} kamu diperkirakan sudah mencapai batas maksimal kesegarannya HARI INI. Konsumsi sekarang sebelum terbuang sia-sia!`;
+           }
+           
+           const addedDate = item.added_at || item.created_at;
+           const dateStr = addedDate ? new Date(addedDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
+           
+           if (title) {
+               const notifId = `notif-${item.id}`;
+               newNotifs.push({
+                   id: notifId,
+                   title,
+                   message: body,
+                   // Restore isRead from localStorage — survives page navigation!
+                   isRead: readIds.has(notifId),
+                   date: `Difoto pada: ${dateStr}`,
+                   daysLeft: dLeft
+               });
+           }
+        });
+        
+        newNotifs.sort((a, b) => a.daysLeft - b.daysLeft);
+        setNotifications(newNotifs);
+
+        // ── In-App false-safe push notification (fires once per session) ──
+        const sessionKey = 'scanora_push_sent_session';
+        const alreadySentThisSession = sessionStorage.getItem(sessionKey);
+        if (!alreadySentThisSession && Notification.permission === 'granted') {
+          sessionStorage.setItem(sessionKey, '1');
+          const urgentToday = newNotifs.filter(n => n.daysLeft === 0 || n.daysLeft === 1);
+          urgentToday.forEach((n, idx) => {
+            setTimeout(() => {
+              try {
+                new Notification(n.title, {
+                  body: n.message,
+                  icon: '/icons/icon-192x192.png',
+                  tag: n.id,
+                });
+              } catch (e) { /* Silent fail on unsupported browsers */ }
+            }, idx * 1500); // Stagger each notification by 1.5s
+          });
+        }
       }
+
 
       if (summaryRes.data.success) {
         const s = summaryRes.data.data;
@@ -145,12 +325,23 @@ const Home = ({ onOpenScanner }) => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Halo, {firstName}!</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">Ayo selamatkan makanan hari ini.</p>
         </div>
-        <button
-          onClick={() => navigate('/profile')}
-          className="w-12 h-12 bg-scanora-green/10 rounded-full flex items-center justify-center text-scanora-green hover:bg-scanora-green/20 active:scale-95 transition-all"
-        >
-          <User size={24} />
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleOpenNotifications}
+            className="w-12 h-12 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 active:scale-95 transition-all shadow-sm relative"
+          >
+            <Bell size={24} />
+            {notifications.some(n => !n.isRead) && (
+              <div className="absolute top-3 right-3 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-gray-800"></div>
+            )}
+          </button>
+          <button
+            onClick={() => navigate('/profile')}
+            className="w-12 h-12 bg-scanora-green/10 rounded-full flex items-center justify-center text-scanora-green hover:bg-scanora-green/20 active:scale-95 transition-all"
+          >
+            <User size={24} />
+          </button>
+        </div>
       </header>
 
       {/* Impact Section */}
@@ -159,53 +350,53 @@ const Home = ({ onOpenScanner }) => {
           <Sprout className="text-scanora-green" size={20} />
           <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Impact Kamu</h2>
         </div>
-        <div className="bg-gradient-to-br from-scanora-green to-scanora-dark rounded-2xl p-5 text-white shadow-md">
+        <div className="bg-transparent">
           {/* 3 metrics */}
           <div className="grid grid-cols-3 gap-3 mb-4">
             {/* Consumed */}
-            <div className="bg-white/10 rounded-xl p-3 text-center">
-              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-1.5">
-                <Utensils size={16} className="text-white" />
+            <div className="bg-green-500/10 border border-green-500/20 backdrop-blur-md rounded-xl p-3 text-center">
+              <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-1.5">
+                <Utensils size={16} className="text-green-700" />
               </div>
-              <p className="text-2xl font-extrabold leading-none">{impact.consumed}</p>
-              <p className="text-white/70 text-[10px] font-medium mt-1">Dikonsumsi</p>
+              <p className="text-2xl font-extrabold leading-none text-green-700">{impact.consumed}</p>
+              <p className="text-green-700 text-[10px] font-medium mt-1">Dikonsumsi</p>
             </div>
             {/* Discarded */}
-            <div className="bg-white/10 rounded-xl p-3 text-center">
-              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-1.5">
-                <Trash2 size={16} className="text-white" />
+            <div className="bg-red-500/10 border border-red-500/20 backdrop-blur-md rounded-xl p-3 text-center">
+              <div className="w-8 h-8 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-1.5">
+                <Trash2 size={16} className="text-red-700" />
               </div>
-              <p className="text-2xl font-extrabold leading-none">{impact.discarded}</p>
-              <p className="text-white/70 text-[10px] font-medium mt-1">Dibuang</p>
+              <p className="text-2xl font-extrabold leading-none text-red-700">{impact.discarded}</p>
+              <p className="text-red-700 text-[10px] font-medium mt-1">Dibuang</p>
             </div>
             {/* Saved */}
-            <div className="bg-white/10 rounded-xl p-3 text-center">
-              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-1.5">
-                <Salad size={16} className="text-white" />
+            <div className="bg-orange-500/10 border border-orange-500/20 backdrop-blur-md rounded-xl p-3 text-center">
+              <div className="w-8 h-8 bg-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-1.5">
+                <Salad size={16} className="text-orange-700" />
               </div>
-              <p className="text-2xl font-extrabold leading-none">{impact.saved}</p>
-              <p className="text-white/70 text-[10px] font-medium mt-1">Disimpan</p>
+              <p className="text-2xl font-extrabold leading-none text-orange-700">{impact.saved}</p>
+              <p className="text-orange-700 text-[10px] font-medium mt-1">Disimpan</p>
             </div>
           </div>
 
           {/* Save rate bar */}
           {saveRate !== null ? (
-            <div className="bg-white/10 rounded-xl p-3">
+            <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
               <div className="flex justify-between items-center mb-1.5">
-                <p className="text-white/80 text-xs font-semibold">Tingkat Keberhasilan</p>
-                <p className="text-white font-bold text-sm">{saveRate}%</p>
+                <p className="text-gray-500 text-xs font-semibold">Tingkat Keberhasilan</p>
+                <p className="text-scanora-green font-bold text-sm">{saveRate}%</p>
               </div>
-              <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
+              <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-white rounded-full transition-all duration-700 ease-out"
+                  className="h-full bg-scanora-green rounded-full transition-all duration-700 ease-out"
                   style={{ width: `${saveRate}%` }}
                 />
               </div>
-              <p className="text-white/70 text-[10px] mt-2 text-center">{prideMsg}</p>
+              <p className="text-gray-400 text-[10px] mt-2 text-center">{prideMsg}</p>
             </div>
           ) : (
-            <div className="bg-white/10 rounded-xl p-3 text-center">
-              <p className="text-white/60 text-xs">Mulai konsumsi atau buang buah dari inventori untuk melihat statistikmu!</p>
+            <div className="bg-white rounded-xl p-3 text-center border border-gray-100 shadow-sm">
+              <p className="text-gray-400 text-xs">Mulai konsumsi atau buang buah dari inventori untuk melihat statistikmu!</p>
             </div>
           )}
         </div>
@@ -313,15 +504,21 @@ const Home = ({ onOpenScanner }) => {
               </div>
 
               {/* Date row */}
-              <div className="flex items-center gap-1.5 mb-5">
-                {selectedItem.condition === 'unripe' ? (
-                  <CalendarCheck size={16} className="text-gray-400" />
-                ) : (
-                  <CalendarX size={16} className="text-gray-400" />
-                )}
-                <span className="text-sm text-gray-500 font-bold">
-                  {selectedItem.condition === 'unripe' ? 'Matang saat:' : 'Batas layak:'} {formatShortDate(selectedItem.reminder_at)}
-                </span>
+              <div className="flex flex-col gap-1.5 mb-5">
+                <p className="text-gray-500 font-medium text-sm flex items-center gap-2">
+                  <CalendarPlus size={16} />
+                  Tanggal Foto: {formatDate(selectedItem.added_at || selectedItem.created_at)}
+                </p>
+                <p className="text-gray-500 font-medium text-sm flex items-center gap-2">
+                  {selectedItem.condition === 'unripe' ? (
+                    <CalendarCheck size={16} />
+                  ) : (
+                    <CalendarX size={16} />
+                  )}
+                  <span className="font-bold">
+                    {selectedItem.condition === 'unripe' ? 'Matang saat:' : 'Batas layak:'} {formatShortDate(selectedItem.reminder_at)}
+                  </span>
+                </p>
               </div>
 
               {/* Freshness bar & Countdown */}
@@ -382,6 +579,52 @@ const Home = ({ onOpenScanner }) => {
                   <Utensils size={16} /> Dikonsumsi
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Notifications Modal */}
+      {showNotifications && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm animate-fade-in">
+          <div className="bg-gray-50 dark:bg-gray-900 w-full h-[85vh] rounded-t-3xl shadow-2xl flex flex-col animate-slide-up">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-white dark:bg-gray-800 rounded-t-3xl shadow-sm">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <Bell size={20} /> Inbox Notifikasi
+              </h2>
+              <div className="flex items-center gap-2">
+                {notifications.length > 0 && (
+                  <button
+                    onClick={handleClearAll}
+                    className="text-xs font-semibold text-red-500 hover:text-red-600 active:scale-95 transition-all px-2 py-1 rounded-lg hover:bg-red-50"
+                  >
+                    Hapus Semua
+                  </button>
+                )}
+                <button 
+                  onClick={() => setShowNotifications(false)} 
+                  className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 active:scale-95 transition-all"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+            
+            <div className="flex-1 overflow-x-hidden overflow-y-auto p-4 pb-12">
+              {notifications.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                  <Bell size={48} className="mb-4 opacity-20" />
+                  <p className="font-medium text-sm">Belum ada notifikasi.</p>
+                </div>
+              ) : (
+                notifications.map(notif => (
+                  <NotificationItem 
+                    key={notif.id} 
+                    notif={notif} 
+                    onDelete={(id) => setNotifications(prev => prev.filter(n => n.id !== id))} 
+                  />
+                ))
+              )}
             </div>
           </div>
         </div>

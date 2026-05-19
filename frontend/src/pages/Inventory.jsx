@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { History, Salad, X, Trash2, Apple, Banana, Citrus, ChevronRight, CalendarCheck, CalendarX, ImageOff, Utensils, Package, Refrigerator } from 'lucide-react';
+import { History, Salad, X, Trash2, Apple, Banana, Citrus, ChevronRight, CalendarCheck, CalendarX, ImageOff, Utensils, Package, Refrigerator, ArrowUp, ArrowDown, CalendarArrowUp, CalendarArrowDown, CalendarPlus } from 'lucide-react';
 import api from '../api';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -36,8 +36,8 @@ const getConditionLabel = (condition) => {
 
 const getConditionBadgeStyle = (condition) => {
   const c = (condition || '').toLowerCase();
-  if (c === 'unripe') return 'bg-teal-100 text-teal-700'; // Cyan/Teal like in mockup
-  if (c === 'ripe') return 'bg-green-100 text-green-700'; // Like freshness score
+  if (c === 'unripe') return 'bg-green-100 text-green-700';
+  if (c === 'ripe') return 'bg-orange-100 text-orange-700';
   if (c === 'rotten') return 'bg-red-100 text-red-700';
   return 'bg-gray-100 text-gray-600';
 };
@@ -214,6 +214,9 @@ const Inventory = () => {
   const [historyData, setHistoryData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState(null);
+  
+  const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
+  const [showSortPopup, setShowSortPopup] = useState(false);
 
   // Undo state
   const [undoItem, setUndoItem] = useState(null);
@@ -289,23 +292,94 @@ const Inventory = () => {
     setUndoItem(null);
   };
 
+  const handleSortSelect = (key) => {
+    if (sortConfig.key === key) {
+      setSortConfig({ key, direction: sortConfig.direction === 'asc' ? 'desc' : 'asc' });
+    } else {
+      setSortConfig({ key, direction: 'asc' });
+    }
+    setShowSortPopup(false);
+  };
+
+  const sortedInventory = [...inventoryData].sort((a, b) => {
+    if (sortConfig.key === 'priority') {
+      const scoreA = a.freshness_score_latest ?? a.freshness_score_initial ?? 0;
+      const scoreB = b.freshness_score_latest ?? b.freshness_score_initial ?? 0;
+      return sortConfig.direction === 'asc' ? scoreA - scoreB : scoreB - scoreA;
+    } else {
+      const dateA = new Date(a.added_at || a.created_at || 0).getTime();
+      const dateB = new Date(b.added_at || b.created_at || 0).getTime();
+      return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
+    }
+  });
+
+  const sortedHistory = [...historyData].sort((a, b) => {
+    if (sortConfig.key === 'priority') {
+      const scoreA = a.freshness_score_latest ?? a.freshness_score_initial ?? 0;
+      const scoreB = b.freshness_score_latest ?? b.freshness_score_initial ?? 0;
+      return sortConfig.direction === 'asc' ? scoreA - scoreB : scoreB - scoreA;
+    } else {
+      const dateA = new Date(a.scanned_at || a.created_at || 0).getTime();
+      const dateB = new Date(b.scanned_at || b.created_at || 0).getTime();
+      return sortConfig.direction === 'asc' ? dateA - dateB : dateB - dateA;
+    }
+  });
+
+  const getSortIcon = () => {
+    if (sortConfig.key === 'date') {
+      return sortConfig.direction === 'asc' ? <CalendarArrowUp size={18} /> : <CalendarArrowDown size={18} />;
+    }
+    return sortConfig.direction === 'asc' ? <ArrowUp size={18} /> : <ArrowDown size={18} />;
+  };
+
   return (
     <div className="flex flex-col h-full bg-gray-50 pb-32 no-scrollbar">
       {/* Sticky Header */}
-      <div className="bg-white px-6 pt-6 pb-4 shadow-sm z-10 sticky top-0 border-b border-gray-100">
-        <div className="bg-gray-100 p-1 rounded-xl flex relative">
-          <button
-            onClick={() => setActiveTab('inventory')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all active:scale-95 min-h-[44px] ${activeTab === 'inventory' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}
-          >
-            <Salad size={16} /> Inventori ({inventoryData.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('history')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all active:scale-95 min-h-[44px] ${activeTab === 'history' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}
-          >
-            <History size={16} /> Riwayat ({historyData.length})
-          </button>
+      <div className="bg-white px-6 pt-6 pb-4 shadow-sm z-40 sticky top-0 border-b border-gray-100">
+        <div className="flex relative gap-2">
+          <div className="bg-gray-100 p-1 rounded-xl flex flex-1">
+            <button
+              onClick={() => { setActiveTab('inventory'); setShowSortPopup(false); }}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all active:scale-95 min-h-[44px] ${activeTab === 'inventory' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}
+            >
+              <Salad size={16} /> Inventori ({inventoryData.length})
+            </button>
+            <button
+              onClick={() => { setActiveTab('history'); setShowSortPopup(false); }}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all active:scale-95 min-h-[44px] ${activeTab === 'history' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}
+            >
+              <History size={16} /> Riwayat ({historyData.length})
+            </button>
+          </div>
+          <div className="bg-gray-100 p-1 rounded-xl flex shadow-sm">
+            <button
+              onClick={() => setShowSortPopup(!showSortPopup)}
+              className="w-[44px] h-[44px] flex items-center justify-center rounded-lg active:scale-95 transition-all bg-white text-scanora-green shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
+            >
+              {getSortIcon()}
+            </button>
+          </div>
+          
+          {showSortPopup && !showFloating && (
+             <div className="absolute top-[60px] right-0 bg-white rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.15)] border border-gray-100 p-2 min-w-[180px] flex flex-col gap-1 z-[200]">
+               <button onClick={() => handleSortSelect('priority')} className={`text-left px-3 py-2.5 text-sm rounded-lg flex justify-between items-center ${sortConfig.key === 'priority' ? 'bg-scanora-green/10 font-bold text-scanora-green' : 'text-gray-600 hover:bg-gray-50'}`}>
+                   <span>Freshness Score</span>
+                   {sortConfig.key === 'priority' ? (
+                     sortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />
+                   ) : (
+                     <ArrowUp size={14} className="text-gray-400" />
+                   )}
+               </button>
+               <button onClick={() => handleSortSelect('date')} className={`text-left px-3 py-2.5 text-sm rounded-lg flex justify-between items-center ${sortConfig.key === 'date' ? 'bg-scanora-green/10 font-bold text-scanora-green' : 'text-gray-600 hover:bg-gray-50'}`}>
+                   <span>Tanggal Foto</span>
+                   {sortConfig.key === 'date' ? (
+                     sortConfig.direction === 'asc' ? <CalendarArrowUp size={14} /> : <CalendarArrowDown size={14} />
+                   ) : (
+                     <CalendarArrowDown size={14} className="text-gray-400" />
+                   )}
+               </button>
+             </div>
+          )}
         </div>
       </div>
 
@@ -313,13 +387,44 @@ const Inventory = () => {
 
       {/* Floating Tab Switcher */}
       <div className={`fixed left-0 right-0 z-30 flex justify-center transition-all duration-300 ease-out ${showFloating ? 'bottom-32 translate-y-0 opacity-100 pointer-events-auto' : 'bottom-28 translate-y-10 opacity-0 pointer-events-none'}`}>
-        <div className="bg-gray-100/90 backdrop-blur-md p-1.5 rounded-full flex gap-1 shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-gray-200">
-          <button onClick={() => setActiveTab('inventory')} className={`flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-full transition-all active:scale-95 ${activeTab === 'inventory' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>
-            <Salad size={16} /> Inventori ({inventoryData.length})
-          </button>
-          <button onClick={() => setActiveTab('history')} className={`flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-full transition-all active:scale-95 ${activeTab === 'history' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>
-            <History size={16} /> Riwayat ({historyData.length})
-          </button>
+        <div className="flex gap-2 relative">
+          <div className="bg-gray-100/90 backdrop-blur-md p-1.5 rounded-full flex shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-gray-200">
+            <button onClick={() => { setActiveTab('inventory'); setShowSortPopup(false); }} className={`flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-full transition-all active:scale-95 ${activeTab === 'inventory' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>
+              <Salad size={16} /> Inventori ({inventoryData.length})
+            </button>
+            <button onClick={() => { setActiveTab('history'); setShowSortPopup(false); }} className={`flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-full transition-all active:scale-95 ${activeTab === 'history' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>
+              <History size={16} /> Riwayat ({historyData.length})
+            </button>
+          </div>
+          <div className="bg-gray-100/90 backdrop-blur-md p-1.5 rounded-full flex shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-gray-200">
+            <button
+              onClick={() => setShowSortPopup(!showSortPopup)}
+              className="w-[44px] h-[44px] flex items-center justify-center rounded-full shadow-sm active:scale-95 transition-all bg-white text-scanora-green"
+            >
+              {getSortIcon()}
+            </button>
+          </div>
+          
+          {showSortPopup && showFloating && (
+             <div className="absolute bottom-16 right-0 bg-white rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.15)] border border-gray-100 p-2 min-w-[180px] flex flex-col gap-1 z-[200]">
+               <button onClick={() => handleSortSelect('priority')} className={`text-left px-3 py-2.5 text-sm rounded-lg flex justify-between items-center ${sortConfig.key === 'priority' ? 'bg-scanora-green/10 font-bold text-scanora-green' : 'text-gray-600 hover:bg-gray-50'}`}>
+                   <span>Freshness Score</span>
+                   {sortConfig.key === 'priority' ? (
+                     sortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />
+                   ) : (
+                     <ArrowUp size={14} className="text-gray-400" />
+                   )}
+               </button>
+               <button onClick={() => handleSortSelect('date')} className={`text-left px-3 py-2.5 text-sm rounded-lg flex justify-between items-center ${sortConfig.key === 'date' ? 'bg-scanora-green/10 font-bold text-scanora-green' : 'text-gray-600 hover:bg-gray-50'}`}>
+                   <span>Tanggal Foto</span>
+                   {sortConfig.key === 'date' ? (
+                     sortConfig.direction === 'asc' ? <CalendarArrowUp size={14} /> : <CalendarArrowDown size={14} />
+                   ) : (
+                     <CalendarArrowDown size={14} className="text-gray-400" />
+                   )}
+               </button>
+             </div>
+          )}
         </div>
       </div>
 
@@ -356,9 +461,9 @@ const Inventory = () => {
             </div>
           )
         ) : activeTab === 'inventory' ? (
-          inventoryData.length > 0 ? (
+          sortedInventory.length > 0 ? (
             <div className="grid grid-cols-2 gap-3">
-              {inventoryData.map(item => (
+              {sortedInventory.map(item => (
                 <InventoryCard key={item.id} item={item} onClick={() => setSelectedItem(item)} />
               ))}
             </div>
@@ -377,7 +482,7 @@ const Inventory = () => {
           )
         ) : (
           <div className="space-y-3">
-            {historyData.length > 0 ? historyData.map(item => (
+            {sortedHistory.length > 0 ? sortedHistory.map(item => (
               <div
                 key={item.id}
                 onClick={() => setSelectedItem(item)}
@@ -400,7 +505,7 @@ const Inventory = () => {
                   <h3 className="font-semibold text-gray-900 capitalize">{getFruitLabel(item.fruit_type)}</h3>
                   <p className="text-xs text-gray-400">{formatDate(item.scanned_at)}</p>
                 </div>
-                <span className={`text-xs font-semibold px-0 py-1 rounded-full uppercase flex-shrink-0 text-center min-w-[72px] ${getConditionBadgeStyle(item.condition)}`}>
+                <span className={`text-xs font-semibold px-0 py-1 rounded-md uppercase flex-shrink-0 text-center min-w-[72px] ${getConditionBadgeStyle(item.condition)}`}>
                   {getConditionLabel(item.condition)}
                 </span>
               </div>
@@ -460,15 +565,21 @@ const Inventory = () => {
               {activeTab === 'inventory' ? (
                 <>
                   {/* Date row */}
-                  <div className="flex items-center gap-1.5 mb-5">
-                    {selectedItem.condition === 'unripe' ? (
-                      <CalendarCheck size={16} className="text-gray-400" />
-                    ) : (
-                      <CalendarX size={16} className="text-gray-400" />
-                    )}
-                    <span className="text-sm text-gray-500 font-bold">
-                      {selectedItem.condition === 'unripe' ? 'Matang saat:' : 'Batas layak:'} {formatShortDate(selectedItem.reminder_at)}
-                    </span>
+                  <div className="flex flex-col gap-1.5 mb-5">
+                    <p className="text-gray-500 font-medium text-sm flex items-center gap-2">
+                      <CalendarPlus size={16} />
+                      Tanggal Foto: {formatDate(selectedItem.added_at || selectedItem.created_at)}
+                    </p>
+                    <p className="text-gray-500 font-medium text-sm flex items-center gap-2">
+                      {selectedItem.condition === 'unripe' ? (
+                        <CalendarCheck size={16} />
+                      ) : (
+                        <CalendarX size={16} />
+                      )}
+                      <span className="font-bold">
+                        {selectedItem.condition === 'unripe' ? 'Matang saat:' : 'Batas layak:'} {formatShortDate(selectedItem.reminder_at)}
+                      </span>
+                    </p>
                   </div>
 
                   {/* Freshness bar & Countdown */}

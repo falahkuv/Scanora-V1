@@ -29,7 +29,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
       setToast(prev => ({ ...prev, show: false }));
     }, 3000);
   };
-  const [facingMode, setFacingMode] = useState('user');
+  const [facingMode, setFacingMode] = useState('environment');
 
   const [touchStartLoc, setTouchStartLoc] = useState(null);
   const [touchEndLoc, setTouchEndLoc] = useState(null);
@@ -41,7 +41,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode }
+        video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } }
       });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -101,8 +101,8 @@ const ScannerSheet = ({ isOpen, onClose }) => {
 
     try {
       const options = {
-        maxSizeMB: 1,
-        maxWidthOrHeight: 800,
+        maxSizeMB: 0.2, // Compressed for faster upload speeds
+        maxWidthOrHeight: 600,
         useWebWorker: true,
       };
       
@@ -227,9 +227,10 @@ const ScannerSheet = ({ isOpen, onClose }) => {
 
   const getConditionColor = (condition) => {
     const c = condition?.toLowerCase() || '';
-    if (c === 'ripe') return { text: 'text-amber-700', bg: 'bg-amber-50', dot: 'bg-amber-500', stroke: '#f59e0b' };
+    if (c === 'ripe') return { text: 'text-orange-700', bg: 'bg-orange-50', dot: 'bg-orange-500', stroke: '#f97316' };
+    if (c === 'unripe') return { text: 'text-green-700', bg: 'bg-green-50', dot: 'bg-green-500', stroke: '#22c55e' };
     if (c === 'rotten') return { text: 'text-red-700', bg: 'bg-red-50', dot: 'bg-red-500', stroke: '#ef4444' };
-    return { text: 'text-gray-700', bg: 'bg-gray-50', dot: 'bg-gray-500', stroke: '#10b981' };
+    return { text: 'text-gray-700', bg: 'bg-gray-50', dot: 'bg-gray-500', stroke: '#9ca3af' };
   };
 
   const condColor = getConditionColor(result?.condition);

@@ -10,7 +10,10 @@ const Profile = () => {
     return localStorage.getItem('theme') === 'dark';
   });
   const [notifEnabled, setNotifEnabled] = useState(() => {
-    return localStorage.getItem('notificationsEnabled') === 'true'; // Default false unless allowed
+    if ('Notification' in window) {
+      return Notification.permission === 'granted' && localStorage.getItem('notificationsEnabled') !== 'false';
+    }
+    return false;
   });
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -122,7 +125,7 @@ const Profile = () => {
               </div>
               <div>
                 <h3 className="font-semibold text-gray-900 dark:text-white">{i18n.language === 'en' ? 'Push Notifications' : 'Notifikasi Push'}</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{i18n.language === 'en' ? 'Smart freshness reminders' : 'Pengingat pintar buah membusuk'}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{i18n.language === 'en' ? 'Smart freshness reminders' : 'Pengingat pintar buah matang atau membusuk'}</p>
               </div>
             </div>
             <button 
@@ -147,6 +150,13 @@ const Profile = () => {
             </div>
           </div>
         </div>
+
+        <button
+          onClick={() => navigate('/home')}
+          className="w-full mt-2 py-3.5 bg-scanora-green text-white font-bold rounded-2xl shadow-sm hover:bg-scanora-green/90 active:scale-[0.98] transition-all flex items-center justify-center"
+        >
+          Kembali ke Beranda
+        </button>
       </div>
     </div>
   );

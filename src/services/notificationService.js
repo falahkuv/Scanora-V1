@@ -2,12 +2,17 @@ const webpush = require('web-push');
 const cron = require('node-cron');
 const { prisma } = require('../config/prisma');
 
-// Konfigurasi VAPID keys untuk Web Push (Harus di-set di .env)
-webpush.setVapidDetails(
-  'mailto:your-email@example.com',
-  process.env.VAPID_PUBLIC_KEY || 'dummy_public_key',
-  process.env.VAPID_PRIVATE_KEY || 'dummy_private_key'
-);
+// Konfigurasi VAPID keys untuk Web Push
+// Keys harus di-set di file .env — lihat .env.example
+if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(
+    process.env.VAPID_MAILTO || 'mailto:admin@scanora.app',
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+} else {
+  console.warn('[WebPush] ⚠️  VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY belum di-set di .env — push notification dinonaktifkan.');
+}
 
 /**
  * Menghitung selisih hari antara tanggal sekarang dengan estimasi tanggal kedaluwarsa.

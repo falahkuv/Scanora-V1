@@ -14,12 +14,12 @@ Aplikasi ini hanya menggunakan satu jenis font family utama agar tidak memberatk
 - **Scanora Dark (`scanora-dark`):** `#064e3b` (Emerald 900) - Digunakan untuk gradien yang lebih pekat dan efek hover.
 
 ### B. Status & Freshness Colors
-- **Ripe (`status-ripe`):** `#f59e0b` (Amber 500) - Indikasi matang optimal / warning tingkat rendah.
-- **Unripe (`status-unripe`):** `#9ca3af` (Gray 400) - Indikasi belum siap konsumsi.
-- **Rotten (`status-rotten`):** `#ef4444` (Red 500) - Indikasi peringatan keras, kebusukan.
-- **Yellow Main (`yellow-main`):** `#fdc107` - Warna aksen ilustrasi maskot Pisang.
-- **Orange Main (`orange-main`):** `#f87305` - Warna aksen ilustrasi maskot Jeruk.
-- **Red Main (`red-main`):** `#e02224` - Warna aksen ilustrasi maskot Apel dan alert *Kedaluwarsa*.
+- 🍊 **Ripe (`status-ripe`):** <img src="https://placehold.co/15x15/f97316/f97316.png" width="12" height="12"> `#f97316` (Orange 500) - Indikasi matang optimal / warning tingkat rendah.
+- 🍏 **Unripe (`status-unripe`):** <img src="https://placehold.co/15x15/22c55e/22c55e.png" width="12" height="12"> `#22c55e` (Green 500) - Indikasi belum siap konsumsi.
+- 🍎 **Rotten (`status-rotten`):** <img src="https://placehold.co/15x15/ef4444/ef4444.png" width="12" height="12"> `#ef4444` (Red 500) - Indikasi peringatan keras, kebusukan.
+- 🍌 **Yellow Main (`yellow-main`):** <img src="https://placehold.co/15x15/fdc107/fdc107.png" width="12" height="12"> `#fdc107` - Warna aksen ilustrasi maskot Pisang.
+- 🍊 **Orange Main (`orange-main`):** <img src="https://placehold.co/15x15/f87305/f87305.png" width="12" height="12"> `#f87305` - Warna aksen ilustrasi maskot Jeruk.
+- 🍎 **Red Main (`red-main`):** <img src="https://placehold.co/15x15/e02224/e02224.png" width="12" height="12"> `#e02224` - Warna aksen ilustrasi maskot Apel dan alert *Kedaluwarsa*.
 
 ### C. System Colors
 - **Backgrounds:** `bg-gray-50` (terang) / `bg-gray-900` (gelap).

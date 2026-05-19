@@ -32,8 +32,8 @@ export default {
       colors: {
         'scanora-green': '#10b981', // Emerald Green 500
         'scanora-dark': '#064e3b',  // Emerald Green 900
-        'status-ripe': '#f59e0b',   // Amber 500
-        'status-unripe': '#9ca3af', // Gray 400
+        'status-ripe': '#f97316',   // Orange 500
+        'status-unripe': '#22c55e', // Green 500
         'status-rotten': '#ef4444', // Red 500
         'yellow-main': '#fdc107',
         'orange-main': '#f87305',
