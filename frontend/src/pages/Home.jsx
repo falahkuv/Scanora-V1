@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { User, AlertCircle, X, Utensils, Trash2, Salad, Sprout, ImageOff, ChevronRight, CalendarCheck, CalendarX, Bell, CalendarPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
+import { useViewport } from '../context/ViewportContext';
 
 const getFruitIcon = (type) => {
   const t = type?.toLowerCase() || '';
@@ -159,6 +160,18 @@ const Home = ({ onOpenScanner }) => {
   const [loading, setLoading] = useState(true);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const notifBtnRef = useRef(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setSelectedItem(null);
+        setShowNotifications(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // ── Notification read-state helpers (persisted via localStorage) ──────────
   const getReadIds = () => {
@@ -317,30 +330,39 @@ const Home = ({ onOpenScanner }) => {
     : saveRate >= 50 ? 'Lumayan! Terus kurangi pemborosan ya. 👍'
     : 'Masih banyak yang dibuang. Yuk lebih bijak! 😬';
 
+  const { viewport } = useViewport();
+  const isDesktop = viewport === 'desktop';
+  const isTablet  = viewport === 'tablet';
+
   return (
-    <div className="p-6 pb-32 bg-gray-50 dark:bg-gray-900 transition-colors min-h-screen">
+    <div className={`${isDesktop ? 'p-8 pb-8' : 'p-6 pb-32'} bg-gray-50 dark:bg-gray-900 transition-colors min-h-screen`}>
       {/* Header */}
       <header className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Halo, {firstName}!</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">Ayo selamatkan makanan hari ini.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <button
             onClick={handleOpenNotifications}
-            className="w-12 h-12 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 active:scale-95 transition-all shadow-sm relative"
+            className={`bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 active:scale-95 transition-all shadow-sm relative
+              ${isDesktop ? 'gap-2 px-4 h-11 rounded-xl text-sm font-semibold' : 'w-12 h-12'}`}
           >
-            <Bell size={24} />
+            <Bell size={isDesktop ? 18 : 24} />
+            {isDesktop && <span>Notifikasi</span>}
             {notifications.some(n => !n.isRead) && (
-              <div className="absolute top-3 right-3 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-gray-800"></div>
+              <div className={`absolute bg-red-500 rounded-full border-2 border-white dark:border-gray-800
+                ${isDesktop ? 'top-2 right-2 w-2 h-2' : 'top-3 right-3 w-2.5 h-2.5'}`} />
             )}
           </button>
-          <button
-            onClick={() => navigate('/profile')}
-            className="w-12 h-12 bg-scanora-green/10 rounded-full flex items-center justify-center text-scanora-green hover:bg-scanora-green/20 active:scale-95 transition-all"
-          >
-            <User size={24} />
-          </button>
+          {!isDesktop && (
+            <button
+              onClick={() => navigate('/profile')}
+              className="w-12 h-12 bg-scanora-green/10 rounded-full flex items-center justify-center text-scanora-green hover:bg-scanora-green/20 active:scale-95 transition-all"
+            >
+              <User size={24} />
+            </button>
+          )}
         </div>
       </header>
 
@@ -351,53 +373,106 @@ const Home = ({ onOpenScanner }) => {
           <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Impact Kamu</h2>
         </div>
         <div className="bg-transparent">
-          {/* 3 metrics */}
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            {/* Consumed */}
-            <div className="bg-green-500/10 border border-green-500/20 backdrop-blur-md rounded-xl p-3 text-center">
-              <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-1.5">
-                <Utensils size={16} className="text-green-700" />
+          {isDesktop ? (
+            // Desktop: 4-column horizontal cards
+            <div className="grid grid-cols-4 gap-4">
+              {/* Dikonsumsi */}
+              <div className="bg-green-500/10 border border-green-500/20 rounded-2xl p-4 flex items-center gap-4">
+                <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Utensils size={22} className="text-green-700" />
+                </div>
+                <div>
+                  <p className="text-3xl font-extrabold leading-none text-green-700">{impact.consumed}</p>
+                  <p className="text-green-700 text-xs font-medium mt-1">Dikonsumsi</p>
+                </div>
               </div>
-              <p className="text-2xl font-extrabold leading-none text-green-700">{impact.consumed}</p>
-              <p className="text-green-700 text-[10px] font-medium mt-1">Dikonsumsi</p>
-            </div>
-            {/* Discarded */}
-            <div className="bg-red-500/10 border border-red-500/20 backdrop-blur-md rounded-xl p-3 text-center">
-              <div className="w-8 h-8 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-1.5">
-                <Trash2 size={16} className="text-red-700" />
+              {/* Dibuang */}
+              <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 flex items-center gap-4">
+                <div className="w-12 h-12 bg-red-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Trash2 size={22} className="text-red-700" />
+                </div>
+                <div>
+                  <p className="text-3xl font-extrabold leading-none text-red-700">{impact.discarded}</p>
+                  <p className="text-red-700 text-xs font-medium mt-1">Dibuang</p>
+                </div>
               </div>
-              <p className="text-2xl font-extrabold leading-none text-red-700">{impact.discarded}</p>
-              <p className="text-red-700 text-[10px] font-medium mt-1">Dibuang</p>
-            </div>
-            {/* Saved */}
-            <div className="bg-orange-500/10 border border-orange-500/20 backdrop-blur-md rounded-xl p-3 text-center">
-              <div className="w-8 h-8 bg-orange-500/20 rounded-full flex items-center justify-center mx-auto mb-1.5">
-                <Salad size={16} className="text-orange-700" />
+              {/* Disimpan */}
+              <div className="bg-orange-500/10 border border-orange-500/20 rounded-2xl p-4 flex items-center gap-4">
+                <div className="w-12 h-12 bg-orange-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Salad size={22} className="text-orange-700" />
+                </div>
+                <div>
+                  <p className="text-3xl font-extrabold leading-none text-orange-700">{impact.saved}</p>
+                  <p className="text-orange-700 text-xs font-medium mt-1">Disimpan</p>
+                </div>
               </div>
-              <p className="text-2xl font-extrabold leading-none text-orange-700">{impact.saved}</p>
-              <p className="text-orange-700 text-[10px] font-medium mt-1">Disimpan</p>
-            </div>
-          </div>
-
-          {/* Save rate bar */}
-          {saveRate !== null ? (
-            <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
-              <div className="flex justify-between items-center mb-1.5">
-                <p className="text-gray-500 text-xs font-semibold">Tingkat Keberhasilan</p>
-                <p className="text-scanora-green font-bold text-sm">{saveRate}%</p>
-              </div>
-              <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-scanora-green rounded-full transition-all duration-700 ease-out"
-                  style={{ width: `${saveRate}%` }}
-                />
-              </div>
-              <p className="text-gray-400 text-[10px] mt-2 text-center">{prideMsg}</p>
+              {/* Tingkat Keberhasilan */}
+              {saveRate !== null ? (
+                <div className="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col justify-center shadow-sm">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-gray-500 text-xs font-semibold">Tingkat Keberhasilan</p>
+                    <p className="text-scanora-green font-bold text-sm">{saveRate}%</p>
+                  </div>
+                  <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-scanora-green rounded-full transition-all duration-700" style={{ width: `${saveRate}%` }} />
+                  </div>
+                  <p className="text-gray-400 text-xs mt-2">{prideMsg}</p>
+                </div>
+              ) : (
+                <div className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center justify-center shadow-sm">
+                  <p className="text-gray-500 text-sm">Mulai konsumsi atau buang buah untuk melihat statistikmu!</p>
+                </div>
+              )}
             </div>
           ) : (
-            <div className="bg-white rounded-xl p-3 text-center border border-gray-100 shadow-sm">
-              <p className="text-gray-400 text-xs">Mulai konsumsi atau buang buah dari inventori untuk melihat statistikmu!</p>
-            </div>
+            // Mobile / Tablet: 3-col grid + bar below
+            <>
+              <div className="grid grid-cols-3 gap-3 mb-4">
+                <div className={`bg-green-500/10 border border-green-500/20 backdrop-blur-md rounded-xl p-3 ${isTablet ? 'flex items-center gap-3' : 'text-center'}`}>
+                  <div className={`w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0 ${isTablet ? '' : 'mx-auto mb-1.5'}`}>
+                    <Utensils size={16} className="text-green-700" />
+                  </div>
+                  <div className={isTablet ? 'flex flex-col text-left' : ''}>
+                    <p className={`${isTablet ? 'text-xl' : 'text-2xl'} font-extrabold leading-none text-green-700`}>{impact.consumed}</p>
+                    <p className={`text-green-700 text-[10px] font-medium ${isTablet ? 'mt-0.5' : 'mt-1'}`}>Dikonsumsi</p>
+                  </div>
+                </div>
+                <div className={`bg-red-500/10 border border-red-500/20 backdrop-blur-md rounded-xl p-3 ${isTablet ? 'flex items-center gap-3' : 'text-center'}`}>
+                  <div className={`w-8 h-8 bg-red-500/20 rounded-full flex items-center justify-center flex-shrink-0 ${isTablet ? '' : 'mx-auto mb-1.5'}`}>
+                    <Trash2 size={16} className="text-red-700" />
+                  </div>
+                  <div className={isTablet ? 'flex flex-col text-left' : ''}>
+                    <p className={`${isTablet ? 'text-xl' : 'text-2xl'} font-extrabold leading-none text-red-700`}>{impact.discarded}</p>
+                    <p className={`text-red-700 text-[10px] font-medium ${isTablet ? 'mt-0.5' : 'mt-1'}`}>Dibuang</p>
+                  </div>
+                </div>
+                <div className={`bg-orange-500/10 border border-orange-500/20 backdrop-blur-md rounded-xl p-3 ${isTablet ? 'flex items-center gap-3' : 'text-center'}`}>
+                  <div className={`w-8 h-8 bg-orange-500/20 rounded-full flex items-center justify-center flex-shrink-0 ${isTablet ? '' : 'mx-auto mb-1.5'}`}>
+                    <Salad size={16} className="text-orange-700" />
+                  </div>
+                  <div className={isTablet ? 'flex flex-col text-left' : ''}>
+                    <p className={`${isTablet ? 'text-xl' : 'text-2xl'} font-extrabold leading-none text-orange-700`}>{impact.saved}</p>
+                    <p className={`text-orange-700 text-[10px] font-medium ${isTablet ? 'mt-0.5' : 'mt-1'}`}>Disimpan</p>
+                  </div>
+                </div>
+              </div>
+              {saveRate !== null ? (
+                <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
+                  <div className="flex justify-between items-center mb-1.5">
+                    <p className="text-gray-500 text-xs font-semibold">Tingkat Keberhasilan</p>
+                    <p className="text-scanora-green font-bold text-sm">{saveRate}%</p>
+                  </div>
+                  <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-scanora-green rounded-full transition-all duration-700 ease-out" style={{ width: `${saveRate}%` }} />
+                  </div>
+                  <p className="text-gray-400 text-sm mt-2 text-center">{prideMsg}</p>
+                </div>
+              ) : (
+                <div className="bg-white rounded-xl p-3 text-center border border-gray-100 shadow-sm">
+                  <p className="text-gray-500 text-xs">Mulai konsumsi atau buang buah dari inventori untuk melihat statistikmu!</p>
+                </div>
+              )}
+            </>
           )}
         </div>
       </section>
@@ -423,38 +498,48 @@ const Home = ({ onOpenScanner }) => {
             ))}
           </div>
         ) : urgentItems.length > 0 ? (
-          <div className="space-y-3 max-h-[340px] overflow-y-auto no-scrollbar pb-2 pr-1">
-            {urgentItems.map(item => (
-              <div
-                key={item.id}
-                onClick={() => setSelectedItem(item)}
-                className="bg-white dark:bg-gray-800 rounded-2xl p-4 flex items-center gap-4 shadow-sm border border-gray-100 dark:border-gray-700 cursor-pointer active:scale-95 transition-all"
-              >
-                <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
-                  {item.image_url ? (
-                    <img
-                      src={item.image_url}
-                      alt={item.fruit_type}
-                      className="w-full h-full object-cover"
-                      onError={(e) => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }}
-                    />
-                  ) : null}
-                  <div className="w-full h-full items-center justify-center bg-gray-100 flex-col gap-1" style={{ display: item.image_url ? 'none' : 'flex' }}>
-                    <ImageOff size={20} className="text-gray-400" strokeWidth={1.5} />
+          <div className={`space-y-3 ${isDesktop ? 'pb-2' : 'max-h-[340px] overflow-y-auto no-scrollbar pb-2 pr-1'}`}>
+            {urgentItems.map(item => {
+              const dotColor = item.daysLeft === 0
+                ? 'bg-[#e02224]'
+                : item.daysLeft <= 2
+                ? 'bg-orange-500'
+                : 'bg-scanora-green';
+              return (
+                <div
+                  key={item.id}
+                  onClick={() => setSelectedItem(item)}
+                  className="bg-white dark:bg-gray-800 rounded-2xl p-4 flex items-center gap-4 shadow-sm border border-gray-100 dark:border-gray-700 cursor-pointer active:scale-95 transition-all"
+                >
+                  <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
+                    {item.image_url ? (
+                      <img src={item.image_url} alt={item.fruit_type} className="w-full h-full object-cover"
+                        onError={(e) => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }}
+                      />
+                    ) : null}
+                    <div className="w-full h-full items-center justify-center bg-gray-100 flex-col gap-1" style={{ display: item.image_url ? 'none' : 'flex' }}>
+                      <ImageOff size={20} className="text-gray-400" strokeWidth={1.5} />
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900 capitalize">{getFruitLabel(item.fruit_type)}</h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={`w-2 h-2 rounded-full ${dotColor}`} />
+                      <span className="text-xs text-gray-500">{item.daysLeft === 0 ? 'Hari ini!' : `Sisa ${item.daysLeft} hari`}</span>
+                    </div>
+                    {isDesktop && (
+                      <div className="flex items-center gap-1 mt-1 text-xs text-gray-400">
+                        <CalendarPlus size={12} />
+                        <span>Tgl. Foto: {item.added_at ? new Date(item.added_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : '-'}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="w-16 flex-shrink-0">
+                    <ScoreBadge score={item.freshness_score_latest ?? item.freshness_score_initial} className="py-1 text-[12px]" />
                   </div>
                 </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900 capitalize">{getFruitLabel(item.fruit_type)}</h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="w-2 h-2 rounded-full bg-status-ripe"></span>
-                    <span className="text-xs text-gray-500">{item.daysLeft === 0 ? 'Hari ini!' : `Sisa ${item.daysLeft} hari`}</span>
-                  </div>
-                </div>
-                <div className="w-16 flex-shrink-0">
-                  <ScoreBadge score={item.freshness_score_latest ?? item.freshness_score_initial} className="py-1 text-[12px]" />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="bg-gray-50 rounded-2xl p-6 text-center border border-dashed border-gray-200">
@@ -463,10 +548,10 @@ const Home = ({ onOpenScanner }) => {
         )}
       </section>
 
-      {/* Detail Dialog Modal (Same as Inventory Detail) */}
+      {/* ── Detail Modal ── */}
       {selectedItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl transform transition-all animate-slide-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in" onClick={() => setSelectedItem(null)}>
+          <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl transform transition-all animate-slide-up" onClick={e => e.stopPropagation()}>
             {/* Image banner */}
             <div className="relative aspect-video bg-gradient-to-b from-sky-200 to-green-200 flex items-center justify-center overflow-hidden">
               {selectedItem.image_url ? (
@@ -486,7 +571,7 @@ const Home = ({ onOpenScanner }) => {
               </div>
               <button
                 onClick={() => setSelectedItem(null)}
-                className="absolute top-4 right-4 w-10 h-10 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 active:scale-95 transition-all"
+                className="absolute top-4 right-4 w-11 h-11 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 active:scale-95 transition-all"
               >
                 <X size={18} />
               </button>
@@ -551,7 +636,7 @@ const Home = ({ onOpenScanner }) => {
               </div>
 
               {/* Actions */}
-              <div className="flex gap-2">
+              <div className="flex gap-4">
                 <button
                   onClick={async () => {
                     try {
@@ -584,51 +669,76 @@ const Home = ({ onOpenScanner }) => {
         </div>
       )}
 
-      {/* Notifications Modal */}
+
+      {/* Notifications — Desktop: mini dropdown, Mobile: half-page sheet */}
       {showNotifications && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm animate-fade-in">
-          <div className="bg-gray-50 dark:bg-gray-900 w-full h-[85vh] rounded-t-3xl shadow-2xl flex flex-col animate-slide-up">
-            <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-white dark:bg-gray-800 rounded-t-3xl shadow-sm">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                <Bell size={20} /> Inbox Notifikasi
-              </h2>
-              <div className="flex items-center gap-2">
-                {notifications.length > 0 && (
-                  <button
-                    onClick={handleClearAll}
-                    className="text-xs font-semibold text-red-500 hover:text-red-600 active:scale-95 transition-all px-2 py-1 rounded-lg hover:bg-red-50"
-                  >
-                    Hapus Semua
+        isDesktop ? (
+          <div className="fixed inset-0 z-50" onClick={() => setShowNotifications(false)}>
+            <div
+              className="absolute top-20 right-8 w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden animate-slide-up"
+              style={{ maxHeight: '480px' }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="p-4 border-b border-gray-100 flex justify-between items-center">
+                <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                  <Bell size={16} /> Notifikasi
+                </h2>
+                <div className="flex items-center gap-3">
+                  {notifications.length > 0 && (
+                    <button onClick={handleClearAll} className="text-xs font-semibold text-red-500 hover:text-red-600 min-h-[36px] px-3 rounded-lg hover:bg-red-50 transition-all">
+                      Hapus Semua
+                    </button>
+                  )}
+                  <button onClick={() => setShowNotifications(false)} className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 active:scale-95 transition-all">
+                    <X size={16} />
                   </button>
-                )}
-                <button 
-                  onClick={() => setShowNotifications(false)} 
-                  className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 active:scale-95 transition-all"
-                >
-                  <X size={18} />
-                </button>
+                </div>
+              </div>
+              <div className="overflow-y-auto flex-1 p-3 space-y-1">
+                {notifications.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-10 text-gray-400">
+                    <Bell size={36} className="mb-3 opacity-20" />
+                    <p className="text-sm">Belum ada notifikasi.</p>
+                  </div>
+                ) : notifications.map(notif => (
+                  <NotificationItem key={notif.id} notif={notif} onDelete={(id) => setNotifications(prev => prev.filter(n => n.id !== id))} />
+                ))}
               </div>
             </div>
-            
-            <div className="flex-1 overflow-x-hidden overflow-y-auto p-4 pb-12">
-              {notifications.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                  <Bell size={48} className="mb-4 opacity-20" />
-                  <p className="font-medium text-sm">Belum ada notifikasi.</p>
+          </div>
+        ) : (
+          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm animate-fade-in" onClick={() => setShowNotifications(false)}>
+            <div className="bg-gray-50 dark:bg-gray-900 w-full h-[85vh] rounded-t-3xl shadow-2xl flex flex-col animate-slide-up" onClick={e => e.stopPropagation()}>
+              <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-white dark:bg-gray-800 rounded-t-3xl shadow-sm">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Bell size={20} /> Inbox Notifikasi
+                </h2>
+                <div className="flex items-center gap-3">
+                  {notifications.length > 0 && (
+                    <button onClick={handleClearAll} className="text-xs font-semibold text-red-500 hover:text-red-600 active:scale-95 transition-all min-h-[44px] px-4 flex items-center justify-center rounded-lg hover:bg-red-50">
+                      Hapus Semua
+                    </button>
+                  )}
+                  <button onClick={() => setShowNotifications(false)} className="w-11 h-11 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 active:scale-95 transition-all">
+                    <X size={18} />
+                  </button>
                 </div>
-              ) : (
-                notifications.map(notif => (
-                  <NotificationItem 
-                    key={notif.id} 
-                    notif={notif} 
-                    onDelete={(id) => setNotifications(prev => prev.filter(n => n.id !== id))} 
-                  />
-                ))
-              )}
+              </div>
+              <div className="flex-1 overflow-x-hidden overflow-y-auto p-4 pb-12">
+                {notifications.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                    <Bell size={48} className="mb-4 opacity-20" />
+                    <p className="font-medium text-sm">Belum ada notifikasi.</p>
+                  </div>
+                ) : notifications.map(notif => (
+                  <NotificationItem key={notif.id} notif={notif} onDelete={(id) => setNotifications(prev => prev.filter(n => n.id !== id))} />
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        )
       )}
+
     </div>
   );
 };

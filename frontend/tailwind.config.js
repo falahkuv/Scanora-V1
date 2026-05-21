@@ -39,6 +39,9 @@ export default {
         'orange-main': '#f87305',
         'red-main': '#e02224',
         'leaf-main': '#076a26',
+        orange: {
+          700: '#cc4e00',
+        },
       },
       fontFamily: {
         sans: ['Nunito', 'sans-serif'],
