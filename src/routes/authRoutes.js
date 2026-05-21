@@ -27,6 +27,13 @@ router.post(
   authController.login
 );
 
+router.post(
+  "/google",
+  [body("accessToken").notEmpty().withMessage("Access token is required")],
+  validate,
+  authController.googleLogin
+);
+
 router.get("/me", authenticateToken, authController.me);
 
 module.exports = router;

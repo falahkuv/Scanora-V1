@@ -1,5 +1,7 @@
 const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 const { prisma } = require("../config/prisma");
+const { supabase } = require("../config/supabase");
 const asyncHandler = require("../middleware/asyncHandler");
 const { signToken } = require("../services/tokenService");
 const { toUserResponse } = require("../services/formatService");
@@ -92,8 +94,67 @@ const me = asyncHandler(async (req, res) => {
   return sendSuccess(res, "User profile", toUserResponse(user));
 });
 
+const googleLogin = asyncHandler(async (req, res) => {
+  const { accessToken } = req.body;
+
+  if (!accessToken) {
+    return res.status(400).json({
+      success: false,
+      message: "Access token is required",
+      data: null
+    });
+  }
+
+  if (!supabase) {
+    return res.status(500).json({
+      success: false,
+      message: "Supabase is not configured",
+      data: null
+    });
+  }
+
+  const { data, error } = await supabase.auth.getUser(accessToken);
+
+  if (error || !data?.user) {
+    return res.status(401).json({
+      success: false,
+      message: "Invalid Google session",
+      data: null
+    });
+  }
+
+  const email = data.user.email;
+  const name =
+    data.user.user_metadata?.full_name ||
+    data.user.user_metadata?.name ||
+    data.user.user_metadata?.preferred_username ||
+    (email ? email.split("@")[0] : "Scanora User");
+
+  let user = await prisma.user.findUnique({ where: { email } });
+
+  if (!user) {
+    const randomPassword = crypto.randomBytes(32).toString("hex");
+    const hashedPassword = await bcrypt.hash(randomPassword, 10);
+    user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword
+      }
+    });
+  }
+
+  const token = signToken({ userId: user.id, email: user.email });
+
+  return sendSuccess(res, "Login successful", {
+    token,
+    user: toUserResponse(user)
+  });
+});
+
 module.exports = {
   register,
   login,
-  me
+  me,
+  googleLogin
 };

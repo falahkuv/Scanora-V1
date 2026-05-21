@@ -45,11 +45,11 @@ const LoadingScreen = ({ isAuthReady, isExiting, onDone }) => {
         </div>
 
         <div
-          className="mt-7 w-[90px] h-[5px] bg-[#FFA726]/20 rounded-[99px] overflow-hidden transition-opacity duration-200"
+          className="mt-7 w-[90px] h-[5px] bg-[#17b341]/20 rounded-[99px] overflow-hidden transition-opacity duration-200"
           style={{ opacity: showBar ? 1 : 0 }}
         >
           <div
-            className="h-full bg-[#FFA726] rounded-[99px] transition-[width] ease-linear"
+            className="h-full bg-[#17b341] rounded-[99px] transition-[width] ease-linear"
             style={{ width: `${progress}%`, transitionDuration: `${PROGRESS_DURATION_MS}ms` }}
           />
         </div>
