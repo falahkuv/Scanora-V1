@@ -14,7 +14,8 @@ const toScanResponse = (scan) => ({
   condition: scan.condition,
   freshness_score: scan.freshnessScore,
   image_url: scan.imageUrl,
-  scanned_at: scan.scannedAt
+  scanned_at: scan.scannedAt,
+  ai_suggestion: scan.aiSuggestion || null
 });
 
 const toInventoryResponse = (item) => ({
@@ -25,7 +26,8 @@ const toInventoryResponse = (item) => ({
   condition: item.condition,
   added_at: item.addedAt,
   reminder_at: item.reminderAt,
-  image_url: item.scan?.imageUrl || null
+  image_url: item.scan?.imageUrl || null,
+  ai_suggestion: item.aiSuggestion || null
 });
 
 module.exports = {

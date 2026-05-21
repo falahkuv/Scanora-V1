@@ -12,6 +12,8 @@ const ScannerSheet = ({ isOpen, onClose }) => {
   const [flashSupported, setFlashSupported] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
   const [toast, setToast] = useState({ msg: '', type: 'success', show: false });
+  const [aiSuggestion, setAiSuggestion] = useState('');
+  const [isLoadingTips, setIsLoadingTips] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -29,6 +31,8 @@ const ScannerSheet = ({ isOpen, onClose }) => {
       setScanState('camera');
       setResult(null);
       setCapturedImage(null);
+      setAiSuggestion('');
+      setIsLoadingTips(false);
       startCamera();
     }, 300);
   };
@@ -97,6 +101,8 @@ const ScannerSheet = ({ isOpen, onClose }) => {
       setResult(null);
       setErrorMsg('');
       setCapturedImage(null);
+      setAiSuggestion('');
+      setIsLoadingTips(false);
       startCamera();
     } else {
       stopCamera();
@@ -138,6 +144,11 @@ const ScannerSheet = ({ isOpen, onClose }) => {
         }
         setResult(data);
         setScanState('full-result');
+        
+        // Panggil AI di background
+        if (data.scan_id) {
+          fetchAiSuggestion(data.scan_id);
+        }
       } else {
         setErrorMsg(response.data.message || 'Gagal memindai');
         setScanState('full-result');
@@ -156,6 +167,22 @@ const ScannerSheet = ({ isOpen, onClose }) => {
         setErrorMsg(apiMessage || 'Proses gagal. Pastikan server API menyala.');
         setScanState('full-result');
       }
+    }
+  };
+
+  const fetchAiSuggestion = async (scanId) => {
+    setIsLoadingTips(true);
+    setAiSuggestion('');
+    try {
+      const response = await api.get(`/scan/${scanId}/suggestion`);
+      if (response.data.success) {
+        setAiSuggestion(response.data.data.ai_suggestion);
+      }
+    } catch (err) {
+      console.error('Failed to get AI suggestion', err);
+      setAiSuggestion('Saran AI tidak tersedia saat ini.');
+    } finally {
+      setIsLoadingTips(false);
     }
   };
 
@@ -492,15 +519,19 @@ const ScannerSheet = ({ isOpen, onClose }) => {
 
               {/* Full View */}
               <div className="mt-6">
-                <div className="bg-gray-50 rounded-2xl p-5 mb-6 border border-gray-100">
-                  <h3 className="font-semibold text-gray-800 mb-2 flex items-center gap-2">💡 Informasi AI</h3>
-                  <p className="text-sm text-gray-600 leading-relaxed">
-                    AI kami mendeteksi <strong className="capitalize">{result.fruit_type}</strong> dengan kondisi <strong>{result.condition}</strong>.
-                    Skor kesegaran: <strong>{Math.round(scoreValue)}%</strong>.
-                    {result.condition === 'ripe' && ' Cocok untuk segera dikonsumsi atau diolah hari ini!'}
-                    {result.condition === 'rotten' && ' Sayangnya buah ini sudah tidak layak konsumsi.'}
-                    {result.condition === 'unripe' && ' Simpan dalam suhu ruangan agar cepat matang.'}
-                  </p>
+                <div className="bg-green-50 rounded-2xl p-5 mb-6 border border-green-100">
+                  <h3 className="font-semibold text-scanora-dark mb-3 flex items-center gap-2">💡 Saran AI Chef Scanora</h3>
+                  {isLoadingTips ? (
+                    <div className="animate-pulse flex flex-col gap-2">
+                        <div className="h-4 bg-green-200/50 rounded w-full"></div>
+                        <div className="h-4 bg-green-200/50 rounded w-5/6"></div>
+                        <div className="h-4 bg-green-200/50 rounded w-4/6"></div>
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                        {aiSuggestion || 'Saran tidak tersedia.'}
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex gap-4">
@@ -512,11 +543,11 @@ const ScannerSheet = ({ isOpen, onClose }) => {
                   </button>
                   <button
                     onClick={handleSaveToInventory}
-                    disabled={isSaving}
+                    disabled={isSaving || isLoadingTips}
                     className="flex-1 min-h-[44px] py-3.5 bg-scanora-green text-white font-semibold rounded-xl shadow-lg shadow-scanora-green/30 flex items-center justify-center gap-2 hover:bg-scanora-dark active:scale-95 transition-all disabled:opacity-70"
                   >
                     <Check size={18} />
-                    {isSaving ? 'Menyimpan...' : 'Simpan'}
+                    {isSaving ? 'Menyimpan...' : (isLoadingTips ? 'Menunggu AI...' : 'Simpan')}
                   </button>
                 </div>
               </div>

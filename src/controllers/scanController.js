@@ -8,6 +8,7 @@ const { supabase } = require("../config/supabase");
 const asyncHandler = require("../middleware/asyncHandler");
 const { toScanResponse } = require("../services/formatService");
 const { sendSuccess } = require("../services/responseService");
+const { getGeminiSuggestion } = require("../services/geminiService");
 
 const FASTAPI_URL = process.env.FASTAPI_URL || "http://localhost:8000";
 
@@ -214,9 +215,41 @@ const deleteHistory = asyncHandler(async (req, res) => {
   return sendSuccess(res, "Scan record deleted", null);
 });
 
+const getScanSuggestion = asyncHandler(async (req, res) => {
+  const scan = await prisma.scanHistory.findFirst({
+    where: { id: req.params.id, userId: req.user.userId }
+  });
+
+  if (!scan) {
+    return res.status(404).json({ success: false, message: "Scan not found", data: null });
+  }
+
+  // 1. Bypass Gemini if Others
+  if (scan.fruitType.toLowerCase() === 'others' || scan.fruitType.toLowerCase() === 'unknown') {
+    return sendSuccess(res, "Suggestion retrieved", { ai_suggestion: "Objek tidak dikenali sebagai buah target. Tidak ada saran AI." });
+  }
+
+  // 2. Cache Hit
+  if (scan.aiSuggestion) {
+    return sendSuccess(res, "Suggestion retrieved from cache", { ai_suggestion: scan.aiSuggestion });
+  }
+
+  // 3. Cache Miss - Call Gemini
+  const suggestion = await getGeminiSuggestion(scan.fruitType, scan.condition, scan.freshnessScore);
+
+  // 4. Save to DB
+  await prisma.scanHistory.update({
+    where: { id: scan.id },
+    data: { aiSuggestion: suggestion }
+  });
+
+  return sendSuccess(res, "Suggestion generated", { ai_suggestion: suggestion });
+});
+
 module.exports = {
   createScan,
   getHistory,
   getHistoryById,
-  deleteHistory
+  deleteHistory,
+  getScanSuggestion
 };

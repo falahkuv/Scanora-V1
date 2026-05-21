@@ -635,6 +635,18 @@ const Home = ({ onOpenScanner }) => {
                 })()}
               </div>
 
+              {/* AI Suggestion Box */}
+              {selectedItem.ai_suggestion && (
+                <div className="bg-green-50 rounded-2xl p-4 border border-green-100 mb-4">
+                  <h4 className="font-semibold text-green-800 text-sm mb-2 flex items-center gap-1.5">
+                    💡 Saran Chef Scanora
+                  </h4>
+                  <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                    {selectedItem.ai_suggestion}
+                  </p>
+                </div>
+              )}
+
               {/* Actions */}
               <div className="flex gap-4">
                 <button

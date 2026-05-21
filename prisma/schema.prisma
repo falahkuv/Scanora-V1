@@ -27,6 +27,7 @@ model ScanHistory {
   freshnessScore Float       @map("freshness_score")
   imageUrl       String?     @map("image_url")
   scannedAt      DateTime    @default(now()) @map("scanned_at")
+  aiSuggestion   String?     @map("ai_suggestion")
   user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   inventoryItems Inventory[]
 
@@ -41,10 +42,11 @@ model Inventory {
   condition  String
   addedAt    DateTime    @default(now()) @map("added_at")
   reminderAt DateTime?   @map("reminder_at")
-  outcome    String?     // 'consumed' | 'discarded' | null
-  outcomeAt  DateTime?   @map("outcome_at")
-  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  scan       ScanHistory? @relation(fields: [scanId], references: [id], onDelete: SetNull)
+  outcome        String?     // 'consumed' | 'discarded' | null
+  outcomeAt      DateTime?   @map("outcome_at")
+  aiSuggestion   String?     @map("ai_suggestion")
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scan           ScanHistory? @relation(fields: [scanId], references: [id], onDelete: SetNull)
 
   @@map("inventory")
 }

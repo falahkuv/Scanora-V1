@@ -1,0 +1,20 @@
+{
+  "Apel": {
+    "Mentah": "Simpan di suhu ruang selama 1-2 hari agar lebih matang.",
+    "Matang": "Apel matang! Simpan di kulkas agar tahan lama atau jadikan jus segar.",
+    "Busuk": "Apel ini sudah membusuk. Anda bisa menjadikannya bahan kompos."
+  },
+  "Jeruk": {
+    "Mentah": "Simpan di suhu ruang dan hindari sinar matahari langsung agar matang.",
+    "Matang": "Segera konsumsi selagi segar! Cocok untuk diperas menjadi es jeruk.",
+    "Busuk": "Sudah tidak layak konsumsi. Buang ke tempat sampah organik untuk kompos."
+  },
+  "Pisang": {
+    "Mentah": "Bungkus bonggol pisang dengan plastik agar matang merata di suhu ruang.",
+    "Matang": "Segera konsumsi atau bekukan untuk dijadikan smoothies lezat.",
+    "Busuk": "Pisang sudah busuk, sangat bagus untuk dicampur ke dalam tanah sebagai pupuk."
+  },
+  "Others": {
+    "unknown": "Objek bukan buah target. Tidak ada saran khusus."
+  }
+}
