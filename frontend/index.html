@@ -4,7 +4,22 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Scanora-V1</title>
+    <title>Scanora</title>
+    <script>
+      (function() {
+        var emoji = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? '🍎' : '🍊';
+        var canvas = document.createElement('canvas');
+        canvas.width = 64; canvas.height = 64;
+        var ctx = canvas.getContext('2d');
+        ctx.font = '52px serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(emoji, 32, 36);
+        var link = document.querySelector('link[rel="icon"]') || document.createElement('link');
+        link.rel = 'icon'; link.href = canvas.toDataURL();
+        document.head.appendChild(link);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

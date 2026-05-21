@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Moon, Sun, LogOut, ChevronLeft, User, Languages, Bell } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useViewport } from '../context/ViewportContext';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -60,12 +61,17 @@ const Profile = () => {
     }
   };
 
+  const { viewport } = useViewport();
+  const isDesktop = viewport === 'desktop';
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-32 transition-colors">
       <div className="bg-white dark:bg-gray-800 px-6 pt-6 pb-4 shadow-sm z-10 sticky top-0 border-b border-gray-100 dark:border-gray-700 flex items-center gap-4">
-        <button onClick={() => navigate(-1)} className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">
-          <ChevronLeft size={24} />
-        </button>
+        {!isDesktop && (
+          <button onClick={() => navigate(-1)} className="text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors">
+            <ChevronLeft size={24} />
+          </button>
+        )}
         <h1 className="text-xl font-bold text-gray-900 dark:text-white">{t('profile.title')}</h1>
       </div>
 

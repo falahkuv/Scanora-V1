@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { History, Salad, X, Trash2, Apple, Banana, Citrus, ChevronRight, CalendarCheck, CalendarX, ImageOff, Utensils, Package, Refrigerator, ArrowUp, ArrowDown, CalendarArrowUp, CalendarArrowDown, CalendarPlus } from 'lucide-react';
 import api from '../api';
+import { useViewport } from '../context/ViewportContext';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -55,14 +56,21 @@ const calculateDaysLeft = (reminderAt) => {
  */
 const getCountdownConfig = (condition, daysLeft) => {
   const cond = (condition || '').toLowerCase();
-  const isExpired = cond === 'rotten' || daysLeft === null || daysLeft < 0;
-
-  if (isExpired) {
+  
+  if (cond === 'rotten' || cond === 'discarded') {
     return { bg: 'bg-gray-100', text: 'text-gray-500', btnText: 'Tidak Layak', isExpired: true };
   }
 
   if (cond === 'unripe') {
-    return { bg: 'bg-scanora-green', text: 'text-white', btnText: daysLeft > 0 ? `Matang ${daysLeft} Hari Lagi` : 'Siap Matang', isExpired: false };
+    if (daysLeft !== null && daysLeft <= 0) {
+      return { bg: 'bg-scanora-green', text: 'text-white', btnText: 'Siap Matang', isExpired: false };
+    }
+    return { bg: 'bg-scanora-green', text: 'text-white', btnText: `Matang ${daysLeft} Hari Lagi`, isExpired: false };
+  }
+
+  // cond === 'ripe'
+  if (daysLeft === null || daysLeft < 0) {
+    return { bg: 'bg-gray-100', text: 'text-gray-500', btnText: 'Kedaluwarsa', isExpired: true };
   }
 
   if (daysLeft === 0) {
@@ -75,7 +83,7 @@ const getCountdownConfig = (condition, daysLeft) => {
     return { bg: 'bg-orange-400', text: 'text-white', btnText: `Sisa ${daysLeft} Hari Lagi`, isExpired: false };
   }
 
-  return { bg: 'bg-gray-100', text: 'text-gray-500', btnText: 'Kedaluwarsa', isExpired: true };
+  return { bg: 'bg-gray-100', text: 'text-gray-500', btnText: 'Tidak Layak', isExpired: true };
 };
 
 /** Short month: "11 Mei 2026" */
@@ -214,6 +222,10 @@ const Inventory = () => {
   const [historyData, setHistoryData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState(null);
+
+  const { viewport } = useViewport();
+  const isDesktop = viewport === 'desktop';
+  const isTablet  = viewport === 'tablet';
   
   const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
   const [showSortPopup, setShowSortPopup] = useState(false);
@@ -256,8 +268,6 @@ const Inventory = () => {
     window.addEventListener('scanora:inventoryUpdated', fetchData);
 
     return () => {
-      if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
-      if (undoIntervalRef.current) clearInterval(undoIntervalRef.current);
       observer.disconnect();
       window.removeEventListener('scanora:inventoryUpdated', fetchData);
     };
@@ -326,11 +336,20 @@ const Inventory = () => {
   });
 
   const getSortIcon = () => {
-    if (sortConfig.key === 'date') {
-      return sortConfig.direction === 'asc' ? <CalendarArrowUp size={18} /> : <CalendarArrowDown size={18} />;
-    }
-    return sortConfig.direction === 'asc' ? <ArrowUp size={18} /> : <ArrowDown size={18} />;
+    if (sortConfig.key === 'priority') return sortConfig.direction === 'asc' ? <ArrowUp size={20} /> : <ArrowDown size={20} />;
+    return sortConfig.direction === 'asc' ? <CalendarArrowUp size={20} /> : <CalendarArrowDown size={20} />;
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setSelectedItem(null);
+        setShowSortPopup(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <div className="flex flex-col h-full bg-gray-50 pb-32 no-scrollbar">
@@ -354,31 +373,29 @@ const Inventory = () => {
           <div className="bg-gray-100 p-1 rounded-xl flex shadow-sm">
             <button
               onClick={() => setShowSortPopup(!showSortPopup)}
-              className="w-[44px] h-[44px] flex items-center justify-center rounded-lg active:scale-95 transition-all bg-white text-scanora-green shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
+              className="h-[44px] flex items-center justify-between gap-2 px-3 rounded-lg active:scale-95 transition-all bg-white text-scanora-green text-sm font-semibold shadow-[0_2px_8px_rgba(0,0,0,0.08)] whitespace-nowrap min-w-[44px] md:min-w-[160px]"
             >
+              <span className="hidden md:inline text-left flex-1">
+                {sortConfig.key === 'priority' ? 'Freshness Score' : 'Tanggal Foto'}
+              </span>
               {getSortIcon()}
             </button>
           </div>
           
           {showSortPopup && !showFloating && (
-             <div className="absolute top-[60px] right-0 bg-white rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.15)] border border-gray-100 p-2 min-w-[180px] flex flex-col gap-1 z-[200]">
-               <button onClick={() => handleSortSelect('priority')} className={`text-left px-3 py-2.5 text-sm rounded-lg flex justify-between items-center ${sortConfig.key === 'priority' ? 'bg-scanora-green/10 font-bold text-scanora-green' : 'text-gray-600 hover:bg-gray-50'}`}>
-                   <span>Freshness Score</span>
-                   {sortConfig.key === 'priority' ? (
-                     sortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />
-                   ) : (
-                     <ArrowUp size={14} className="text-gray-400" />
-                   )}
-               </button>
-               <button onClick={() => handleSortSelect('date')} className={`text-left px-3 py-2.5 text-sm rounded-lg flex justify-between items-center ${sortConfig.key === 'date' ? 'bg-scanora-green/10 font-bold text-scanora-green' : 'text-gray-600 hover:bg-gray-50'}`}>
-                   <span>Tanggal Foto</span>
-                   {sortConfig.key === 'date' ? (
-                     sortConfig.direction === 'asc' ? <CalendarArrowUp size={14} /> : <CalendarArrowDown size={14} />
-                   ) : (
-                     <CalendarArrowDown size={14} className="text-gray-400" />
-                   )}
-               </button>
-             </div>
+            <>
+              <div className="fixed inset-0 z-[199]" onClick={() => setShowSortPopup(false)} />
+              <div className="absolute top-[60px] right-0 bg-white rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.15)] border border-gray-100 p-2 min-w-[200px] flex flex-col gap-1 z-[200]">
+                <button onClick={() => handleSortSelect('priority')} className={`text-left px-3 py-2.5 text-sm rounded-lg flex justify-between items-center min-h-[44px] text-gray-600 hover:bg-gray-50`}>
+                    <span>Freshness Score</span>
+                    {sortConfig.key === 'priority' && sortConfig.direction === 'asc' ? <ArrowDown size={14} /> : <ArrowUp size={14} className={sortConfig.key === 'priority' ? '' : 'text-gray-400'} />}
+                </button>
+                <button onClick={() => handleSortSelect('date')} className={`text-left px-3 py-2.5 text-sm rounded-lg flex justify-between items-center min-h-[44px] text-gray-600 hover:bg-gray-50`}>
+                    <span>Tanggal Foto</span>
+                    {sortConfig.key === 'date' && sortConfig.direction === 'asc' ? <CalendarArrowDown size={14} /> : <CalendarArrowUp size={14} className={sortConfig.key === 'date' ? '' : 'text-gray-400'} />}
+                </button>
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -386,44 +403,42 @@ const Inventory = () => {
       <div ref={observerTarget} className="h-1 w-full" />
 
       {/* Floating Tab Switcher */}
-      <div className={`fixed left-0 right-0 z-30 flex justify-center transition-all duration-300 ease-out ${showFloating ? 'bottom-32 translate-y-0 opacity-100 pointer-events-auto' : 'bottom-28 translate-y-10 opacity-0 pointer-events-none'}`}>
-        <div className="flex gap-2 relative">
-          <div className="bg-gray-100/90 backdrop-blur-md p-1.5 rounded-full flex shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-gray-200">
-            <button onClick={() => { setActiveTab('inventory'); setShowSortPopup(false); }} className={`flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-full transition-all active:scale-95 ${activeTab === 'inventory' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>
+      <div className={`fixed left-0 right-0 z-30 flex justify-center transition-all duration-300 ease-out ${isDesktop ? 'pl-64' : ''} ${showFloating ? 'bottom-32 translate-y-0 opacity-100 pointer-events-auto' : 'bottom-28 translate-y-10 opacity-0 pointer-events-none'}`}>
+        <div className="flex gap-4 relative">
+          <div className="bg-gray-100/90 backdrop-blur-md p-1.5 rounded-full flex gap-1 shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-gray-200">
+            <button onClick={() => { setActiveTab('inventory'); setShowSortPopup(false); }} className={`flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-full min-h-[44px] transition-all active:scale-95 ${activeTab === 'inventory' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>
               <Salad size={16} /> Inventori ({inventoryData.length})
             </button>
-            <button onClick={() => { setActiveTab('history'); setShowSortPopup(false); }} className={`flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-full transition-all active:scale-95 ${activeTab === 'history' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>
+            <button onClick={() => { setActiveTab('history'); setShowSortPopup(false); }} className={`flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-full min-h-[44px] transition-all active:scale-95 ${activeTab === 'history' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>
               <History size={16} /> Riwayat ({historyData.length})
             </button>
           </div>
           <div className="bg-gray-100/90 backdrop-blur-md p-1.5 rounded-full flex shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-gray-200">
             <button
               onClick={() => setShowSortPopup(!showSortPopup)}
-              className="w-[44px] h-[44px] flex items-center justify-center rounded-full shadow-sm active:scale-95 transition-all bg-white text-scanora-green"
+              className="h-[44px] flex items-center justify-between gap-2 px-4 rounded-full shadow-sm active:scale-95 transition-all bg-white text-scanora-green text-sm font-semibold min-w-[44px] md:min-w-[170px]"
             >
+              <span className="hidden md:inline text-left flex-1">
+                {sortConfig.key === 'priority' ? 'Freshness Score' : 'Tanggal Foto'}
+              </span>
               {getSortIcon()}
             </button>
           </div>
           
           {showSortPopup && showFloating && (
-             <div className="absolute bottom-16 right-0 bg-white rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.15)] border border-gray-100 p-2 min-w-[180px] flex flex-col gap-1 z-[200]">
-               <button onClick={() => handleSortSelect('priority')} className={`text-left px-3 py-2.5 text-sm rounded-lg flex justify-between items-center ${sortConfig.key === 'priority' ? 'bg-scanora-green/10 font-bold text-scanora-green' : 'text-gray-600 hover:bg-gray-50'}`}>
-                   <span>Freshness Score</span>
-                   {sortConfig.key === 'priority' ? (
-                     sortConfig.direction === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />
-                   ) : (
-                     <ArrowUp size={14} className="text-gray-400" />
-                   )}
-               </button>
-               <button onClick={() => handleSortSelect('date')} className={`text-left px-3 py-2.5 text-sm rounded-lg flex justify-between items-center ${sortConfig.key === 'date' ? 'bg-scanora-green/10 font-bold text-scanora-green' : 'text-gray-600 hover:bg-gray-50'}`}>
-                   <span>Tanggal Foto</span>
-                   {sortConfig.key === 'date' ? (
-                     sortConfig.direction === 'asc' ? <CalendarArrowUp size={14} /> : <CalendarArrowDown size={14} />
-                   ) : (
-                     <CalendarArrowDown size={14} className="text-gray-400" />
-                   )}
-               </button>
-             </div>
+            <>
+              <div className="fixed inset-0 z-[199]" onClick={() => setShowSortPopup(false)} />
+              <div className="absolute bottom-16 right-0 bg-white rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.15)] border border-gray-100 p-2 min-w-[200px] flex flex-col gap-1 z-[200]">
+                <button onClick={() => handleSortSelect('priority')} className={`text-left px-3 py-2.5 text-sm rounded-lg flex justify-between items-center min-h-[44px] text-gray-600 hover:bg-gray-50`}>
+                    <span>Freshness Score</span>
+                    {sortConfig.key === 'priority' && sortConfig.direction === 'asc' ? <ArrowDown size={14} /> : <ArrowUp size={14} className={sortConfig.key === 'priority' ? '' : 'text-gray-400'} />}
+                </button>
+                <button onClick={() => handleSortSelect('date')} className={`text-left px-3 py-2.5 text-sm rounded-lg flex justify-between items-center min-h-[44px] text-gray-600 hover:bg-gray-50`}>
+                    <span>Tanggal Foto</span>
+                    {sortConfig.key === 'date' && sortConfig.direction === 'asc' ? <CalendarArrowDown size={14} /> : <CalendarArrowUp size={14} className={sortConfig.key === 'date' ? '' : 'text-gray-400'} />}
+                </button>
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -462,7 +477,7 @@ const Inventory = () => {
           )
         ) : activeTab === 'inventory' ? (
           sortedInventory.length > 0 ? (
-            <div className="grid grid-cols-2 gap-3">
+            <div className={`grid gap-3 ${isDesktop ? 'grid-cols-6' : isTablet ? 'grid-cols-3' : 'grid-cols-2'}`}>
               {sortedInventory.map(item => (
                 <InventoryCard key={item.id} item={item} onClick={() => setSelectedItem(item)} />
               ))}
@@ -481,51 +496,68 @@ const Inventory = () => {
             </div>
           )
         ) : (
-          <div className="space-y-3">
-            {sortedHistory.length > 0 ? sortedHistory.map(item => (
-              <div
-                key={item.id}
-                onClick={() => setSelectedItem(item)}
-                className="bg-white p-4 rounded-2xl flex items-center gap-4 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:-translate-y-0.5 active:scale-95 transition-all"
-              >
-                <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
-                  {item.image_url ? (
-                    <img
-                      src={item.image_url}
-                      alt={item.fruit_type}
-                      className="w-full h-full object-cover"
-                      onError={(e) => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }}
-                    />
-                  ) : null}
-                  <div className="w-full h-full items-center justify-center" style={{ display: item.image_url ? 'none' : 'flex' }}>
-                    <ImageOff size={20} className="text-gray-300" strokeWidth={1.5} />
+          sortedHistory.length > 0 ? (
+            <div className="space-y-6">
+              {Object.entries(
+                sortedHistory.reduce((acc, item) => {
+                  const d = new Date(item.scanned_at);
+                  const key = d.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+                  if (!acc[key]) acc[key] = [];
+                  acc[key].push(item);
+                  return acc;
+                }, {})
+              ).map(([monthYear, items]) => (
+                <div key={monthYear}>
+                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-1">{monthYear}</h3>
+                  <div className="space-y-3">
+                    {items.map(item => (
+                      <div
+                        key={item.id}
+                        onClick={() => setSelectedItem(item)}
+                        className="bg-white p-4 rounded-2xl flex items-center gap-4 shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:-translate-y-0.5 active:scale-95 transition-all"
+                      >
+                        <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
+                          {item.image_url ? (
+                            <img
+                              src={item.image_url}
+                              alt={item.fruit_type}
+                              className="w-full h-full object-cover"
+                              onError={(e) => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }}
+                            />
+                          ) : null}
+                          <div className="w-full h-full items-center justify-center" style={{ display: item.image_url ? 'none' : 'flex' }}>
+                            <ImageOff size={20} className="text-gray-300" strokeWidth={1.5} />
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-gray-900 capitalize">{getFruitLabel(item.fruit_type)}</h3>
+                          <p className="text-xs text-gray-400">{formatDate(item.scanned_at)}</p>
+                        </div>
+                        <span className={`text-xs font-semibold px-0 py-1 rounded-md uppercase flex-shrink-0 text-center min-w-[72px] ${getConditionBadgeStyle(item.condition)}`}>
+                          {getConditionLabel(item.condition)}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-900 capitalize">{getFruitLabel(item.fruit_type)}</h3>
-                  <p className="text-xs text-gray-400">{formatDate(item.scanned_at)}</p>
-                </div>
-                <span className={`text-xs font-semibold px-0 py-1 rounded-md uppercase flex-shrink-0 text-center min-w-[72px] ${getConditionBadgeStyle(item.condition)}`}>
-                  {getConditionLabel(item.condition)}
-                </span>
-              </div>
-            )) : (
-              <div className="flex-1 flex flex-col items-center justify-center py-16 px-4 text-center">
-                <History size={48} className="text-gray-300 mb-6" strokeWidth={1.5} />
-                <h3 className="text-lg font-bold text-gray-800 mb-2">Belum ada riwayat scan</h3>
-                <p className="text-sm text-gray-500 leading-relaxed max-w-[260px]">
-                  Setiap hasil scan buah yang dilakukan akan tersimpan ke sini.
-                </p>
-              </div>
-            )}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center py-16 px-4 text-center">
+              <History size={48} className="text-gray-300 mb-6" strokeWidth={1.5} />
+              <h3 className="text-lg font-bold text-gray-800 mb-2">Belum ada riwayat scan</h3>
+              <p className="text-sm text-gray-500 leading-relaxed max-w-[260px]">
+                Setiap hasil scan buah yang dilakukan akan tersimpan ke sini.
+              </p>
+            </div>
+          )
         )}
       </div>
 
       {/* ── Detail Modal ── */}
       {selectedItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl transform transition-all animate-slide-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in" onClick={() => setSelectedItem(null)}>
+          <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl transform transition-all animate-slide-up" onClick={e => e.stopPropagation()}>
             {/* Image banner */}
             <div className="relative aspect-video bg-gradient-to-b from-sky-200 to-green-200 flex items-center justify-center overflow-hidden">
               {selectedItem.image_url ? (
@@ -545,7 +577,7 @@ const Inventory = () => {
               </div>
               <button
                 onClick={() => setSelectedItem(null)}
-                className="absolute top-4 right-4 w-10 h-10 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 active:scale-95 transition-all"
+                className="absolute top-4 right-4 w-11 h-11 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 active:scale-95 transition-all"
               >
                 <X size={18} />
               </button>
@@ -576,7 +608,7 @@ const Inventory = () => {
                       ) : (
                         <CalendarX size={16} />
                       )}
-                      <span className="font-bold">
+                      <span className="font-medium text-gray-900">
                         {selectedItem.condition === 'unripe' ? 'Matang saat:' : 'Batas layak:'} {formatShortDate(selectedItem.reminder_at)}
                       </span>
                     </p>
@@ -627,7 +659,7 @@ const Inventory = () => {
 
               {/* Actions */}
               {activeTab === 'inventory' ? (
-                <div className="flex gap-2">
+                <div className="flex gap-4">
                   <button
                     onClick={async () => {
                       try {
@@ -654,7 +686,7 @@ const Inventory = () => {
                   </button>
                 </div>
               ) : (
-                <div className="flex gap-2">
+                <div className="flex gap-4">
                   <button
                     onClick={() => handleDeleteHistory(selectedItem)}
                     className="w-[20%] min-h-[44px] bg-red-100 text-red-600 rounded-xl flex items-center justify-center hover:bg-red-200 active:scale-95 transition-all"

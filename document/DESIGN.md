@@ -54,3 +54,27 @@ Karakteristik *Scanner Modal* dan *Inventory Detail*:
 - `logo-square.png` / `LOGO_Scanora_Color_Square.png`: Logo proporsi rasio 1:1, ideal untuk loading screen dan *icon*.
 - `logo-long.png` / `LOGO_Scanora_Color_Long.png`: Logo memanjang horizontal lengkap dengan nama merk, ideal diletakkan di *Header* / *Navbar*.
 - `mascots/*`: Koleksi karakter antropomorfik buah berdasar 3 tingkatan kematangan, disuguhkan di Inventory dan Scanner Sheet.
+
+## 5. Sistem Responsive Viewport
+
+Scanora mendukung tiga mode tampilan yang bisa dipilih user melalui **Viewport Toggle** (FAB floating di pojok kanan bawah).
+
+### A. Breakpoints & Container
+
+| Mode        | Lebar Kontainer | Navigasi              | Grid Inventori |
+|-------------|----------------|-----------------------|----------------|
+| ?? Mobile   | `max-w-md`     | Bottom Navigation     | 2 kolom        |
+| ?? Tablet   | `max-w-2xl`    | Bottom Navigation     | 3 kolom        |
+| ?? Desktop  | Full Width     | Left Sidebar (`w-60`) | 4 kolom        |
+
+### B. Perbedaan Layout
+
+- **Mobile:** BottomNav, padding p-6 pb-32, cards 2 kolom
+- **Tablet:** BottomNav, max-w-2xl mx-auto, cards 3 kolom
+- **Desktop:** SideNav kiri (w-60), full-width, padding p-8, cards 4 kolom
+
+### C. ViewportToggle
+- Posisi: fixed pojok kanan bawah. Mobile/Tablet: bottom-[88px]. Desktop: bottom-6.
+- Klik FAB -> expand ke atas -> pilih Mobile / Tablet / Desktop
+- Disimpan di localStorage (scanora_viewport), auto-detect dari lebar jendela
+- Tidak tampil di halaman auth (/login, /register, /onboarding)

@@ -13,6 +13,16 @@ const ScannerSheet = ({ isOpen, onClose }) => {
   const [capturedImage, setCapturedImage] = useState(null);
   const [toast, setToast] = useState({ msg: '', type: 'success', show: false });
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   const closeCard = () => {
     setScanState('closing');
     setTimeout(() => {
@@ -227,7 +237,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
 
   const getConditionColor = (condition) => {
     const c = condition?.toLowerCase() || '';
-    if (c === 'ripe') return { text: 'text-orange-700', bg: 'bg-orange-50', dot: 'bg-orange-500', stroke: '#f97316' };
+    if (c === 'ripe') return { text: 'text-orange-700', bg: 'bg-orange-50', dot: 'bg-orange-500', stroke: '#c25e00' };
     if (c === 'unripe') return { text: 'text-green-700', bg: 'bg-green-50', dot: 'bg-green-500', stroke: '#22c55e' };
     if (c === 'rotten') return { text: 'text-red-700', bg: 'bg-red-50', dot: 'bg-red-500', stroke: '#ef4444' };
     return { text: 'text-gray-700', bg: 'bg-gray-50', dot: 'bg-gray-500', stroke: '#9ca3af' };
@@ -239,7 +249,8 @@ const ScannerSheet = ({ isOpen, onClose }) => {
   const dashOffset = 283 - (scoreRatio * 283);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-black max-w-md mx-auto overflow-hidden">
+    <div className="fixed inset-0 z-[999] flex justify-center bg-black/80 backdrop-blur-sm">
+      <div className="flex flex-col bg-black w-full lg:max-w-3xl h-full relative overflow-hidden shadow-2xl">
       {/* Hidden gallery file input */}
       <input
         ref={fileInputRef}
@@ -429,16 +440,16 @@ const ScannerSheet = ({ isOpen, onClose }) => {
               </div>
               <h2 className="text-xl font-bold text-gray-900 mb-2">Gagal Memindai</h2>
               <p className="text-gray-500 text-sm mb-6">{errorMsg}</p>
-              <div className="flex gap-3">
+              <div className="flex gap-4">
                 <button
                   onClick={() => { setErrorMsg(''); setScanState('camera'); setCapturedImage(null); startCamera(); }}
-                  className="px-5 py-2 bg-gray-100 rounded-full text-gray-700 font-medium text-sm"
+                  className="px-5 min-h-[44px] flex items-center justify-center bg-gray-100 rounded-full text-gray-700 font-medium text-sm"
                 >
                   Coba Kamera
                 </button>
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-5 py-2 bg-scanora-green text-white rounded-full font-medium text-sm flex items-center gap-1"
+                  className="px-5 min-h-[44px] bg-scanora-green text-white rounded-full font-medium text-sm flex items-center justify-center gap-1"
                 >
                   <ImageIcon size={14} /> Galeri
                 </button>
@@ -492,7 +503,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
                   </p>
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex gap-4">
                   <button
                     onClick={closeCard}
                     className="flex-1 min-h-[44px] py-3.5 bg-gray-100 text-gray-700 font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-gray-200 active:scale-95 transition-all"
@@ -512,6 +523,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
             </>
           ) : null}
         </div>
+      </div>
       </div>
     </div>
   );
