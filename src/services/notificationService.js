@@ -58,7 +58,7 @@ const startNotificationScheduler = () => {
         if (daysLeft === 3) {
           notificationPayload = {
             title: `🥗 Jangan Lupa ${fruitName} Kamu!`,
-            body: `Mengingatkan: ${fruitName} kamu tinggal 3 hari lagi sebelum mulai membusuk. Yuk, jadwalkan untuk dikonsumsi!`,
+            body: `Mengingatkan: ${fruitName} kamu tinggal 2 hari lagi sebelum mulai membusuk. Yuk, segera dikonsumsi :)`,
             icon: '/icons/icon-192x192.png',
             data: { url: '/inventory' }
           };
@@ -72,7 +72,7 @@ const startNotificationScheduler = () => {
         } else if (daysLeft === 0) {
           notificationPayload = {
             title: `🚨 HARI TERAKHIR untuk ${fruitName}!`,
-            body: `${fruitName} kamu diperkirakan sudah mencapai batas maksimal kesegarannya HARI INI. Konsumsi sekarang sebelum terbuang sia-sia!`,
+            body: `${fruitName} kamu diperkirakan sudah mencapai batas maksimal kesegarannya HARI INI. Yuk konsumsi sekarang sebelum terbuang sia-sia :)`,
             icon: '/icons/icon-alert.png',
             data: { url: '/inventory' }
           };
