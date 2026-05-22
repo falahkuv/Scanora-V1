@@ -8,7 +8,8 @@ const { supabase } = require("../config/supabase");
 const asyncHandler = require("../middleware/asyncHandler");
 const { toScanResponse } = require("../services/formatService");
 const { sendSuccess } = require("../services/responseService");
-const { getGeminiSuggestion } = require("../services/geminiService");
+// const { getGeminiSuggestion } = require("../services/geminiService");
+const { getAISuggestion } = require("../services/openRouterService");
 
 const FASTAPI_URL = process.env.FASTAPI_URL || "http://localhost:8000";
 
@@ -234,8 +235,9 @@ const getScanSuggestion = asyncHandler(async (req, res) => {
     return sendSuccess(res, "Suggestion retrieved from cache", { ai_suggestion: scan.aiSuggestion });
   }
 
-  // 3. Cache Miss - Call Gemini
-  const suggestion = await getGeminiSuggestion(scan.fruitType, scan.condition, scan.freshnessScore);
+  // 3. Cache Miss - Call Gemini/OpenRouter
+  // const suggestion = await getGeminiSuggestion(scan.fruitType, scan.condition, scan.freshnessScore);
+  const suggestion = await getAISuggestion(scan.fruitType, scan.condition, scan.freshnessScore);
 
   // 4. Save to DB
   await prisma.scanHistory.update({

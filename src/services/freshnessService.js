@@ -62,12 +62,12 @@ const normalizeCondition = (condition, fruitType) => {
 
 /**
  * Normalize freshness score to [0.0, 1.0].
- * - Unripe condition is always treated as 100% fresh (bypass).
  * - Model may return 0–100 scale; we normalize to 0–1.
+ * - No bypass for unripe — score is used normally.
  */
 const normalizeFreshnessScore = (score, condition, fruitType) => {
   const cond = normalizeCondition(condition, fruitType);
-  if (cond === "unripe") return 1.0; // bypass — unripe is always 100% fresh
+  if (cond === "rotten") return 0; // rotten has no freshness
   const raw = score > 1 ? score / 100 : score;
   return Math.max(0, Math.min(1, raw));
 };
@@ -96,7 +96,7 @@ const calculateReminderAt = (fruitType, condition, freshnessScore, baseDate = ne
 
   const score = normalizeFreshnessScore(freshnessScore, condition, fruitType);
 
-  // Interpolate: higher freshness → closer to max days
+  // Interpolate: higher freshness score → closer to max days
   const days = shelf.min + Math.round((shelf.max - shelf.min) * score);
 
   const reminderAt = new Date(baseDate);
@@ -107,25 +107,37 @@ const calculateReminderAt = (fruitType, condition, freshnessScore, baseDate = ne
 
 /**
  * Calculate current estimated freshness score based on time elapsed.
- * Depreciates linearly from initial score to 0 over maxDays.
- * Unripe bypass: always returns 1.0 (no decay tracked before it ripens).
+ *
+ * Strategy:
+ * - Unripe: freshness stays at 100% until it transitions to "ripe" —
+ *   we show countdown to ripening, score doesn't decay.
+ * - Ripe/Rotten: score decays LINEARLY from initialScore → 0 over maxDays.
+ *   This ensures score = 0 exactly when estimatedExpiry is reached.
+ *   Formula: current = initialScore × (1 - daysElapsed / maxDays)
  *
  * @param {number} initialScore  - raw score from scan (0–1 or 0–100)
  * @param {string} condition
+ * @param {string} fruitType
  * @param {number} maxDays       - total estimated shelf life in days
  * @param {Date}   addedAt       - when item was added to inventory
  * @returns {number} - score 0.0–1.0
  */
 const calculateCurrentFreshnessScore = (initialScore, condition, fruitType, maxDays, addedAt) => {
   const cond = normalizeCondition(condition, fruitType);
-  if (cond === "unripe") return 1.0; // bypass — no decay for unripe
 
-  if (maxDays <= 0) return 0;
+  // Unripe: no decay — stays at full freshness, countdown shows ripening time
+  if (cond === "unripe") return 1.0;
+
+  // Rotten: already at 0
+  if (cond === "rotten" || maxDays <= 0) return 0;
 
   const score = normalizeFreshnessScore(initialScore, condition, fruitType);
   const daysElapsed = (Date.now() - new Date(addedAt)) / (1000 * 60 * 60 * 24);
-  const scorePerDay = score / maxDays;
-  const current = score - daysElapsed * scorePerDay;
+
+  // Linear decay: score reaches 0 exactly at maxDays (expiry)
+  // current = initialScore × (1 - daysElapsed / maxDays)
+  const decayRatio = daysElapsed / maxDays;
+  const current = score * (1 - decayRatio);
 
   return Math.max(0, Math.round(current * 100) / 100);
 };
