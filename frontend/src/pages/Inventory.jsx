@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { History, Salad, X, Trash2, Apple, Banana, Citrus, ChevronRight, CalendarCheck, CalendarX, ImageOff, Utensils, Package, Refrigerator, ArrowUp, ArrowDown, CalendarArrowUp, CalendarArrowDown, CalendarPlus } from 'lucide-react';
 import api from '../api';
 import { useViewport } from '../context/ViewportContext';
+import { getCachedSuggestion, saveSuggestionToCache } from '../lib/aiSuggestionCache';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -62,7 +63,10 @@ const getCountdownConfig = (condition, daysLeft) => {
   }
 
   if (cond === 'unripe') {
-    if (daysLeft !== null && daysLeft <= 0) {
+    if (daysLeft === null) {
+      return { bg: 'bg-gray-100', text: 'text-gray-500', btnText: 'Tidak Akan Matang', isExpired: true };
+    }
+    if (daysLeft <= 0) {
       return { bg: 'bg-scanora-green', text: 'text-white', btnText: 'Siap Matang', isExpired: false };
     }
     return { bg: 'bg-scanora-green', text: 'text-white', btnText: `Matang ${daysLeft} Hari Lagi`, isExpired: false };
@@ -222,6 +226,9 @@ const Inventory = () => {
   const [historyData, setHistoryData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [aiSuggestion, setAiSuggestion] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState(null);
 
   const { viewport } = useViewport();
   const isDesktop = viewport === 'desktop';
@@ -338,6 +345,60 @@ const Inventory = () => {
   const getSortIcon = () => {
     if (sortConfig.key === 'priority') return sortConfig.direction === 'asc' ? <ArrowUp size={20} /> : <ArrowDown size={20} />;
     return sortConfig.direction === 'asc' ? <CalendarArrowUp size={20} /> : <CalendarArrowDown size={20} />;
+  };
+
+  // Reset and auto-load AI suggestion state when selected item changes
+  useEffect(() => {
+    if (!selectedItem?.scan_id) {
+      setAiSuggestion(null);
+      setAiError(null);
+      setAiLoading(false);
+      return;
+    }
+
+    const currentScore = selectedItem.freshness_score_latest ?? selectedItem.freshness_score_initial;
+    const condition = selectedItem.condition;
+    const daysLeft = calculateDaysLeft(selectedItem.reminder_at);
+    
+    const { suggestion, tierChanged } = getCachedSuggestion(selectedItem.scan_id, currentScore, condition, daysLeft);
+
+    if (suggestion) {
+      setAiSuggestion(suggestion);
+      setAiError(null);
+      setAiLoading(false);
+
+      // Background auto-refresh if tier changed
+      if (tierChanged) {
+        handleGetAiSuggestion(true);
+      }
+    } else {
+      // Nothing in cache, wait for user to click
+      setAiSuggestion(null);
+      setAiError(null);
+      setAiLoading(false);
+    }
+  }, [selectedItem?.id]);
+
+  const handleGetAiSuggestion = async (isBackground = false) => {
+    if (!selectedItem?.scan_id) return;
+    if (!isBackground) setAiLoading(true);
+    setAiError(null);
+    try {
+      const currentScore = selectedItem.freshness_score_latest ?? selectedItem.freshness_score_initial;
+      const condition = selectedItem.condition;
+      const daysLeft = calculateDaysLeft(selectedItem.reminder_at);
+
+      const res = await api.post(`/scan/${selectedItem.scan_id}/suggestion`, {
+        freshness_score_latest: currentScore
+      });
+      const newSuggestion = res.data?.data?.ai_suggestion || 'Tidak ada saran tersedia.';
+      setAiSuggestion(newSuggestion);
+      saveSuggestionToCache(selectedItem.scan_id, newSuggestion, currentScore, condition, daysLeft);
+    } catch (err) {
+      if (!isBackground) setAiError('Gagal mendapatkan saran. Coba lagi.');
+    } finally {
+      if (!isBackground) setAiLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -657,15 +718,38 @@ const Inventory = () => {
                 </div>
               )}
 
-              {/* AI Suggestion Box */}
-              {selectedItem.ai_suggestion && (
-                <div className="bg-green-50 rounded-2xl p-4 border border-green-100 mb-4">
-                  <h4 className="font-semibold text-green-800 text-sm mb-2 flex items-center gap-1.5">
-                    💡 Saran Chef Scanora
-                  </h4>
-                  <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-                    {selectedItem.ai_suggestion}
-                  </p>
+              {/* AI Suggestion — On-Demand Button */}
+              {selectedItem.scan_id && activeTab === 'inventory' && (
+                <div className="mb-4">
+                  {!aiSuggestion && !aiLoading && (
+                    <button
+                      onClick={handleGetAiSuggestion}
+                      className="w-full min-h-[44px] bg-green-50 hover:bg-green-100 border border-green-200 text-green-800 font-semibold rounded-2xl flex items-center justify-center gap-2 text-sm active:scale-95 transition-all"
+                    >
+                      💡 Minta Saran AI
+                    </button>
+                  )}
+
+                  {aiLoading && (
+                    <div className="bg-green-50 rounded-2xl p-4 border border-green-100 flex items-center gap-3">
+                      <div className="w-5 h-5 border-2 border-green-400 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+                      <p className="text-sm text-green-700 font-medium">Scanora sedang berpikir...</p>
+                    </div>
+                  )}
+
+                  {aiSuggestion && !aiLoading && (
+                    <div className="bg-green-50 rounded-2xl p-4 border border-green-100">
+                      <h4 className="font-semibold text-green-800 text-sm flex items-center gap-1.5 mb-2">💡 Saran Chef Scanora</h4>
+                      <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{aiSuggestion}</p>
+                    </div>
+                  )}
+
+                  {aiError && !aiLoading && (
+                    <div className="bg-red-50 rounded-2xl p-4 border border-red-100 flex items-center justify-between gap-2">
+                      <p className="text-sm text-red-600">{aiError}</p>
+                      <button onClick={handleGetAiSuggestion} className="text-xs text-red-600 font-bold underline">Coba Lagi</button>
+                    </div>
+                  )}
                 </div>
               )}
 

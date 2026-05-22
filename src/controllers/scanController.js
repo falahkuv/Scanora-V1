@@ -225,19 +225,18 @@ const getScanSuggestion = asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, message: "Scan not found", data: null });
   }
 
-  // 1. Bypass Gemini if Others
+  // 1. Bypass AI if Others/unknown
   if (scan.fruitType.toLowerCase() === 'others' || scan.fruitType.toLowerCase() === 'unknown') {
     return sendSuccess(res, "Suggestion retrieved", { ai_suggestion: "Objek tidak dikenali sebagai buah target. Tidak ada saran AI." });
   }
 
-  // 2. Cache Hit
-  if (scan.aiSuggestion) {
-    return sendSuccess(res, "Suggestion retrieved from cache", { ai_suggestion: scan.aiSuggestion });
-  }
+  // 2. Gunakan freshness_score_latest dari request jika ada (lebih akurat = kondisi terkini)
+  //    Jika tidak ada, fallback ke skor awal dari scan
+  const freshnessScoreToUse = req.body?.freshness_score_latest ?? scan.freshnessScore;
 
-  // 3. Cache Miss - Call Gemini/OpenRouter
+  // 3. Always generate fresh suggestion (no cache) — saran selalu sesuai kondisi terkini
   // const suggestion = await getGeminiSuggestion(scan.fruitType, scan.condition, scan.freshnessScore);
-  const suggestion = await getAISuggestion(scan.fruitType, scan.condition, scan.freshnessScore);
+  const suggestion = await getAISuggestion(scan.fruitType, scan.condition, freshnessScoreToUse);
 
   // 4. Save to DB
   await prisma.scanHistory.update({

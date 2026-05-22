@@ -30,7 +30,7 @@ const SHELF_LIFE_RULES = {
     rotten: { min: 0, max: 0, label: "Kedaluwarsa" },
   },
   orange: {
-    unripe: { min: 7, max: 7, label: "Perkiraan Matang" },
+    unripe: { min: 0, max: 0, label: "Tidak Akan Matang" },
     ripe:   { min: 14, max: 14, label: "Baik Sebelum" },
     rotten: { min: 0, max: 0, label: "Kedaluwarsa" },
   },

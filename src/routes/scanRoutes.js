@@ -28,6 +28,6 @@ router.post(
 router.get("/history", authenticateToken, scanController.getHistory);
 router.get("/history/:id", authenticateToken, scanController.getHistoryById);
 router.delete("/history/:id", authenticateToken, scanController.deleteHistory);
-router.get("/:id/suggestion", authenticateToken, scanController.getScanSuggestion);
+router.post("/:id/suggestion", authenticateToken, scanController.getScanSuggestion);
 
 module.exports = router;

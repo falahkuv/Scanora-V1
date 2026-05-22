@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { X, HelpCircle, ImageIcon, RefreshCw, Zap, ZapOff, CheckCircle, CircleX, ChevronDown, Check, Camera } from 'lucide-react';
 import imageCompression from 'browser-image-compression';
 import api from '../api';
+import { getCachedSuggestion, saveSuggestionToCache } from '../lib/aiSuggestionCache';
 
 const ScannerSheet = ({ isOpen, onClose }) => {
   const [scanState, setScanState] = useState('camera');
@@ -144,11 +145,6 @@ const ScannerSheet = ({ isOpen, onClose }) => {
         }
         setResult(data);
         setScanState('full-result');
-        
-        // Panggil AI di background
-        if (data.scan_id) {
-          fetchAiSuggestion(data.scan_id);
-        }
       } else {
         setErrorMsg(response.data.message || 'Gagal memindai');
         setScanState('full-result');
@@ -170,13 +166,25 @@ const ScannerSheet = ({ isOpen, onClose }) => {
     }
   };
 
-  const fetchAiSuggestion = async (scanId) => {
+  const fetchAiSuggestion = async (scanId, freshnessScore) => {
+    // Optional: Check cache first even in ScannerSheet (though it's usually a new scan)
+    const condition = result?.condition;
+    const { suggestion, tierChanged } = getCachedSuggestion(scanId, freshnessScore, condition, undefined);
+    if (suggestion && !tierChanged) {
+      setAiSuggestion(suggestion);
+      return;
+    }
+
     setIsLoadingTips(true);
     setAiSuggestion('');
     try {
-      const response = await api.get(`/scan/${scanId}/suggestion`);
+      const response = await api.post(`/scan/${scanId}/suggestion`, {
+        freshness_score_latest: freshnessScore
+      });
       if (response.data.success) {
-        setAiSuggestion(response.data.data.ai_suggestion);
+        const newSuggestion = response.data.data.ai_suggestion;
+        setAiSuggestion(newSuggestion);
+        saveSuggestionToCache(scanId, newSuggestion, freshnessScore, condition, undefined);
       }
     } catch (err) {
       console.error('Failed to get AI suggestion', err);
@@ -521,16 +529,31 @@ const ScannerSheet = ({ isOpen, onClose }) => {
               <div className="mt-6">
                 <div className="bg-green-50 rounded-2xl p-5 mb-6 border border-green-100">
                   <h3 className="font-semibold text-scanora-dark mb-3 flex items-center gap-2">💡 Saran AI Chef Scanora</h3>
-                  {isLoadingTips ? (
+
+                  {/* Belum diminta */}
+                  {!aiSuggestion && !isLoadingTips && (
+                    <button
+                      onClick={() => fetchAiSuggestion(result.scan_id, result.freshness_score)}
+                      className="w-full py-2.5 bg-white border border-green-200 text-green-700 font-semibold rounded-xl text-sm hover:bg-green-100 active:scale-95 transition-all"
+                    >
+                      Minta Saran AI ✨
+                    </button>
+                  )}
+
+                  {/* Loading skeleton */}
+                  {isLoadingTips && (
                     <div className="animate-pulse flex flex-col gap-2">
-                        <div className="h-4 bg-green-200/50 rounded w-full"></div>
-                        <div className="h-4 bg-green-200/50 rounded w-5/6"></div>
-                        <div className="h-4 bg-green-200/50 rounded w-4/6"></div>
+                      <div className="h-4 bg-green-200/50 rounded w-full" />
+                      <div className="h-4 bg-green-200/50 rounded w-5/6" />
+                      <div className="h-4 bg-green-200/50 rounded w-4/6" />
                     </div>
-                  ) : (
-                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-                        {aiSuggestion || 'Saran tidak tersedia.'}
-                    </p>
+                  )}
+
+                  {/* Hasil saran */}
+                  {aiSuggestion && !isLoadingTips && (
+                    <div>
+                      <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{aiSuggestion}</p>
+                    </div>
                   )}
                 </div>
 
@@ -543,11 +566,11 @@ const ScannerSheet = ({ isOpen, onClose }) => {
                   </button>
                   <button
                     onClick={handleSaveToInventory}
-                    disabled={isSaving || isLoadingTips}
+                    disabled={isSaving}
                     className="flex-1 min-h-[44px] py-3.5 bg-scanora-green text-white font-semibold rounded-xl shadow-lg shadow-scanora-green/30 flex items-center justify-center gap-2 hover:bg-scanora-dark active:scale-95 transition-all disabled:opacity-70"
                   >
                     <Check size={18} />
-                    {isSaving ? 'Menyimpan...' : (isLoadingTips ? 'Menunggu AI...' : 'Simpan')}
+                    {isSaving ? 'Menyimpan...' : 'Simpan'}
                   </button>
                 </div>
               </div>
