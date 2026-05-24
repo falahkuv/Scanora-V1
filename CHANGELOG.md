@@ -2,6 +2,32 @@
 
 Semua perubahan yang signifikan pada proyek Scanora akan didokumentasikan dalam file ini.
 
+## [v1.8.0] - 2026-05-24
+### Added
+- **Halaman Statistik Aksi (`/stats`)**: Halaman baru dengan animasi *page-in*, dibangun ulang menggunakan **Chart.js + react-chartjs-2**. Menampilkan dua section utama:
+  - *Performa Bulan Ini*: Navigasi antar bulan (← →), kartu stat Dibuang/Dikonsumsi/Disimpan, dan progress bar Save Rate.
+  - *Overview*: Kartu highlight (Buah Favorit & Save Rate Terbaik), Bar Chart riwayat performa dengan efek *focus bar* pada bulan aktif, dan Pie Chart komposisi jenis buah.
+- **Profile Footer**: Menambahkan *footer* versi aplikasi di halaman Profil dengan teks `"Scanora · v1.8.0 Beta · Mei 2026"`, slogan *"Choose Better, Waste Less."*, dan hak cipta `© 2026 Scanora`.
+
+### Changed
+- **Home — Section Performa**: Mengubah judul `"Impact Kamu"` → `"Performa Bulan Ini"` dan menambahkan tombol `"Detail"` (abu-abu, tanpa ikon) yang mengarahkan ke halaman `/stats`.
+- **App Routing**: Route `/stats` didaftarkan dan *Bottom Nav* disembunyikan otomatis saat berada di halaman statistik.
+- **Statistik Aksi — Layout**: Layout didesain ulang dengan dua section terstruktur (*Performa Bulan Ini* dan *Overview*). Sub-heading menggunakan teks tanpa ikon untuk tampilan yang lebih bersih. Radius komponen diseragamkan ke `rounded-xl` (tidak terlalu rounded).
+- **Bar Chart**: Urutan bar diperbaiki — *Dibuang* tampil pertama (kiri), *Dikonsumsi* kedua. Warna legend dan bar kini dikelola Chart.js secara konsisten.
+
+## [v1.7.1] - 2026-05-24
+### Added
+- **Category Filter Pills**: Menambahkan filter kategori dinamis (Semua, Ripe, Unripe, Rotten) pada halaman Inventori untuk memudahkan sortir buah.
+- **Scanner Image Cropping**: Gambar hasil tangkapan kamera kini akan di-crop otomatis sesuai kotak *viewfinder* (crosshair) untuk hasil yang presisi.
+
+### Changed
+- **UI & Viewport Standardization**: Memperhalus padding, margin, styling `capitalize`, dan standarisasi ukuran serta animasi komponen lintas viewport (Mobile S hingga Laptop 1024px).
+- **Notifikasi Push UX**: Penataan ulang *layout* profil agar tombol Notifikasi Push tidak tertumpuk dengan teks berlebih. Penambahan *softfeather mask* pada daftar Segera Konsumsi.
+
+### Fixed
+- **Countdown Auto-Transition**: Perbaikan *bug* krusial pada backend (`inventoryController.js`) di mana buah yang berstatus `unripe` kini akan otomatis bertransisi menjadi `ripe` saat melewati tanggal matang, lalu mengkalkulasi ulang sisa umur kesegaran barunya secara *real-time*.
+- Penyesuaian warna `Kedaluwarsa` dan Freshness Score 0% menjadi `#8e0610` untuk urgensi seragam.
+
 ## [v1.7.0] - 2026-05-21
 ### Added
 - **Viewport Switcher & Responsiveness**: Implementasi fitur toggle responsif (Dekstop/Tablet/Mobile) dan penggunaan ikon navigasi yang berbeda (🍎 untuk Localhost, 🍊 untuk Web Asli).

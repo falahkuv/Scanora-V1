@@ -2,7 +2,7 @@ const { prisma } = require("../config/prisma");
 const asyncHandler = require("../middleware/asyncHandler");
 const { toInventoryResponse } = require("../services/formatService");
 const { sendSuccess } = require("../services/responseService");
-const { getFreshnessData } = require("../services/freshnessService");
+const { getFreshnessData, calculateReminderAt } = require("../services/freshnessService");
 
 const getInventory = asyncHandler(async (req, res) => {
   const items = await prisma.inventory.findMany({
@@ -10,6 +10,32 @@ const getInventory = asyncHandler(async (req, res) => {
     orderBy: { addedAt: "desc" },
     include: { scan: true }
   });
+
+  // ── Auto-transition: unripe items that have passed their ripe date → ripe ──
+  const now = new Date();
+  for (const item of items) {
+    if (
+      item.condition === "unripe" &&
+      item.reminderAt &&
+      new Date(item.reminderAt) <= now
+    ) {
+      const rawScore = item.scan?.freshnessScore ?? 75;
+      // Calculate new reminder_at (busuk date), using the actual ripe date as baseDate
+      const { reminderAt: newReminderAt } = calculateReminderAt(
+        item.fruitType,
+        "ripe",
+        rawScore,
+        new Date(item.reminderAt) // the moment it actually ripened
+      );
+      await prisma.inventory.update({
+        where: { id: item.id },
+        data: { condition: "ripe", reminderAt: newReminderAt ?? null },
+      });
+      // Mutate in-memory so enrichment below uses correct condition
+      item.condition = "ripe";
+      item.reminderAt = newReminderAt ?? null;
+    }
+  }
 
   const enriched = items.map(item => {
     const base = toInventoryResponse(item);

@@ -74,28 +74,29 @@ const getCountdownConfig = (condition, daysLeft) => {
 
   // cond === 'ripe'
   if (daysLeft === null || daysLeft < 0) {
-    return { bg: 'bg-gray-100', text: 'text-gray-500', btnText: 'Kedaluwarsa', isExpired: true };
+    return { bg: 'bg-[#8e0610]', text: 'text-white', btnText: 'Kedaluwarsa', isExpired: true };
   }
 
   if (daysLeft === 0) {
-    return { bg: 'bg-[#e02224]', text: 'text-white', btnText: `Hari ini!`, isExpired: false };
+    return { bg: 'bg-[#8e0610]', text: 'text-white', btnText: `Hari ini!`, isExpired: false };
   }
   if (daysLeft === 1) {
-    return { bg: 'bg-[#e02224]', text: 'text-white', btnText: `Sisa 1 Hari Lagi`, isExpired: false };
+    return { bg: 'bg-[#8e0610]', text: 'text-white', btnText: `Sisa 1 Hari Lagi`, isExpired: false };
   }
   if (daysLeft > 1) {
-    return { bg: 'bg-orange-400', text: 'text-white', btnText: `Sisa ${daysLeft} Hari Lagi`, isExpired: false };
+    return { bg: 'bg-orange-main', text: 'text-white', btnText: `Sisa ${daysLeft} Hari Lagi`, isExpired: false };
   }
 
   return { bg: 'bg-gray-100', text: 'text-gray-500', btnText: 'Tidak Layak', isExpired: true };
 };
 
-/** Short month: "11 Mei 2026" */
+/** Short month: "11 Mei '26" */
 const formatShortDate = (dateStr) => {
   if (!dateStr) return '-';
   const d = new Date(dateStr);
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+  const yr = String(d.getFullYear()).slice(2);
+  return `${d.getDate()} ${months[d.getMonth()]} '${yr}`;
 };
 
 /** Captured date: "27 Mei" */
@@ -115,8 +116,8 @@ const formatDate = (dateStr) => {
 /** Percent badge for freshness score */
 const ScoreBadge = ({ score, className = "py-1 text-[11px]" }) => {
   const pct = Math.round(score ?? 0);
-  const bg = pct >= 70 ? 'bg-green-100' : pct > 0 ? 'bg-orange-100' : 'bg-red-800';
-  const text = pct >= 70 ? 'text-green-700' : pct > 0 ? 'text-orange-700' : 'text-white';
+  const bg = pct >= 70 ? 'bg-green-100' : pct > 0 ? 'bg-orange-main/15' : 'bg-red-800';
+  const text = pct >= 70 ? 'text-green-700' : pct > 0 ? 'text-orange-main' : 'text-white';
   return (
     <div className={`px-2 rounded w-full text-center font-bold flex items-center justify-center ${bg} ${text} ${className}`}>
       {pct}%
@@ -190,7 +191,7 @@ const InventoryCard = ({ item, onClick }) => {
           {getFruitLabel(item.fruit_type)}
         </h3>
 
-        {/* Label + date (with icons) */}
+        {/* Date — compact format no prefix */}
         <div className="flex items-center gap-1.5 mt-[0.5rem]">
           {item.condition === 'unripe' ? (
              <CalendarCheck size={14} className="text-gray-400" />
@@ -198,7 +199,8 @@ const InventoryCard = ({ item, onClick }) => {
              <CalendarX size={14} className="text-gray-400" />
           )}
           <span className="text-xs font-semibold text-gray-500">
-            {labelText} {item.reminder_at ? formatShortDate(item.reminder_at) : '-'}
+            {item.condition === 'unripe' ? 'Matang: ' : 'Busuk: '}
+            {item.reminder_at ? formatShortDate(item.reminder_at) : '-'}
           </span>
         </div>
 
@@ -234,6 +236,7 @@ const Inventory = () => {
   const isDesktop = viewport === 'desktop';
   const isTablet  = viewport === 'tablet';
   
+  const [conditionFilter, setConditionFilter] = useState('all');
   const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
   const [showSortPopup, setShowSortPopup] = useState(false);
 
@@ -415,20 +418,20 @@ const Inventory = () => {
   return (
     <div className="flex flex-col h-full bg-gray-50 pb-32 no-scrollbar">
       {/* Sticky Header */}
-      <div className="bg-white px-6 pt-6 pb-4 shadow-sm z-40 sticky top-0 border-b border-gray-100">
+      <div className="bg-white px-4 pt-6 pb-4 shadow-sm z-40 sticky top-0 border-b border-gray-100">
         <div className="flex relative gap-2">
           <div className="bg-gray-100 p-1 rounded-xl flex flex-1">
             <button
               onClick={() => { setActiveTab('inventory'); setShowSortPopup(false); }}
               className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all active:scale-95 min-h-[44px] ${activeTab === 'inventory' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}
             >
-              <Salad size={16} /> Inventori ({inventoryData.length})
+              <Salad size={16} /> Inventori
             </button>
             <button
               onClick={() => { setActiveTab('history'); setShowSortPopup(false); }}
               className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all active:scale-95 min-h-[44px] ${activeTab === 'history' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}
             >
-              <History size={16} /> Riwayat ({historyData.length})
+              <History size={16} /> Riwayat
             </button>
           </div>
           <div className="bg-gray-100 p-1 rounded-xl flex shadow-sm">
@@ -461,6 +464,31 @@ const Inventory = () => {
         </div>
       </div>
 
+      {/* ── Category Filter Pills (Inventori tab only) ── */}
+      {activeTab === 'inventory' && (
+        <div className="px-4 pt-3 pb-1 flex gap-2 overflow-x-auto no-scrollbar min-h-[44px]">
+          {[
+            { key: 'all',    label: 'Semua',  count: inventoryData.length,                                        active: 'bg-gray-800 text-white',                 inactive: 'border border-gray-200 text-gray-600 bg-transparent' },
+            { key: 'ripe',   label: 'Ripe',   count: inventoryData.filter(i => i.condition === 'ripe').length,   active: 'bg-orange-main text-white',              inactive: 'border border-orange-200 text-orange-600 bg-transparent' },
+            { key: 'unripe', label: 'Unripe', count: inventoryData.filter(i => i.condition === 'unripe').length, active: 'bg-scanora-green text-white',            inactive: 'border border-green-200 text-green-600 bg-transparent' },
+            { key: 'rotten', label: 'Rotten', count: inventoryData.filter(i => i.condition === 'rotten').length, active: 'bg-[#8e0610] text-white',                inactive: 'border border-red-200 text-red-600 bg-transparent' },
+          ].map(pill => (
+            <button
+              key={pill.key}
+              onClick={() => setConditionFilter(pill.key)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 transition-all active:scale-95
+                ${conditionFilter === pill.key ? pill.active : pill.inactive}`}
+            >
+              {pill.label}
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full
+                ${conditionFilter === pill.key ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>
+                {pill.count}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
       <div ref={observerTarget} className="h-1 w-full" />
 
       {/* Floating Tab Switcher */}
@@ -468,10 +496,10 @@ const Inventory = () => {
         <div className="flex gap-4 relative">
           <div className="bg-gray-100/90 backdrop-blur-md p-1.5 rounded-full flex gap-1 shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-gray-200">
             <button onClick={() => { setActiveTab('inventory'); setShowSortPopup(false); }} className={`flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-full min-h-[44px] transition-all active:scale-95 ${activeTab === 'inventory' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>
-              <Salad size={16} /> Inventori ({inventoryData.length})
+              <Salad size={16} /> <span className="hidden sm:inline">Inventori</span>
             </button>
             <button onClick={() => { setActiveTab('history'); setShowSortPopup(false); }} className={`flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-full min-h-[44px] transition-all active:scale-95 ${activeTab === 'history' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>
-              <History size={16} /> Riwayat ({historyData.length})
+              <History size={16} /> <span className="hidden sm:inline">Riwayat</span>
             </button>
           </div>
           <div className="bg-gray-100/90 backdrop-blur-md p-1.5 rounded-full flex shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-gray-200">
@@ -509,7 +537,7 @@ const Inventory = () => {
         {loading ? (
           activeTab === 'inventory' ? (
             // Skeleton — Inventory grid
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               {[...Array(4)].map((_, i) => (
                 <div key={i} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
                   <div className="aspect-square bg-gray-100 animate-pulse" />
@@ -536,10 +564,16 @@ const Inventory = () => {
               ))}
             </div>
           )
-        ) : activeTab === 'inventory' ? (
-          sortedInventory.length > 0 ? (
-            <div className={`grid gap-3 ${isDesktop ? 'grid-cols-6' : isTablet ? 'grid-cols-3' : 'grid-cols-2'}`}>
-              {sortedInventory.map(item => (
+        ) : activeTab === 'inventory' ? (() => {
+          const filteredInventory = conditionFilter === 'all'
+            ? sortedInventory
+            : sortedInventory.filter(i => i.condition === conditionFilter);
+
+          return filteredInventory.length > 0 ? (
+            <div className={`grid gap-4 ${
+              isDesktop ? 'grid-cols-4' : isTablet ? 'grid-cols-3' : 'grid-cols-1 sm:grid-cols-2'
+            }`}>
+              {filteredInventory.map(item => (
                 <InventoryCard key={item.id} item={item} onClick={() => setSelectedItem(item)} />
               ))}
             </div>
@@ -550,26 +584,41 @@ const Inventory = () => {
                 <Banana size={48} className="text-yellow-400/40" strokeWidth={1.5} />
                 <Citrus size={46} className="text-orange-400/40 -scale-x-100 -scale-y-100" strokeWidth={1.5} />
               </div>
-              <h3 className="text-lg font-bold text-gray-800 mb-2">Inventori kamu masih kosong</h3>
+              <h3 className="text-lg font-bold text-gray-800 mb-2">
+                {conditionFilter === 'all' ? 'Inventori kamu masih kosong' : `Buah status ${conditionFilter} tidak ditemukan`}
+              </h3>
               <p className="text-sm text-gray-500 leading-relaxed max-w-[260px]">
-                Kalau kamu simpan ke Inventori maka aplikasi akan bisa memberi kamu notifikasi pengingat.
+                {conditionFilter === 'all' ? 'Kalau kamu simpan ke Inventori maka aplikasi akan bisa memberi kamu notifikasi pengingat.' : 'Coba ganti filter atau scan buah baru.'}
               </p>
             </div>
-          )
-        ) : (
+          );
+        })() : (
           sortedHistory.length > 0 ? (
             <div className="space-y-6">
               {Object.entries(
                 sortedHistory.reduce((acc, item) => {
                   const d = new Date(item.scanned_at);
-                  const key = d.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  const itemDate = new Date(d);
+                  itemDate.setHours(0, 0, 0, 0);
+                  
+                  const diffTime = today.getTime() - itemDate.getTime();
+                  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+                  
+                  let key;
+                  if (diffDays === 0) key = 'Hari Ini';
+                  else if (diffDays === 1) key = 'Kemarin';
+                  else if (diffDays <= 7) key = '7 Hari Terakhir';
+                  else key = d.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+                  
                   if (!acc[key]) acc[key] = [];
                   acc[key].push(item);
                   return acc;
                 }, {})
-              ).map(([monthYear, items]) => (
-                <div key={monthYear}>
-                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-1">{monthYear}</h3>
+              ).map(([groupTitle, items]) => (
+                <div key={groupTitle}>
+                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-1">{groupTitle}</h3>
                   <div className="space-y-3">
                     {items.map(item => (
                       <div
@@ -594,7 +643,7 @@ const Inventory = () => {
                           <h3 className="font-semibold text-gray-900 capitalize">{getFruitLabel(item.fruit_type)}</h3>
                           <p className="text-xs text-gray-400">{formatDate(item.scanned_at)}</p>
                         </div>
-                        <span className={`text-xs font-semibold px-0 py-1 rounded-md uppercase flex-shrink-0 text-center min-w-[72px] ${getConditionBadgeStyle(item.condition)}`}>
+                        <span className={`text-xs font-semibold px-0 py-1 rounded-md capitalize flex-shrink-0 text-center min-w-[72px] ${getConditionBadgeStyle(item.condition)}`}>
                           {getConditionLabel(item.condition)}
                         </span>
                       </div>
@@ -646,11 +695,11 @@ const Inventory = () => {
 
             <div className="p-5">
               {/* Name + badge hug */}
-              <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center gap-4 mb-4">
                 <h2 className="text-2xl font-bold text-gray-900 capitalize leading-none">
                   {getFruitLabel(selectedItem.fruit_type)}
                 </h2>
-                <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase leading-none ${getConditionBadgeStyle(selectedItem.condition)}`}>
+                <span className={`text-[10px] font-bold px-2 py-1 rounded-md capitalize leading-none ${getConditionBadgeStyle(selectedItem.condition)}`}>
                   {getConditionLabel(selectedItem.condition)}
                 </span>
               </div>
@@ -658,28 +707,30 @@ const Inventory = () => {
               {activeTab === 'inventory' ? (
                 <>
                   {/* Date row */}
-                  <div className="flex flex-col gap-1.5 mb-5">
-                    <p className="text-gray-500 font-medium text-sm flex items-center gap-2">
-                      <CalendarPlus size={16} />
-                      Tanggal Foto: {formatDate(selectedItem.added_at || selectedItem.created_at)}
-                    </p>
-                    <p className="text-gray-500 font-medium text-sm flex items-center gap-2">
-                      {selectedItem.condition === 'unripe' ? (
-                        <CalendarCheck size={16} />
-                      ) : (
-                        <CalendarX size={16} />
-                      )}
-                      <span className="font-medium text-gray-900">
-                        {selectedItem.condition === 'unripe' ? 'Matang saat:' : 'Batas layak:'} {formatShortDate(selectedItem.reminder_at)}
-                      </span>
-                    </p>
-                  </div>
-
-                  {/* Freshness bar & Countdown */}
-                  <div className="mb-6">
-                    <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-2">
-                      <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2 font-bold text-center">Perubahan Freshness Score</p>
-                      <div className="flex items-center gap-2">
+                  <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-2">
+                    <div className="flex flex-col gap-3 mb-4">
+                      <p className="text-gray-500 font-medium text-sm flex items-center gap-2">
+                        <CalendarPlus size={16} />
+                        <span className="font-medium text-gray-500">
+                          Tgl. Foto: {formatShortDate(selectedItem.added_at || selectedItem.created_at)}
+                        </span>
+                      </p>
+                      <p className="text-gray-500 font-medium text-sm flex items-center gap-2">
+                        {selectedItem.condition === 'unripe' ? (
+                          <CalendarCheck size={16} />
+                        ) : (
+                          <CalendarX size={16} />
+                        )}
+                        <span className="font-medium text-gray-500">
+                          {selectedItem.condition === 'unripe' ? 'Matang saat:' : 'Batas Layak:'} {formatShortDate(selectedItem.reminder_at)}
+                        </span>
+                      </p>
+                    </div>
+                    <hr className="border-gray-200 mb-4" />
+                    <p className="text-[10px] text-gray-500 capitalize tracking-wide mb-2 font-bold text-center">Perubahan Freshness Score</p>
+                    
+                    {/* Freshness bar & Countdown */}
+                    <div className="flex items-center gap-2 mb-4">
                         <div className="flex-1">
                           <ScoreBadge score={selectedItem.freshness_score_initial} className="py-2 text-sm" />
                         </div>
@@ -690,7 +741,6 @@ const Inventory = () => {
                         <div className="flex-1">
                           <ScoreBadge score={selectedItem.freshness_score_latest ?? selectedItem.freshness_score_initial} className="py-2 text-sm" />
                         </div>
-                      </div>
                     </div>
 
                     {(() => {
@@ -703,13 +753,23 @@ const Inventory = () => {
                       );
                     })()}
                   </div>
+
+                  {/* Divider before actions */}
+                  <hr className="border-gray-100 mb-4" />
                 </>
               ) : (
                 <div className="mb-6">
                   <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
-                    <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2 font-bold text-center">Detail Scan</p>
-                    <div className="flex items-center justify-between text-sm text-gray-600">
-                      <span>{formatDate(selectedItem.scanned_at)}</span>
+                    <p className="text-[10px] text-gray-500 capitalize tracking-wide mb-2 font-bold text-center">Detail Scan</p>
+                    <div className="flex flex-col gap-3">
+                      <p className="text-gray-500 font-medium text-sm flex items-center gap-2">
+                        <CalendarPlus size={16} />
+                        <span className="font-medium text-gray-500">
+                          Tgl. Foto: {formatShortDate(selectedItem.scanned_at)}
+                        </span>
+                      </p>
+                    </div>
+                    <div className="flex items-center justify-between text-sm text-gray-600 mt-4">
                       <div className="min-w-[88px]">
                         <ScoreBadge score={selectedItem.freshness_score} className="py-1.5 text-sm" />
                       </div>

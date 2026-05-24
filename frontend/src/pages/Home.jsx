@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { User, AlertCircle, X, Utensils, Trash2, Salad, Sprout, ImageOff, ChevronRight, CalendarCheck, CalendarX, Bell, CalendarPlus } from 'lucide-react';
+import { User, AlertCircle, X, Utensils, Trash2, Salad, Sprout, ImageOff, ChevronRight, CalendarCheck, CalendarX, Bell, CalendarPlus, BarChart2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { useViewport } from '../context/ViewportContext';
 import { getCachedSuggestion, saveSuggestionToCache } from '../lib/aiSuggestionCache';
+import Tooltip from '../components/Tooltip';
 
 const getFruitIcon = (type) => {
   const t = type?.toLowerCase() || '';
@@ -53,8 +54,8 @@ const formatShortDate = (dateStr) => {
 
 const ScoreBadge = ({ score, className = "py-1 text-[11px]" }) => {
   const pct = Math.round(score ?? 0);
-  const bg = pct >= 70 ? 'bg-green-100' : pct > 0 ? 'bg-orange-100' : 'bg-red-800';
-  const text = pct >= 70 ? 'text-green-700' : pct > 0 ? 'text-orange-700' : 'text-white';
+  const bg = pct >= 70 ? 'bg-green-100' : pct > 0 ? 'bg-orange-main/15' : 'bg-red-800';
+  const text = pct >= 70 ? 'text-green-700' : pct > 0 ? 'text-orange-main' : 'text-white';
   return (
     <div className={`px-2 rounded w-full text-center font-bold flex items-center justify-center ${bg} ${text} ${className}`}>
       {pct}%
@@ -402,35 +403,47 @@ const Home = ({ onOpenScanner }) => {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Halo, {firstName}!</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">Ayo selamatkan makanan hari ini.</p>
         </div>
-        <div className="flex gap-3">
-          <button
-            onClick={handleOpenNotifications}
-            className={`bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 active:scale-95 transition-all shadow-sm relative
-              ${isDesktop ? 'gap-2 px-4 h-11 rounded-xl text-sm font-semibold' : 'w-12 h-12'}`}
-          >
-            <Bell size={isDesktop ? 18 : 24} />
-            {isDesktop && <span>Notifikasi</span>}
-            {notifications.some(n => !n.isRead) && (
-              <div className={`absolute bg-red-500 rounded-full border-2 border-white dark:border-gray-800
-                ${isDesktop ? 'top-2 right-2 w-2 h-2' : 'top-3 right-3 w-2.5 h-2.5'}`} />
-            )}
-          </button>
-          {!isDesktop && (
+        <div className="flex gap-4">
+          <Tooltip content="Notifikasi" placement="bottom">
             <button
-              onClick={() => navigate('/profile')}
-              className="w-12 h-12 bg-scanora-green/10 rounded-full flex items-center justify-center text-scanora-green hover:bg-scanora-green/20 active:scale-95 transition-all"
+              onClick={handleOpenNotifications}
+              className={`bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 active:scale-95 transition-all shadow-sm relative
+                ${isDesktop ? 'gap-2 px-4 h-11 rounded-xl text-sm font-semibold' : 'w-12 h-12'}`}
             >
-              <User size={24} />
+              <Bell size={isDesktop ? 18 : 24} />
+              {isDesktop && <span>Notifikasi</span>}
+              {notifications.some(n => !n.isRead) && (
+                <div className={`absolute bg-red-500 rounded-full border-2 border-white dark:border-gray-800
+                  ${isDesktop ? 'top-2 right-2 w-2 h-2' : 'top-3 right-3 w-2.5 h-2.5'}`} />
+              )}
             </button>
+          </Tooltip>
+          {!isDesktop && (
+            <Tooltip content="Profil" placement="bottom">
+              <button
+                onClick={() => navigate('/profile')}
+                className="w-12 h-12 bg-scanora-green/10 rounded-full flex items-center justify-center text-scanora-green hover:bg-scanora-green/20 active:scale-95 transition-all"
+              >
+                <User size={24} />
+              </button>
+            </Tooltip>
           )}
         </div>
       </header>
 
       {/* Impact Section */}
       <section className="mb-8">
-        <div className="flex items-center gap-2 mb-4">
-          <Sprout className="text-scanora-green" size={20} />
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Impact Kamu</h2>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Sprout className="text-scanora-green" size={20} />
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Performa Bulan Ini</h2>
+          </div>
+          <button 
+            onClick={() => navigate('/stats')}
+            className="px-3 py-1.5 bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 rounded-full text-xs font-bold transition-all active:scale-95"
+          >
+            Detail
+          </button>
         </div>
         <div className="bg-transparent">
           {isDesktop ? (
@@ -487,8 +500,8 @@ const Home = ({ onOpenScanner }) => {
           ) : (
             // Mobile / Tablet: 3-col grid + bar below
             <>
-              <div className="grid grid-cols-3 gap-3 mb-4">
-                <div className={`bg-green-500/10 border border-green-500/20 backdrop-blur-md rounded-xl p-3 ${isTablet ? 'flex items-center gap-3' : 'text-center'}`}>
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                <div className={`bg-green-500/10 border border-green-500/20 backdrop-blur-md rounded-xl p-3 ${isTablet ? 'flex items-center gap-4' : 'text-center'}`}>
                   <div className={`w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center flex-shrink-0 ${isTablet ? '' : 'mx-auto mb-1.5'}`}>
                     <Utensils size={16} className="text-green-700" />
                   </div>
@@ -497,7 +510,7 @@ const Home = ({ onOpenScanner }) => {
                     <p className={`text-green-700 text-[10px] font-medium ${isTablet ? 'mt-0.5' : 'mt-1'}`}>Dikonsumsi</p>
                   </div>
                 </div>
-                <div className={`bg-red-500/10 border border-red-500/20 backdrop-blur-md rounded-xl p-3 ${isTablet ? 'flex items-center gap-3' : 'text-center'}`}>
+                <div className={`bg-red-500/10 border border-red-500/20 backdrop-blur-md rounded-xl p-3 ${isTablet ? 'flex items-center gap-4' : 'text-center'}`}>
                   <div className={`w-8 h-8 bg-red-500/20 rounded-full flex items-center justify-center flex-shrink-0 ${isTablet ? '' : 'mx-auto mb-1.5'}`}>
                     <Trash2 size={16} className="text-red-700" />
                   </div>
@@ -506,7 +519,7 @@ const Home = ({ onOpenScanner }) => {
                     <p className={`text-red-700 text-[10px] font-medium ${isTablet ? 'mt-0.5' : 'mt-1'}`}>Dibuang</p>
                   </div>
                 </div>
-                <div className={`bg-orange-500/10 border border-orange-500/20 backdrop-blur-md rounded-xl p-3 ${isTablet ? 'flex items-center gap-3' : 'text-center'}`}>
+                <div className={`bg-orange-500/10 border border-orange-500/20 backdrop-blur-md rounded-xl p-3 ${isTablet ? 'flex items-center gap-4' : 'text-center'}`}>
                   <div className={`w-8 h-8 bg-orange-500/20 rounded-full flex items-center justify-center flex-shrink-0 ${isTablet ? '' : 'mx-auto mb-1.5'}`}>
                     <Salad size={16} className="text-orange-700" />
                   </div>
@@ -558,12 +571,12 @@ const Home = ({ onOpenScanner }) => {
             ))}
           </div>
         ) : urgentItems.length > 0 ? (
-          <div className={`space-y-3 ${isDesktop ? 'pb-2' : 'max-h-[340px] overflow-y-auto no-scrollbar pb-2 pr-1'}`}>
+          <div className={`space-y-3 ${isDesktop ? 'pb-2' : 'max-h-[340px] overflow-y-auto no-scrollbar pb-8 pr-1 [mask-image:linear-gradient(to_bottom,black_85%,transparent)]'}`}>
             {urgentItems.map(item => {
               const dotColor = item.daysLeft === 0
-                ? 'bg-[#e02224]'
-                : item.daysLeft <= 2
-                ? 'bg-orange-500'
+                ? 'bg-[#8e0610]'
+                : item.daysLeft < 5
+                ? 'bg-orange-main'
                 : 'bg-scanora-green';
               return (
                 <div
@@ -602,8 +615,11 @@ const Home = ({ onOpenScanner }) => {
             })}
           </div>
         ) : (
-          <div className="bg-gray-50 rounded-2xl p-6 text-center border border-dashed border-gray-200">
-            <p className="text-gray-500 text-sm">Semua buah masih aman! 🌿</p>
+          <div className="flex flex-col items-center justify-center py-8 px-4 text-center border border-dashed border-gray-200 dark:border-gray-700 rounded-2xl bg-gray-50 dark:bg-gray-800/50">
+            <p className="text-gray-500 text-sm mb-3">Semua buah masih aman! 🌿</p>
+            {inventoryData.length === 0 && (
+              <button onClick={() => onOpenScanner?.() || document.getElementById('viewport-toggle-btn')?.click()} className="bg-scanora-green text-white font-bold py-2 px-4 rounded-xl text-xs shadow-md active:scale-95 transition-all">Scan Buah Sekarang</button>
+            )}
           </div>
         )}
       </section>
@@ -639,38 +655,38 @@ const Home = ({ onOpenScanner }) => {
 
             <div className="p-5">
               {/* Name + badge hug */}
-              <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center gap-4 mb-4">
                 <h2 className="text-2xl font-bold text-gray-900 capitalize leading-none">
                   {getFruitLabel(selectedItem.fruit_type)}
                 </h2>
-                <span className={`text-[10px] font-bold px-2 py-1 rounded-md uppercase leading-none ${getConditionBadgeStyle(selectedItem.condition)}`}>
+                <span className={`text-[10px] font-bold px-2 py-1 rounded-md capitalize leading-none ${getConditionBadgeStyle(selectedItem.condition)}`}>
                   {getConditionLabel(selectedItem.condition)}
                 </span>
               </div>
 
               {/* Date row */}
-              <div className="flex flex-col gap-1.5 mb-5">
-                <p className="text-gray-500 font-medium text-sm flex items-center gap-2">
-                  <CalendarPlus size={16} />
-                  Tanggal Foto: {formatDate(selectedItem.added_at || selectedItem.created_at)}
-                </p>
-                <p className="text-gray-500 font-medium text-sm flex items-center gap-2">
-                  {selectedItem.condition === 'unripe' ? (
-                    <CalendarCheck size={16} />
-                  ) : (
-                    <CalendarX size={16} />
-                  )}
-                  <span className="font-bold">
-                    {selectedItem.condition === 'unripe' ? 'Matang saat:' : 'Batas layak:'} {formatShortDate(selectedItem.reminder_at)}
-                  </span>
-                </p>
-              </div>
-
-              {/* Freshness bar & Countdown */}
-              <div className="mb-6">
-                <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-2">
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wide mb-2 font-bold text-center">Perubahan Freshness Score</p>
-                  <div className="flex items-center gap-2">
+              <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-2">
+                <div className="flex flex-col gap-3 mb-4">
+                  <p className="text-gray-500 font-medium text-sm flex items-center gap-2">
+                    <CalendarPlus size={16} />
+                    <span className="font-medium text-gray-500">
+                      Tgl. Foto: {formatShortDate(selectedItem.added_at)}
+                    </span>
+                  </p>
+                  <p className="text-gray-500 font-medium text-sm flex items-center gap-2">
+                    {selectedItem.condition === 'unripe' ? (
+                      <CalendarCheck size={16} />
+                    ) : (
+                      <CalendarX size={16} />
+                    )}
+                    <span className="font-medium text-gray-500">
+                      {selectedItem.condition === 'unripe' ? 'Matang saat:' : 'Batas Layak:'} {formatShortDate(selectedItem.reminder_at)}
+                    </span>
+                  </p>
+                </div>
+                <hr className="border-gray-200 mb-4" />
+                <p className="text-[10px] text-gray-500 capitalize tracking-wide mb-2 font-bold text-center">Perubahan Freshness Score</p>
+                <div className="flex items-center gap-2">
                     <div className="flex-1">
                       <ScoreBadge score={selectedItem.freshness_score_initial} className="py-2 text-sm" />
                     </div>
@@ -693,7 +709,9 @@ const Home = ({ onOpenScanner }) => {
                     </div>
                   );
                 })()}
-              </div>
+              
+              {/* Divider before actions */}
+              <hr className="border-gray-100 mb-4 mt-6" />
 
               {/* AI Suggestion Box */}
               {selectedItem.scan_id && (
@@ -778,7 +796,7 @@ const Home = ({ onOpenScanner }) => {
                 <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
                   <Bell size={16} /> Notifikasi
                 </h2>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                   {notifications.length > 0 && (
                     <button onClick={handleClearAll} className="text-xs font-semibold text-red-500 hover:text-red-600 min-h-[36px] px-3 rounded-lg hover:bg-red-50 transition-all">
                       Hapus Semua
@@ -808,7 +826,7 @@ const Home = ({ onOpenScanner }) => {
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                   <Bell size={20} /> Inbox Notifikasi
                 </h2>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                   {notifications.length > 0 && (
                     <button onClick={handleClearAll} className="text-xs font-semibold text-red-500 hover:text-red-600 active:scale-95 transition-all min-h-[44px] px-4 flex items-center justify-center rounded-lg hover:bg-red-50">
                       Hapus Semua

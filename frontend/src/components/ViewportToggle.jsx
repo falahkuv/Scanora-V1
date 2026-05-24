@@ -1,63 +1,69 @@
+/**
+ * ViewportToggle.jsx
+ *
+ * Single FAB button that toggles between Fullscreen (maximize) and Compact (minimize).
+ * - Fullscreen: Expand icon  — app fills entire canvas
+ * - Compact:    Minimize icon — app floats above live wallpaper, capped at Tablet
+ *
+ * Sizing by breakpoint:
+ * - Mobile / Tablet (< 1024px): 44px  × 44px, bottom 14vh
+ * - Laptop+ (≥ 1024px):         56px  × 56px, bottom 4vh
+ *
+ * Hides automatically when isHidden=true (scanner open, dialog active, etc.)
+ */
+
 import { useState } from 'react';
-import { Monitor, Tablet, Smartphone, Expand } from 'lucide-react';
+import { Expand, Minimize } from 'lucide-react';
 import { useViewport } from '../context/ViewportContext';
+import Tooltip from './Tooltip';
 
-const options = [
-  { id: 'mobile',  label: 'Mobile',  icon: Smartphone },
-  { id: 'tablet',  label: 'Tablet',  icon: Tablet },
-  { id: 'full-screen', label: 'Full Screen', icon: Expand },
-];
+const ViewportToggle = ({ isHidden = false }) => {
+  const { mode, setMode } = useViewport();
+  const [jiggle, setJiggle] = useState(false);
 
-const ViewportToggle = () => {
-  const { viewport, mode, setViewport } = useViewport();
-  const [isOpen, setIsOpen] = useState(false);
+  const isFullscreen = mode === 'fullscreen';
 
-  const ActiveIcon = options.find(o => o.id === mode)?.icon ?? Expand;
+  const handleToggle = () => {
+    setMode(isFullscreen ? 'compact' : 'fullscreen');
+    setJiggle(true);
+    setTimeout(() => setJiggle(false), 500);
+  };
 
-  // Stable position: always bottom-right
-  const posClass = 'bottom-[5vh] right-[3vw]';
+  const tooltipText = isFullscreen ? 'Compact Mode' : 'Fullscreen';
 
   return (
-    <div className={`fixed ${posClass} z-[999] flex flex-col items-end gap-2.5`}>
-
-      {/* Options — expand upward */}
-      {isOpen && (
-        <>
-          {/* Backdrop to close when clicking outside */}
-          <div
-            className="fixed inset-0 z-[-1]"
-            onClick={() => setIsOpen(false)}
-          />
-          <div className="flex flex-col gap-2 items-end animate-slide-up">
-            {[...options].reverse().map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                onClick={() => { setViewport(id); setIsOpen(false); }}
-                className={`flex items-center gap-3 px-5 py-3 rounded-2xl text-base font-semibold shadow-xl transition-all active:scale-95 whitespace-nowrap
-                  ${mode === id
-                    ? 'bg-scanora-green text-white shadow-scanora-green/30'
-                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-100'}`}
-              >
-                <Icon size={18} />
-                {label}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* FAB trigger — bigger */}
-      <button
-        onClick={() => setIsOpen(prev => !prev)}
-        title="Ganti Viewport"
-        className={`w-14 h-14 rounded-2xl shadow-2xl flex items-center justify-center active:scale-95 transition-all border-2
-          ${isOpen
-            ? 'bg-scanora-green text-white border-scanora-green shadow-scanora-green/30'
-            : 'bg-white text-scanora-green border-gray-100 hover:bg-gray-50'}`}
+    <>
+      <div
+        className={`fixed right-[3vw] z-[999] transition-all duration-300
+          bottom-[14vh] lg:bottom-[4vh]
+          ${isHidden ? 'opacity-0 pointer-events-none scale-75' : 'opacity-100 pointer-events-auto scale-100'}
+        `}
       >
-        <ActiveIcon size={26} />
-      </button>
-    </div>
+        <Tooltip content={tooltipText} placement="left" delay={300}>
+          <button
+            id="viewport-toggle-btn"
+            onClick={handleToggle}
+            aria-label={tooltipText}
+            className={`
+              relative flex items-center justify-center gap-2
+              w-11 h-11 lg:w-14 lg:h-14
+              rounded-2xl bg-white border-gray-200 text-scanora-green shadow-xl hover:shadow-2xl hover:border-scanora-green/30
+              border-2 transition-all duration-300 active:scale-90
+              ${jiggle ? 'animate-fab-jiggle' : ''}
+            `}
+          >
+            {isFullscreen
+              ? <Minimize size={20} strokeWidth={2.2} className="lg:hidden" />
+              : <Expand   size={20} strokeWidth={2.2} className="lg:hidden" />
+            }
+            {isFullscreen
+              ? <Minimize size={22} strokeWidth={2.2} className="hidden lg:block" />
+              : <Expand   size={22} strokeWidth={2.2} className="hidden lg:block" />
+            }
+          </button>
+        </Tooltip>
+      </div>
+    </>
   );
 };
 

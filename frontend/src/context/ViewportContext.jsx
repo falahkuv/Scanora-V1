@@ -2,47 +2,60 @@ import { createContext, useContext, useState, useEffect } from 'react';
 
 const ViewportContext = createContext();
 
-const STORAGE_KEY = 'scanora_viewport';
+const STORAGE_KEY = 'scanora_viewport_mode';
 
-const getAutoViewport = () => {
-  if (typeof window === 'undefined') return 'mobile';
-  const w = window.innerWidth;
-  if (w >= 1024) return 'desktop';
-  if (w >= 640) return 'tablet';
+/**
+ * Compute the actual layout based on mode + window width.
+ * - fullscreen: responsive to actual canvas width
+ * - compact: max tablet (never desktop), responsive at phone breakpoint
+ */
+const computeLayout = (mode, width) => {
+  if (mode === 'fullscreen') {
+    if (width >= 1024) return 'desktop';
+    if (width >= 640)  return 'tablet';
+    return 'mobile';
+  }
+  // compact: cap at tablet
+  if (width >= 640) return 'tablet';
   return 'mobile';
 };
 
 export const ViewportProvider = ({ children }) => {
-  const [viewportMode, setViewportMode] = useState(() => {
+  const [mode, setModeState] = useState(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved && ['mobile', 'tablet', 'full-screen'].includes(saved)) return saved;
-    return 'full-screen';
+    return saved === 'compact' ? 'compact' : 'fullscreen';
   });
 
-  const [actualViewport, setActualViewport] = useState(() => 
-    viewportMode === 'full-screen' ? getAutoViewport() : viewportMode
+  const [layout, setLayout] = useState(() =>
+    computeLayout(
+      localStorage.getItem(STORAGE_KEY) === 'compact' ? 'compact' : 'fullscreen',
+      typeof window !== 'undefined' ? window.innerWidth : 1024
+    )
   );
 
   useEffect(() => {
-    const handleResize = () => {
-      if (viewportMode === 'full-screen') {
-        setActualViewport(getAutoViewport());
-      } else {
-        setActualViewport(viewportMode);
-      }
-    };
-    handleResize(); // run on mount/mode change
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [viewportMode]);
+    const update = () => setLayout(computeLayout(mode, window.innerWidth));
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, [mode]);
 
-  const setViewport = (v) => {
-    setViewportMode(v);
-    localStorage.setItem(STORAGE_KEY, v);
+  const setMode = (newMode) => {
+    setModeState(newMode);
+    localStorage.setItem(STORAGE_KEY, newMode);
+    setLayout(computeLayout(newMode, window.innerWidth));
   };
 
   return (
-    <ViewportContext.Provider value={{ viewport: actualViewport, mode: viewportMode, setViewport }}>
+    <ViewportContext.Provider value={{ mode, layout, setMode,
+      // legacy aliases so existing code (viewport / setViewport) still works
+      viewport: layout,
+      setViewport: (v) => {
+        // map old 3-option values to new 2-option
+        if (v === 'full-screen') setMode('fullscreen');
+        else setMode('compact');
+      },
+    }}>
       {children}
     </ViewportContext.Provider>
   );

@@ -23,11 +23,19 @@ export default {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-6px)' },
         },
+        'fab-jiggle': {
+          '0%, 100%': { transform: 'rotate(0deg) scale(1)' },
+          '20%':  { transform: 'rotate(-12deg) scale(1.12)' },
+          '40%':  { transform: 'rotate(10deg) scale(1.08)' },
+          '60%':  { transform: 'rotate(-6deg) scale(1.04)' },
+          '80%':  { transform: 'rotate(4deg) scale(1.02)' },
+        },
       },
       animation: {
         'page-in': 'page-in 500ms cubic-bezier(0.22, 1, 0.36, 1)',
         'swipe-swap': 'swipe-swap 520ms cubic-bezier(0.22, 1, 0.36, 1)',
         'floaty': 'floaty 3s ease-in-out infinite',
+        'fab-jiggle': 'fab-jiggle 500ms cubic-bezier(0.36,0.07,0.19,0.97) both',
       },
       colors: {
         'scanora-green': '#10b981', // Emerald Green 500

@@ -8,7 +8,7 @@ const BottomNav = ({ onOpenScanner }) => {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <div className="sticky bottom-0 w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-16 py-3 flex justify-between items-center pb-safe rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-40 transition-colors mt-auto">
+    <div className="sticky bottom-0 w-full bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-8 py-3 flex justify-between items-center pb-safe rounded-t-3xl shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-40 transition-colors mt-auto">
       <button 
         onClick={() => navigate('/')}
         className={`flex flex-col items-center justify-center gap-1 min-w-[44px] min-h-[44px] ${isActive('/') ? 'text-scanora-green' : 'text-gray-400'}`}
