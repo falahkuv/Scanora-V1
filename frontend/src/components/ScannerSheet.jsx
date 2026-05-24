@@ -575,7 +575,6 @@ const ScannerSheet = ({ isOpen, onClose }) => {
                     </div>
                   )}
                 </div>
-                </div>
 
                 {/* ── AI Disclaimer ───────────────────────────────────── */}
                 <div className="flex items-center gap-4 bg-gray-100/80 border border-gray-200/70 rounded-2xl px-4 py-3 mb-5">

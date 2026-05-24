@@ -617,7 +617,7 @@ const Home = ({ onOpenScanner }) => {
         ) : (
           <div className="flex flex-col items-center justify-center py-8 px-4 text-center border border-dashed border-gray-200 dark:border-gray-700 rounded-2xl bg-gray-50 dark:bg-gray-800/50">
             <p className="text-gray-500 text-sm mb-3">Semua buah masih aman! 🌿</p>
-            {inventoryData.length === 0 && (
+            {urgentItems.length === 0 && (
               <button onClick={() => onOpenScanner?.() || document.getElementById('viewport-toggle-btn')?.click()} className="bg-scanora-green text-white font-bold py-2 px-4 rounded-xl text-xs shadow-md active:scale-95 transition-all">Scan Buah Sekarang</button>
             )}
           </div>
