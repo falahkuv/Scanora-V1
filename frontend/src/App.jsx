@@ -10,13 +10,14 @@ import Profile from './pages/Profile';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Onboarding from './pages/Onboarding';
+import ImpactStats from './pages/ImpactStats';
 import ScannerSheet from './components/ScannerSheet';
 import LoadingScreen from './components/LoadingScreen';
 import { initializeAuth } from './api';
 import { ViewportProvider, useViewport } from './context/ViewportContext';
 
 // Pages where nav/toggle should NOT appear
-const NO_NAV_PATHS = ['/login', '/register', '/onboarding'];
+const NO_NAV_PATHS = ['/login', '/register', '/onboarding', '/stats'];
 
 // ─── Inner shell: needs Router context for useLocation ───────────────────────
 function AppShell({ isScannerOpen, setIsScannerOpen, isAppEntering, isSplashVisible }) {
@@ -71,6 +72,7 @@ function AppShell({ isScannerOpen, setIsScannerOpen, isAppEntering, isSplashVisi
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/login"      element={<Login />} />
             <Route path="/register"   element={<Register />} />
+            <Route path="/stats"      element={<ImpactStats />} />
             <Route path="*"           element={<Navigate to="/" replace />} />
           </Routes>
         </main>
@@ -81,6 +83,7 @@ function AppShell({ isScannerOpen, setIsScannerOpen, isAppEntering, isSplashVisi
             <Route path="/register"   element={null} />
             <Route path="/profile"    element={null} />
             <Route path="/onboarding" element={null} />
+            <Route path="/stats"      element={null} />
             <Route path="*" element={<BottomNav onOpenScanner={() => setIsScannerOpen(true)} />} />
           </Routes>
         )}
@@ -122,6 +125,7 @@ function AppShell({ isScannerOpen, setIsScannerOpen, isAppEntering, isSplashVisi
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/login"      element={<Login />} />
               <Route path="/register"   element={<Register />} />
+              <Route path="/stats"      element={<ImpactStats />} />
               <Route path="*"           element={<Navigate to="/" replace />} />
             </Routes>
           </main>
@@ -132,6 +136,7 @@ function AppShell({ isScannerOpen, setIsScannerOpen, isAppEntering, isSplashVisi
               <Route path="/register"   element={null} />
               <Route path="/profile"    element={null} />
               <Route path="/onboarding" element={null} />
+              <Route path="/stats"      element={null} />
               <Route path="*" element={<BottomNav onOpenScanner={() => setIsScannerOpen(true)} />} />
             </Routes>
           )}

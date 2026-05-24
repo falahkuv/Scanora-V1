@@ -1,0 +1,11 @@
+feat: v1.8.0 - Halaman Statistik Aksi, Profile Footer, Performa Bulan Ini
+
+- Tambah halaman /stats (ImpactStats.jsx) dengan Chart.js + react-chartjs-2
+- Layout dua section: Performa Bulan Ini + Overview
+- Bar Chart dengan focus mode pada bulan aktif, urutan Dibuang lalu Dikonsumsi
+- Pie Chart komposisi jenis buah dengan tooltip exact count
+- Navigasi bulan interaktif prev/next dengan Save Rate indicator
+- Profile footer: versi v1.8.0 Beta, slogan Choose Better Waste Less, dan hak cipta
+- Home: rename Impact Kamu ke Performa Bulan Ini, tombol CTA Detail abu-abu tanpa ikon
+- App routing: /stats terdaftar, BottomNav disembunyikan di halaman statistik
+- Update CHANGELOG.md v1.8.0

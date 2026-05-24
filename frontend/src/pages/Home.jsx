@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { User, AlertCircle, X, Utensils, Trash2, Salad, Sprout, ImageOff, ChevronRight, CalendarCheck, CalendarX, Bell, CalendarPlus } from 'lucide-react';
+import { User, AlertCircle, X, Utensils, Trash2, Salad, Sprout, ImageOff, ChevronRight, CalendarCheck, CalendarX, Bell, CalendarPlus, BarChart2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { useViewport } from '../context/ViewportContext';
@@ -433,9 +433,17 @@ const Home = ({ onOpenScanner }) => {
 
       {/* Impact Section */}
       <section className="mb-8">
-        <div className="flex items-center gap-2 mb-4">
-          <Sprout className="text-scanora-green" size={20} />
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Impact Kamu</h2>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Sprout className="text-scanora-green" size={20} />
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Performa Bulan Ini</h2>
+          </div>
+          <button 
+            onClick={() => navigate('/stats')}
+            className="px-3 py-1.5 bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 rounded-full text-xs font-bold transition-all active:scale-95"
+          >
+            Detail
+          </button>
         </div>
         <div className="bg-transparent">
           {isDesktop ? (

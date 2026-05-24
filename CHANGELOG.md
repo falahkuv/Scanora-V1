@@ -2,6 +2,19 @@
 
 Semua perubahan yang signifikan pada proyek Scanora akan didokumentasikan dalam file ini.
 
+## [v1.8.0] - 2026-05-24
+### Added
+- **Halaman Statistik Aksi (`/stats`)**: Halaman baru dengan animasi *page-in*, dibangun ulang menggunakan **Chart.js + react-chartjs-2**. Menampilkan dua section utama:
+  - *Performa Bulan Ini*: Navigasi antar bulan (← →), kartu stat Dibuang/Dikonsumsi/Disimpan, dan progress bar Save Rate.
+  - *Overview*: Kartu highlight (Buah Favorit & Save Rate Terbaik), Bar Chart riwayat performa dengan efek *focus bar* pada bulan aktif, dan Pie Chart komposisi jenis buah.
+- **Profile Footer**: Menambahkan *footer* versi aplikasi di halaman Profil dengan teks `"Scanora · v1.8.0 Beta · Mei 2026"`, slogan *"Choose Better, Waste Less."*, dan hak cipta `© 2026 Scanora`.
+
+### Changed
+- **Home — Section Performa**: Mengubah judul `"Impact Kamu"` → `"Performa Bulan Ini"` dan menambahkan tombol `"Detail"` (abu-abu, tanpa ikon) yang mengarahkan ke halaman `/stats`.
+- **App Routing**: Route `/stats` didaftarkan dan *Bottom Nav* disembunyikan otomatis saat berada di halaman statistik.
+- **Statistik Aksi — Layout**: Layout didesain ulang dengan dua section terstruktur (*Performa Bulan Ini* dan *Overview*). Sub-heading menggunakan teks tanpa ikon untuk tampilan yang lebih bersih. Radius komponen diseragamkan ke `rounded-xl` (tidak terlalu rounded).
+- **Bar Chart**: Urutan bar diperbaiki — *Dibuang* tampil pertama (kiri), *Dikonsumsi* kedua. Warna legend dan bar kini dikelola Chart.js secara konsisten.
+
 ## [v1.7.1] - 2026-05-24
 ### Added
 - **Category Filter Pills**: Menambahkan filter kategori dinamis (Semua, Ripe, Unripe, Rotten) pada halaman Inventori untuk memudahkan sortir buah.

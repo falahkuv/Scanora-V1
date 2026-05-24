@@ -164,6 +164,23 @@ const Profile = () => {
         >
           Kembali ke Beranda
         </button>
+
+        {/* Footer App Version */}
+        <div className="mt-12 mb-8 flex flex-col items-center justify-center text-center opacity-80">
+          <div className="flex items-center gap-1.5 mb-1.5 text-gray-500 dark:text-gray-400">
+            <span className="text-lg">🍎</span>
+            <span className="font-bold tracking-wide">Scanora</span>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+            v1.8.0 Beta &middot; Mei 2026
+          </p>
+          <p className="text-xs italic text-gray-500 dark:text-gray-400 mb-3">
+            "Choose Better, Waste Less."
+          </p>
+          <p className="text-[10px] text-gray-500 dark:text-gray-400">
+            &copy; 2026 Scanora. All rights reserved.
+          </p>
+        </div>
       </div>
     </div>
   );
