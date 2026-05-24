@@ -129,8 +129,8 @@ const ScoreBadge = ({ score, className = "py-1 text-[11px]" }) => {
 
 const InventoryCard = ({ item, onClick }) => {
   const daysLeft = calculateDaysLeft(item.reminder_at);
-  const countdown = getCountdownConfig(item.condition, daysLeft);
-  const labelText = item.condition === 'unripe' ? 'Matang:' : 'Busuk:';
+  const countdown = getCountdownConfig((item.condition_latest || item.condition), daysLeft);
+  const labelText = (item.condition_latest || item.condition) === 'unripe' ? 'Matang:' : 'Busuk:';
 
   // Sky/grass background gradient for the card header
   const headerBg = 'bg-gradient-to-b from-sky-200 via-sky-100 to-green-200';
@@ -144,8 +144,8 @@ const InventoryCard = ({ item, onClick }) => {
         {/* ── Top half: image area ── */}
         <div className={`relative ${headerBg} flex-shrink-0 rounded-xl overflow-hidden aspect-square`}>
           {/* Condition Badge */}
-          <span className={`absolute top-2 left-2 px-2.5 py-1 z-20 rounded-md text-[11px] font-bold shadow-sm ${getConditionBadgeStyle(item.condition)}`}>
-            {getConditionLabel(item.condition)}
+          <span className={`absolute top-2 left-2 px-2.5 py-1 z-20 rounded-md text-[11px] font-bold shadow-sm ${getConditionBadgeStyle((item.condition_latest || item.condition))}`}>
+            {getConditionLabel((item.condition_latest || item.condition))}
           </span>
 
           {/* Captured date */}
@@ -177,7 +177,7 @@ const InventoryCard = ({ item, onClick }) => {
 
         {/* Mascot (bottom-right outside overflow-hidden) */}
         <img
-          src={getMascotSrc(item.fruit_type, item.condition)}
+          src={getMascotSrc(item.fruit_type, (item.condition_latest || item.condition))}
           alt=""
           className="absolute -bottom-8 right-1 h-16 object-contain drop-shadow-md z-20"
           onError={(e) => { e.target.style.display = 'none'; }}
@@ -193,13 +193,13 @@ const InventoryCard = ({ item, onClick }) => {
 
         {/* Date — compact format no prefix */}
         <div className="flex items-center gap-1.5 mt-[0.5rem]">
-          {item.condition === 'unripe' ? (
+          {(item.condition_latest || item.condition) === 'unripe' ? (
              <CalendarCheck size={14} className="text-gray-400" />
           ) : (
              <CalendarX size={14} className="text-gray-400" />
           )}
           <span className="text-xs font-semibold text-gray-500">
-            {item.condition === 'unripe' ? 'Matang: ' : 'Busuk: '}
+            {(item.condition_latest || item.condition) === 'unripe' ? 'Matang: ' : 'Busuk: '}
             {item.reminder_at ? formatShortDate(item.reminder_at) : '-'}
           </span>
         </div>
@@ -360,7 +360,7 @@ const Inventory = () => {
     }
 
     const currentScore = selectedItem.freshness_score_latest ?? selectedItem.freshness_score_initial;
-    const condition = selectedItem.condition;
+    const condition = (selectedItem.condition_latest || selectedItem.condition);
     const daysLeft = calculateDaysLeft(selectedItem.reminder_at);
     
     const { suggestion, tierChanged } = getCachedSuggestion(selectedItem.scan_id, currentScore, condition, daysLeft);
@@ -388,7 +388,7 @@ const Inventory = () => {
     setAiError(null);
     try {
       const currentScore = selectedItem.freshness_score_latest ?? selectedItem.freshness_score_initial;
-      const condition = selectedItem.condition;
+      const condition = (selectedItem.condition_latest || selectedItem.condition);
       const daysLeft = calculateDaysLeft(selectedItem.reminder_at);
 
       const res = await api.post(`/scan/${selectedItem.scan_id}/suggestion`, {
@@ -469,9 +469,9 @@ const Inventory = () => {
         <div className="px-4 pt-3 pb-1 flex gap-2 overflow-x-auto no-scrollbar min-h-[44px]">
           {[
             { key: 'all',    label: 'Semua',  count: inventoryData.length,                                        active: 'bg-gray-800 text-white',                 inactive: 'border border-gray-200 text-gray-600 bg-transparent' },
-            { key: 'ripe',   label: 'Ripe',   count: inventoryData.filter(i => i.condition === 'ripe').length,   active: 'bg-orange-main text-white',              inactive: 'border border-orange-200 text-orange-600 bg-transparent' },
-            { key: 'unripe', label: 'Unripe', count: inventoryData.filter(i => i.condition === 'unripe').length, active: 'bg-scanora-green text-white',            inactive: 'border border-green-200 text-green-600 bg-transparent' },
-            { key: 'rotten', label: 'Rotten', count: inventoryData.filter(i => i.condition === 'rotten').length, active: 'bg-[#8e0610] text-white',                inactive: 'border border-red-200 text-red-600 bg-transparent' },
+            { key: 'ripe',   label: 'Ripe',   count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'ripe').length,   active: 'bg-orange-main text-white',              inactive: 'border border-orange-200 text-orange-600 bg-transparent' },
+            { key: 'unripe', label: 'Unripe', count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'unripe').length, active: 'bg-scanora-green text-white',            inactive: 'border border-green-200 text-green-600 bg-transparent' },
+            { key: 'rotten', label: 'Rotten', count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'rotten').length, active: 'bg-[#8e0610] text-white',                inactive: 'border border-red-200 text-red-600 bg-transparent' },
           ].map(pill => (
             <button
               key={pill.key}
@@ -567,7 +567,7 @@ const Inventory = () => {
         ) : activeTab === 'inventory' ? (() => {
           const filteredInventory = conditionFilter === 'all'
             ? sortedInventory
-            : sortedInventory.filter(i => i.condition === conditionFilter);
+            : sortedInventory.filter(i => (i.condition_latest || i.condition) === conditionFilter);
 
           return filteredInventory.length > 0 ? (
             <div className={`grid gap-4 ${
@@ -643,8 +643,8 @@ const Inventory = () => {
                           <h3 className="font-semibold text-gray-900 capitalize">{getFruitLabel(item.fruit_type)}</h3>
                           <p className="text-xs text-gray-400">{formatDate(item.scanned_at)}</p>
                         </div>
-                        <span className={`text-xs font-semibold px-0 py-1 rounded-md capitalize flex-shrink-0 text-center min-w-[72px] ${getConditionBadgeStyle(item.condition)}`}>
-                          {getConditionLabel(item.condition)}
+                        <span className={`text-xs font-semibold px-0 py-1 rounded-md capitalize flex-shrink-0 text-center min-w-[72px] ${getConditionBadgeStyle((item.condition_latest || item.condition))}`}>
+                          {getConditionLabel((item.condition_latest || item.condition))}
                         </span>
                       </div>
                     ))}
@@ -699,8 +699,8 @@ const Inventory = () => {
                 <h2 className="text-2xl font-bold text-gray-900 capitalize leading-none">
                   {getFruitLabel(selectedItem.fruit_type)}
                 </h2>
-                <span className={`text-[10px] font-bold px-2 py-1 rounded-md capitalize leading-none ${getConditionBadgeStyle(selectedItem.condition)}`}>
-                  {getConditionLabel(selectedItem.condition)}
+                <span className={`text-[10px] font-bold px-2 py-1 rounded-md capitalize leading-none ${getConditionBadgeStyle((selectedItem.condition_latest || selectedItem.condition))}`}>
+                  {getConditionLabel((selectedItem.condition_latest || selectedItem.condition))}
                 </span>
               </div>
 
@@ -716,13 +716,13 @@ const Inventory = () => {
                         </span>
                       </p>
                       <p className="text-gray-500 font-medium text-sm flex items-center gap-2">
-                        {selectedItem.condition === 'unripe' ? (
+                        {(selectedItem.condition_latest || selectedItem.condition) === 'unripe' ? (
                           <CalendarCheck size={16} />
                         ) : (
                           <CalendarX size={16} />
                         )}
                         <span className="font-medium text-gray-500">
-                          {selectedItem.condition === 'unripe' ? 'Matang saat:' : 'Batas Layak:'} {formatShortDate(selectedItem.reminder_at)}
+                          {(selectedItem.condition_latest || selectedItem.condition) === 'unripe' ? 'Matang saat:' : 'Batas Layak:'} {formatShortDate(selectedItem.reminder_at)}
                         </span>
                       </p>
                     </div>
@@ -745,7 +745,7 @@ const Inventory = () => {
 
                     {(() => {
                       const daysLeft = calculateDaysLeft(selectedItem.reminder_at);
-                      const countdown = getCountdownConfig(selectedItem.condition, daysLeft, selectedItem.condition);
+                      const countdown = getCountdownConfig((selectedItem.condition_latest || selectedItem.condition), daysLeft, (selectedItem.condition_latest || selectedItem.condition));
                       return (
                         <div className={`px-4 py-3 rounded-xl text-center text-sm font-bold w-full ${countdown.bg} ${countdown.text}`}>
                           {countdown.btnText}

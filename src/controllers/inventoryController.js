@@ -40,7 +40,7 @@ const getInventory = asyncHandler(async (req, res) => {
   const enriched = items.map(item => {
     const base = toInventoryResponse(item);
     const rawScore = item.scan?.freshnessScore ?? 0;
-    const { freshnessScoreInitial, freshnessScoreLatest } = getFreshnessData(
+    const { freshnessScoreInitial, freshnessScoreLatest, conditionLatest } = getFreshnessData(
       item.fruitType,
       item.condition,
       rawScore,
@@ -50,6 +50,7 @@ const getInventory = asyncHandler(async (req, res) => {
       ...base,
       freshness_score_initial: freshnessScoreInitial,
       freshness_score_latest: freshnessScoreLatest,
+      condition_latest: conditionLatest,
     };
   });
 
@@ -83,7 +84,7 @@ const addInventory = asyncHandler(async (req, res) => {
     }
   }
 
-  const { reminderAt, freshnessScoreInitial, freshnessScoreLatest } = getFreshnessData(
+  const { reminderAt, freshnessScoreInitial, freshnessScoreLatest, conditionLatest } = getFreshnessData(
     fruit_type,
     condition,
     freshnessScore,
@@ -107,6 +108,7 @@ const addInventory = asyncHandler(async (req, res) => {
     ...base,
     freshness_score_initial: freshnessScoreInitial,
     freshness_score_latest: freshnessScoreLatest,
+    condition_latest: conditionLatest,
   }, 201);
 });
 

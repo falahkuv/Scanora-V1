@@ -29,6 +29,9 @@ Semua perubahan yang signifikan pada proyek Scanora akan didokumentasikan dalam 
 - Penyesuaian warna `Kedaluwarsa` dan Freshness Score 0% menjadi `#8e0610` untuk urgensi seragam.
 
 ## [v1.7.1] - 2026-05-25
+### Changed
+- **Real-Time UI Condition Sync**: Mengubah logika tampilan antarmuka (UI) Inventori agar badge status buah memprioritaskan kondisi terkini (`condition_latest`). Kini, badge "Mentah" (Unripe) akan otomatis berubah menjadi "Matang" (Ripe), dan badge "Matang" akan otomatis berubah menjadi "Busuk" (Rotten) ketika usianya sudah habis. Hal ini membuat tampilan antarmuka tersinkronisasi penuh dengan logika AI secara *real-time*.
+
 ### Fixed
 - **Sinkronisasi AI Suggestion**: Memperbaiki masalah ketidaksinkronan kondisi buah dengan saran AI di `scanController.js`. Kondisi buah mentah (*unripe*) yang sudah masuk masa matang (*ripe*), serta buah matang yang sudah busuk/kedaluwarsa (skor kesegaran <= 0%), kini otomatis disesuaikan secara *real-time* sebelum dikirimkan ke AI, sehingga Chef Scanora selalu memberikan saran yang akurat.
 

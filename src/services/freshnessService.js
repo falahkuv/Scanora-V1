@@ -174,12 +174,25 @@ const getFreshnessData = (fruitType, condition, rawFreshnessScore, addedAt) => {
     addedAt
   );
 
+  let conditionLatest = condition;
+  if (condition.toLowerCase() === 'unripe') {
+    const daysElapsed = (Date.now() - new Date(addedAt)) / (1000 * 60 * 60 * 24);
+    if (daysElapsed >= maxDays) {
+      conditionLatest = 'ripe';
+    }
+  }
+
+  if (freshnessScoreLatest <= 0 && conditionLatest !== 'unripe') {
+    conditionLatest = 'rotten';
+  }
+
   return {
     reminderAt,
     maxDays,
     label,
     freshnessScoreInitial: toPercent(scoreNormalized),
     freshnessScoreLatest: toPercent(freshnessScoreLatest),
+    conditionLatest,
   };
 };
 
