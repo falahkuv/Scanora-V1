@@ -2,6 +2,19 @@
 
 Semua perubahan yang signifikan pada proyek Scanora akan didokumentasikan dalam file ini.
 
+## [v1.7.1] - 2026-05-24
+### Added
+- **Category Filter Pills**: Menambahkan filter kategori dinamis (Semua, Ripe, Unripe, Rotten) pada halaman Inventori untuk memudahkan sortir buah.
+- **Scanner Image Cropping**: Gambar hasil tangkapan kamera kini akan di-crop otomatis sesuai kotak *viewfinder* (crosshair) untuk hasil yang presisi.
+
+### Changed
+- **UI & Viewport Standardization**: Memperhalus padding, margin, styling `capitalize`, dan standarisasi ukuran serta animasi komponen lintas viewport (Mobile S hingga Laptop 1024px).
+- **Notifikasi Push UX**: Penataan ulang *layout* profil agar tombol Notifikasi Push tidak tertumpuk dengan teks berlebih. Penambahan *softfeather mask* pada daftar Segera Konsumsi.
+
+### Fixed
+- **Countdown Auto-Transition**: Perbaikan *bug* krusial pada backend (`inventoryController.js`) di mana buah yang berstatus `unripe` kini akan otomatis bertransisi menjadi `ripe` saat melewati tanggal matang, lalu mengkalkulasi ulang sisa umur kesegaran barunya secara *real-time*.
+- Penyesuaian warna `Kedaluwarsa` dan Freshness Score 0% menjadi `#8e0610` untuk urgensi seragam.
+
 ## [v1.7.0] - 2026-05-21
 ### Added
 - **Viewport Switcher & Responsiveness**: Implementasi fitur toggle responsif (Dekstop/Tablet/Mobile) dan penggunaan ikon navigasi yang berbeda (🍎 untuk Localhost, 🍊 untuk Web Asli).

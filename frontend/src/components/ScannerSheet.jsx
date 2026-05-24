@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, HelpCircle, ImageIcon, RefreshCw, Zap, ZapOff, CheckCircle, CircleX, ChevronDown, Check, Camera } from 'lucide-react';
+import { X, HelpCircle, ImageIcon, RefreshCw, Zap, ZapOff, CheckCircle, CircleX, ChevronDown, Check, Camera, Bot } from 'lucide-react';
 import imageCompression from 'browser-image-compression';
 import api from '../api';
 import { getCachedSuggestion, saveSuggestionToCache } from '../lib/aiSuggestionCache';
@@ -197,17 +197,36 @@ const ScannerSheet = ({ isOpen, onClose }) => {
   const handleCapture = async () => {
     if (!videoRef.current || scanState === 'scanning') return;
 
+    const vw = videoRef.current.videoWidth;
+    const vh = videoRef.current.videoHeight;
+
+    // ── Crop to viewfinder square (288px on screen, offset -60px Y) ──
+    // The viewfinder is centered on screen. We calculate the crop region
+    // in video-pixel space that corresponds to the 288×288 box.
+    const displayW = videoRef.current.clientWidth  || window.innerWidth;
+    const displayH = videoRef.current.clientHeight || window.innerHeight;
+    const viewfinderPx = 288; // matches the w-72 / h-72 div
+    const offsetYPx    = -60;  // matches translateY(-60px)
+
+    const scaleX = vw / displayW;
+    const scaleY = vh / displayH;
+
+    const cropW = viewfinderPx * scaleX;
+    const cropH = viewfinderPx * scaleY;
+    const cropX = (vw - cropW) / 2;
+    const cropY = (vh - cropH) / 2 + offsetYPx * scaleY;
+
     const canvas = document.createElement('canvas');
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
+    canvas.width  = Math.round(cropW);
+    canvas.height = Math.round(cropH);
     const ctx = canvas.getContext('2d');
-    ctx.drawImage(videoRef.current, 0, 0);
+    ctx.drawImage(videoRef.current, cropX, cropY, cropW, cropH, 0, 0, canvas.width, canvas.height);
 
     canvas.toBlob((blob) => {
       const url = URL.createObjectURL(blob);
       setCapturedImage(url);
       processBlob(blob);
-    }, 'image/jpeg', 0.8);
+    }, 'image/jpeg', 0.9);
   };
 
   const handleGalleryChange = (e) => {
@@ -272,7 +291,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
 
   const getConditionColor = (condition) => {
     const c = condition?.toLowerCase() || '';
-    if (c === 'ripe') return { text: 'text-orange-700', bg: 'bg-orange-50', dot: 'bg-orange-500', stroke: '#c25e00' };
+    if (c === 'ripe') return { text: 'text-orange-main', bg: 'bg-orange-main/10', dot: 'bg-orange-main', stroke: '#f87305' };
     if (c === 'unripe') return { text: 'text-green-700', bg: 'bg-green-50', dot: 'bg-green-500', stroke: '#22c55e' };
     if (c === 'rotten') return { text: 'text-red-700', bg: 'bg-red-50', dot: 'bg-red-500', stroke: '#ef4444' };
     return { text: 'text-gray-700', bg: 'bg-gray-50', dot: 'bg-gray-500', stroke: '#9ca3af' };
@@ -365,7 +384,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
         </div>
 
         {/* Top Controls */}
-        <div className="absolute top-0 left-0 right-0 px-6 pt-8 pb-4 flex justify-between items-center bg-gradient-to-b from-black/60 to-transparent z-30">
+        <div className="absolute top-0 left-0 right-0 px-6 pt-14 pb-4 flex justify-between items-center bg-gradient-to-b from-black/60 to-transparent z-30">
           <button
             onClick={() => {
               if (scanState === 'half-result' || scanState === 'full-result' || scanState === 'scanning') {
@@ -497,7 +516,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
                 {/* Left Col: Fruit Name & Ripeness */}
                 <div className="flex flex-col text-left">
                   <h2 className="text-3xl font-bold text-gray-900 capitalize">{result.fruit_type}</h2>
-                  <div className={`inline-flex items-center gap-2 mt-2 px-3 py-1.5 rounded-full font-semibold w-fit text-sm uppercase ${condColor.bg} ${condColor.text}`}>
+                  <div className={`inline-flex items-center gap-2 mt-2 px-3 py-1.5 rounded-full font-semibold w-fit text-sm capitalize ${condColor.bg} ${condColor.text}`}>
                     <span className={`w-2 h-2 rounded-full ${condColor.dot}`}></span>
                     {result.condition}
                   </div>
@@ -556,20 +575,29 @@ const ScannerSheet = ({ isOpen, onClose }) => {
                     </div>
                   )}
                 </div>
+                </div>
+
+                {/* ── AI Disclaimer ───────────────────────────────────── */}
+                <div className="flex items-center gap-4 bg-gray-100/80 border border-gray-200/70 rounded-2xl px-4 py-3 mb-5">
+                  <Bot size={16} className="text-gray-400 flex-shrink-0" />
+                  <p className="text-[11px] text-gray-500 leading-relaxed">
+                    Hasil ini dianalisis dari satu foto — kondisi buah nyatanya bisa berbeda.
+                    {' '}Scan ulang kapan saja untuk mendapatkan pembacaan terbaru.
+                  </p>
+                </div>
 
                 <div className="flex gap-4">
                   <button
                     onClick={closeCard}
-                    className="flex-1 min-h-[44px] py-3.5 bg-gray-100 text-gray-700 font-semibold rounded-xl flex items-center justify-center gap-2 hover:bg-gray-200 active:scale-95 transition-all"
+                    className="flex-1 min-h-[44px] py-3.5 bg-gray-100 text-gray-700 font-semibold rounded-xl flex items-center justify-center hover:bg-gray-200 active:scale-95 transition-all"
                   >
-                    <ChevronDown size={18} /> Tutup
+                    Tutup
                   </button>
                   <button
                     onClick={handleSaveToInventory}
                     disabled={isSaving}
-                    className="flex-1 min-h-[44px] py-3.5 bg-scanora-green text-white font-semibold rounded-xl shadow-lg shadow-scanora-green/30 flex items-center justify-center gap-2 hover:bg-scanora-dark active:scale-95 transition-all disabled:opacity-70"
+                    className="flex-1 min-h-[44px] py-3.5 bg-scanora-green text-white font-semibold rounded-xl shadow-lg shadow-scanora-green/30 flex items-center justify-center hover:bg-scanora-dark active:scale-95 transition-all disabled:opacity-70"
                   >
-                    <Check size={18} />
                     {isSaving ? 'Menyimpan...' : 'Simpan'}
                   </button>
                 </div>

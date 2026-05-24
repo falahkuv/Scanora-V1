@@ -25,9 +25,7 @@ const SideNav = ({ onOpenScanner }) => {
       {/* ── Logo ── */}
       <div className="flex items-center gap-2 px-4 mb-6">
         <span className="text-2xl">🍊</span>
-        <span className="text-xl font-extrabold tracking-tight text-gray-900">
-          Scan<span className="text-scanora-green">ORA</span>
-        </span>
+        <h1 className="text-2xl font-bold text-gray-900 drop-shadow-sm ml-2">Scanora</h1>
       </div>
 
       {/* ── Scan Buah CTA (prominent, at the top) ── */}
@@ -45,7 +43,7 @@ const SideNav = ({ onOpenScanner }) => {
           <button
             key={path}
             onClick={() => navigate(path)}
-            className={`flex items-center gap-3 px-4 min-h-[56px] rounded-2xl text-sm font-semibold transition-all active:scale-95 text-left w-full
+            className={`flex items-center gap-4 px-4 min-h-[56px] rounded-2xl text-sm font-semibold transition-all active:scale-95 text-left w-full
               ${isActive(path)
                 ? 'bg-scanora-green/10 text-scanora-green'
                 : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'}`}
@@ -63,7 +61,7 @@ const SideNav = ({ onOpenScanner }) => {
       <div className="border-t border-gray-100 my-2 mx-2"></div>
       <button
         onClick={() => navigate('/profile')}
-        className={`flex items-center gap-3 px-3 py-3 rounded-2xl transition-all active:scale-95 w-full text-left hover:bg-gray-50
+        className={`flex items-center gap-4 px-3 py-3 rounded-2xl transition-all active:scale-95 w-full text-left hover:bg-gray-50
           ${isActive('/profile') ? 'bg-scanora-green/10' : ''}`}
       >
         <div className="w-11 h-11 rounded-full bg-scanora-green/10 flex items-center justify-center text-scanora-green font-bold text-sm flex-shrink-0">

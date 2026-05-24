@@ -76,11 +76,12 @@ const Profile = () => {
       </div>
 
       <div className="p-6">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 mb-6 flex flex-row items-center gap-5 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors">
+        <div className={`bg-white dark:bg-gray-800 rounded-2xl p-6 mb-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors
+          ${isDesktop ? 'flex flex-row items-center gap-5' : 'flex flex-col items-center text-center gap-4'}`}>
           <div className="w-20 h-20 bg-scanora-green/10 rounded-full flex-shrink-0 flex items-center justify-center text-scanora-green">
             <User size={40} />
           </div>
-          <div className="flex flex-col overflow-hidden">
+          <div className={`flex flex-col overflow-hidden ${isDesktop ? '' : 'items-center'}`}>
             <h2 className="text-xl font-bold text-gray-900 dark:text-white truncate">{firstName}</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 truncate mb-1.5">{user.email || 'sobat@scanora.app'}</p>
             <p className="text-xs font-medium text-scanora-green bg-scanora-green/10 w-fit px-2.5 py-1 rounded-md">Sobat Scanora sejak {joinDate}</p>
@@ -89,7 +90,7 @@ const Profile = () => {
 
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-6 transition-colors">
           <div className="p-4 flex justify-between items-center border-b border-gray-100 dark:border-gray-700">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-500">
                 {isDark ? <Moon size={20} /> : <Sun size={20} />}
               </div>
@@ -107,7 +108,7 @@ const Profile = () => {
           </div>
 
           <div className="p-4 flex justify-between items-center border-b border-gray-100 dark:border-gray-700">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <div className="w-10 h-10 bg-orange-50 dark:bg-orange-900/30 rounded-full flex items-center justify-center text-orange-500">
                 <Languages size={20} />
               </div>
@@ -124,19 +125,19 @@ const Profile = () => {
             </button>
           </div>
 
-          <div className="p-4 flex justify-between items-center border-b border-gray-100 dark:border-gray-700">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-purple-50 dark:bg-purple-900/30 rounded-full flex items-center justify-center text-purple-500">
+          <div className="p-4 flex justify-between items-center border-b border-gray-100 dark:border-gray-700 gap-4">
+            <div className="flex items-center gap-4 flex-1 pr-2 min-w-0">
+              <div className="w-10 h-10 bg-purple-50 dark:bg-purple-900/30 rounded-full flex-shrink-0 flex items-center justify-center text-purple-500">
                 <Bell size={20} />
               </div>
-              <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">{i18n.language === 'en' ? 'Push Notifications' : 'Notifikasi Push'}</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{i18n.language === 'en' ? 'Smart freshness reminders' : 'Pengingat pintar buah matang atau membusuk'}</p>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-gray-900 dark:text-white truncate">{i18n.language === 'en' ? 'Push Notifications' : 'Notifikasi Push'}</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400 break-words">{i18n.language === 'en' ? 'Smart freshness reminders' : 'Pengingat pintar sebelum buah matang dan membusuk'}</p>
               </div>
             </div>
             <button 
               onClick={toggleNotif}
-              className={`w-12 h-6 rounded-full transition-colors relative flex items-center ${notifEnabled ? 'bg-scanora-green' : 'bg-gray-200 dark:bg-gray-600'}`}
+              className={`flex-shrink-0 w-12 h-6 rounded-full transition-colors relative flex items-center ${notifEnabled ? 'bg-scanora-green' : 'bg-gray-200 dark:bg-gray-600'}`}
             >
               <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform ${notifEnabled ? 'translate-x-6' : 'translate-x-1'}`}></div>
             </button>
@@ -146,7 +147,7 @@ const Profile = () => {
             onClick={handleLogout}
             className="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 active:bg-gray-100 dark:active:bg-gray-700 transition-colors"
           >
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4">
               <div className="w-10 h-10 bg-red-50 dark:bg-red-900/30 rounded-full flex items-center justify-center text-red-500">
                 <LogOut size={20} />
               </div>
