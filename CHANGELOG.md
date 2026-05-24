@@ -28,6 +28,10 @@ Semua perubahan yang signifikan pada proyek Scanora akan didokumentasikan dalam 
 - **Countdown Auto-Transition**: Perbaikan *bug* krusial pada backend (`inventoryController.js`) di mana buah yang berstatus `unripe` kini akan otomatis bertransisi menjadi `ripe` saat melewati tanggal matang, lalu mengkalkulasi ulang sisa umur kesegaran barunya secara *real-time*.
 - Penyesuaian warna `Kedaluwarsa` dan Freshness Score 0% menjadi `#8e0610` untuk urgensi seragam.
 
+## [v1.7.1] - 2026-05-25
+### Fixed
+- **Sinkronisasi AI Suggestion**: Memperbaiki masalah ketidaksinkronan kondisi buah dengan saran AI di `scanController.js`. Kondisi buah mentah (*unripe*) yang sudah masuk masa matang (*ripe*), serta buah matang yang sudah busuk/kedaluwarsa (skor kesegaran <= 0%), kini otomatis disesuaikan secara *real-time* sebelum dikirimkan ke AI, sehingga Chef Scanora selalu memberikan saran yang akurat.
+
 ## [v1.7.0] - 2026-05-21
 ### Added
 - **Viewport Switcher & Responsiveness**: Implementasi fitur toggle responsif (Dekstop/Tablet/Mobile) dan penggunaan ikon navigasi yang berbeda (🍎 untuk Localhost, 🍊 untuk Web Asli).

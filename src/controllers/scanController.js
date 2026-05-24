@@ -10,6 +10,7 @@ const { toScanResponse } = require("../services/formatService");
 const { sendSuccess } = require("../services/responseService");
 // const { getGeminiSuggestion } = require("../services/geminiService");
 const { getAISuggestion } = require("../services/openRouterService");
+const { calculateReminderAt } = require("../services/freshnessService");
 
 const FASTAPI_URL = process.env.FASTAPI_URL || "http://localhost:8000";
 
@@ -234,9 +235,31 @@ const getScanSuggestion = asyncHandler(async (req, res) => {
   //    Jika tidak ada, fallback ke skor awal dari scan
   const freshnessScoreToUse = req.body?.freshness_score_latest ?? scan.freshnessScore;
 
+  // Tentukan kondisi saat ini.
+  let currentCondition = scan.condition;
+  
+  // 2a. Periksa apakah buah mentah (unripe) sudah matang seiring waktu
+  if (currentCondition.toLowerCase() === 'unripe') {
+    const inventoryItem = await prisma.inventory.findFirst({
+      where: { scanId: scan.id, userId: req.user.userId }
+    });
+    
+    const addedDate = inventoryItem ? inventoryItem.addedAt : scan.scannedAt;
+    const { maxDays } = calculateReminderAt(scan.fruitType, 'unripe', scan.freshnessScore, addedDate);
+    const daysElapsed = (Date.now() - new Date(addedDate)) / (1000 * 60 * 60 * 24);
+    
+    if (daysElapsed >= maxDays) {
+      currentCondition = 'ripe';
+    }
+  }
+
+  // 2b. Jika freshness score 0, berarti sudah busuk/kedaluwarsa.
+  if (freshnessScoreToUse <= 0 && currentCondition !== 'unripe') {
+    currentCondition = 'rotten';
+  }
+
   // 3. Always generate fresh suggestion (no cache) — saran selalu sesuai kondisi terkini
-  // const suggestion = await getGeminiSuggestion(scan.fruitType, scan.condition, scan.freshnessScore);
-  const suggestion = await getAISuggestion(scan.fruitType, scan.condition, freshnessScoreToUse);
+  const suggestion = await getAISuggestion(scan.fruitType, currentCondition, freshnessScoreToUse);
 
   // 4. Save to DB
   await prisma.scanHistory.update({
