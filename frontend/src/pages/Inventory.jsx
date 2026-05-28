@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { History, Salad, X, Trash2, Apple, Banana, Citrus, ChevronRight, CalendarCheck, CalendarX, ImageOff, Utensils, Package, Refrigerator, ArrowUp, ArrowDown, CalendarArrowUp, CalendarArrowDown, CalendarPlus } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { History, Salad, X, Trash2, Apple, Banana, Citrus, ChevronRight, SquareCheck, SquareX, ImageOff, Utensils, Package, Refrigerator, ArrowUp, ArrowDown, CalendarArrowUp, CalendarArrowDown, Camera, Sparkles, Bot } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import api from '../api';
 import { useViewport } from '../context/ViewportContext';
 import { getCachedSuggestion, saveSuggestionToCache } from '../lib/aiSuggestionCache';
@@ -57,14 +58,14 @@ const calculateDaysLeft = (reminderAt) => {
  */
 const getCountdownConfig = (condition, daysLeft) => {
   const cond = (condition || '').toLowerCase();
-  
+
   if (cond === 'rotten' || cond === 'discarded') {
-    return { bg: 'bg-gray-100', text: 'text-gray-500', btnText: 'Tidak Layak', isExpired: true };
+    return { bg: 'bg-red-main', text: 'text-white', btnText: 'Tidak Layak', isExpired: true };
   }
 
   if (cond === 'unripe') {
     if (daysLeft === null) {
-      return { bg: 'bg-gray-100', text: 'text-gray-500', btnText: 'Tidak Akan Matang', isExpired: true };
+      return { bg: 'bg-red-main', text: 'text-white', btnText: 'Tidak Akan Matang', isExpired: true };
     }
     if (daysLeft <= 0) {
       return { bg: 'bg-scanora-green', text: 'text-white', btnText: 'Siap Matang', isExpired: false };
@@ -74,29 +75,29 @@ const getCountdownConfig = (condition, daysLeft) => {
 
   // cond === 'ripe'
   if (daysLeft === null || daysLeft < 0) {
-    return { bg: 'bg-[#8e0610]', text: 'text-white', btnText: 'Kedaluwarsa', isExpired: true };
+    return { bg: 'bg-red-main', text: 'text-white', btnText: 'Kedaluwarsa', isExpired: true };
   }
 
   if (daysLeft === 0) {
-    return { bg: 'bg-[#8e0610]', text: 'text-white', btnText: `Hari ini!`, isExpired: false };
+    return { bg: 'bg-red-main', text: 'text-white', btnText: `Hari ini!`, isExpired: false };
   }
   if (daysLeft === 1) {
-    return { bg: 'bg-[#8e0610]', text: 'text-white', btnText: `Sisa 1 Hari Lagi`, isExpired: false };
+    return { bg: 'bg-red-main', text: 'text-white', btnText: `Sisa 1 Hari Lagi`, isExpired: false };
   }
   if (daysLeft > 1) {
     return { bg: 'bg-orange-main', text: 'text-white', btnText: `Sisa ${daysLeft} Hari Lagi`, isExpired: false };
   }
 
-  return { bg: 'bg-gray-100', text: 'text-gray-500', btnText: 'Tidak Layak', isExpired: true };
+  return { bg: 'bg-red-main', text: 'text-white', btnText: 'Tidak Layak', isExpired: true };
 };
 
-/** Short month: "11 Mei '26" */
+/** Short date: "11 Mei 2026" */
 const formatShortDate = (dateStr) => {
   if (!dateStr) return '-';
   const d = new Date(dateStr);
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-  const yr = String(d.getFullYear()).slice(2);
-  return `${d.getDate()} ${months[d.getMonth()]} '${yr}`;
+  const fullYear = d.getFullYear();
+  return `${d.getDate()} ${months[d.getMonth()]} ${fullYear}`;
 };
 
 /** Captured date: "27 Mei" */
@@ -113,11 +114,11 @@ const formatDate = (dateStr) => {
   return d.toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 };
 
-/** Percent badge for freshness score */
+/** Percent badge for freshness score. */
 const ScoreBadge = ({ score, className = "py-1 text-[11px]" }) => {
   const pct = Math.round(score ?? 0);
-  const bg = pct >= 70 ? 'bg-green-100' : pct > 0 ? 'bg-orange-main/15' : 'bg-red-800';
-  const text = pct >= 70 ? 'text-green-700' : pct > 0 ? 'text-orange-main' : 'text-white';
+  const bg = pct >= 70 ? 'bg-green-100' : pct > 0 ? 'bg-orange-main/15' : 'bg-red-100';
+  const text = pct >= 70 ? 'text-green-700' : pct > 0 ? 'text-orange-main' : 'text-red-700';
   return (
     <div className={`px-2 rounded w-full text-center font-bold flex items-center justify-center ${bg} ${text} ${className}`}>
       {pct}%
@@ -125,16 +126,123 @@ const ScoreBadge = ({ score, className = "py-1 text-[11px]" }) => {
   );
 };
 
+/** Render AI suggestion markdown: **bold**, *italic*, bullet lists */
+const renderMarkdown = (text) => {
+  if (!text) return null;
+  const lines = text.split('\n');
+  return lines.map((line, i) => {
+    // bullet
+    const isBullet = /^[-*•]\s+/.test(line);
+    const content = line.replace(/^[-*•]\s+/, '');
+    // parse inline bold/italic
+    const parseInline = (str) => {
+      const parts = str.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
+      return parts.map((part, j) => {
+        if (/^\*\*[^*]+\*\*$/.test(part)) return <strong key={j}>{part.slice(2, -2)}</strong>;
+        if (/^\*[^*]+\*$/.test(part)) return <em key={j}>{part.slice(1, -1)}</em>;
+        return part;
+      });
+    };
+    if (isBullet) {
+      return (
+        <div key={i} className="flex gap-2 mt-1">
+          <span className="text-green-600 font-bold mt-0.5">•</span>
+          <span>{parseInline(content)}</span>
+        </div>
+      );
+    }
+    if (!line.trim()) return <div key={i} className="mt-2" />;
+    return <p key={i} className="mt-1">{parseInline(line)}</p>;
+  });
+};
+
 // ─── Card Component ────────────────────────────────────────────────────────────
 
-const InventoryCard = ({ item, onClick }) => {
+const InventoryCard = ({ item, onClick, isTablet }) => {
   const daysLeft = calculateDaysLeft(item.reminder_at);
   const countdown = getCountdownConfig((item.condition_latest || item.condition), daysLeft);
-  const labelText = (item.condition_latest || item.condition) === 'unripe' ? 'Matang:' : 'Busuk:';
 
   // Sky/grass background gradient for the card header
   const headerBg = 'bg-gradient-to-b from-sky-200 via-sky-100 to-green-200';
 
+  if (isTablet) {
+    // Tablet: horizontal card — photo left, info right
+    return (
+      <div
+        onClick={onClick}
+        className={`bg-white rounded-2xl shadow-sm border border-gray-100 cursor-pointer hover:shadow-md hover:-translate-y-0.5 active:scale-95 transition-all flex flex-row relative overflow-hidden ${countdown.isExpired ? 'opacity-60 brightness-[0.95]' : ''}`}
+        style={{ minHeight: '130px' }}
+      >
+        {/* Left: photo */}
+        <div className={`relative ${headerBg} flex-shrink-0 w-[130px]`}>
+          {/* Condition Badge */}
+          <span className={`absolute top-2 left-2 px-2 py-1 z-20 rounded-md text-sm font-bold shadow-sm leading-none capitalize ${getConditionBadgeStyle((item.condition_latest || item.condition))}`}>
+            {getConditionLabel((item.condition_latest || item.condition))}
+          </span>
+          {item.image_url ? (
+            <img
+              src={item.image_url}
+              alt={item.fruit_type}
+              className="absolute inset-0 w-full h-full object-cover z-0"
+              onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+            />
+          ) : null}
+          <div
+            className="absolute inset-0 w-full h-full z-0 bg-gray-100 flex items-center justify-center flex-col gap-1"
+            style={{ display: item.image_url ? 'none' : 'flex' }}
+          >
+            <ImageOff size={32} className="text-gray-400" strokeWidth={1.5} />
+          </div>
+        </div>
+
+        {/* Right: info */}
+        <div className="flex-1 px-4 py-3 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-fruit-name-sm font-bold text-gray-900 capitalize">
+                {getFruitLabel(item.fruit_type)}
+              </h3>
+              <span className="text-xs font-bold text-gray-500 bg-white/80 px-2 py-0.5 rounded-md">
+                {formatCapturedDate(item.added_at)}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              {(item.condition_latest || item.condition) === 'unripe' ? (
+                <SquareCheck size={13} className="text-gray-400" />
+              ) : (
+                <SquareX size={13} className="text-gray-400" />
+              )}
+              <span className="text-sm font-semibold text-gray-500">
+                {(item.condition_latest || item.condition) === 'unripe' ? 'Matang: ' : 'Busuk: '}
+                {item.reminder_at ? formatShortDate(item.reminder_at) : '-'}
+              </span>
+            </div>
+          </div>
+          {/* Countdown + score */}
+          <div className="flex gap-2 mt-2">
+            <div className="flex-1">
+              <div className={`w-full flex items-center justify-center rounded-md py-2 text-base font-bold whitespace-nowrap overflow-hidden ${countdown.bg} ${countdown.text}`}>
+                <span className="truncate px-1">{countdown.btnText}</span>
+              </div>
+            </div>
+            <div className="w-16">
+              <ScoreBadge score={item.freshness_score_latest ?? item.freshness_score_initial} className="h-full py-2 text-sm" />
+            </div>
+          </div>
+        </div>
+
+        {/* Mascot */}
+        <img
+          src={getMascotSrc(item.fruit_type, (item.condition_latest || item.condition))}
+          alt=""
+          className="absolute bottom-0 right-[150px] h-16 object-contain drop-shadow-md z-20 pointer-events-none"
+          onError={(e) => { e.target.style.display = 'none'; }}
+        />
+      </div>
+    );
+  }
+
+  // Default: vertical card
   return (
     <div
       onClick={onClick}
@@ -143,8 +251,8 @@ const InventoryCard = ({ item, onClick }) => {
       <div className="relative">
         {/* ── Top half: image area ── */}
         <div className={`relative ${headerBg} flex-shrink-0 rounded-xl overflow-hidden aspect-square`}>
-          {/* Condition Badge */}
-          <span className={`absolute top-2 left-2 px-2.5 py-1 z-20 rounded-md text-[11px] font-bold shadow-sm ${getConditionBadgeStyle((item.condition_latest || item.condition))}`}>
+          {/* Condition Badge — min 14px */}
+          <span className={`absolute top-2 left-2 px-2 py-1 z-20 rounded-md text-[14px] font-bold shadow-sm leading-none capitalize ${getConditionBadgeStyle((item.condition_latest || item.condition))}`}>
             {getConditionLabel((item.condition_latest || item.condition))}
           </span>
 
@@ -175,44 +283,44 @@ const InventoryCard = ({ item, onClick }) => {
           </div>
         </div>
 
-        {/* Mascot (bottom-right outside overflow-hidden) */}
+        {/* Mascot (bottom-right outside overflow-hidden) — uses mascot-card-offset for -5vh */}
         <img
           src={getMascotSrc(item.fruit_type, (item.condition_latest || item.condition))}
           alt=""
-          className="absolute -bottom-8 right-1 h-16 object-contain drop-shadow-md z-20"
+          className="mascot-card-offset absolute right-1 h-16 object-contain drop-shadow-md z-20"
           onError={(e) => { e.target.style.display = 'none'; }}
         />
       </div>
 
       {/* ── Bottom half: info ── */}
       <div className="px-2 pt-1 pb-1 flex flex-col gap-1.5 flex-1 mt-1">
-        {/* Fruit name */}
-        <h3 className="font-bold text-gray-900 text-lg leading-tight capitalize">
+        {/* Fruit name — text-fruit-name semantic class */}
+        <h3 className="text-fruit-name font-bold text-gray-900 leading-tight capitalize">
           {getFruitLabel(item.fruit_type)}
         </h3>
 
-        {/* Date — compact format no prefix */}
-        <div className="flex items-center gap-1.5 mt-[0.5rem]">
+        {/* Date — min 14px */}
+        <div className="flex items-center gap-1.5 mt-1">
           {(item.condition_latest || item.condition) === 'unripe' ? (
-             <CalendarCheck size={14} className="text-gray-400" />
+            <SquareCheck size={14} className="text-gray-400" />
           ) : (
-             <CalendarX size={14} className="text-gray-400" />
+            <SquareX size={14} className="text-gray-400" />
           )}
-          <span className="text-xs font-semibold text-gray-500">
+          <span className="text-sm font-semibold text-gray-500">
             {(item.condition_latest || item.condition) === 'unripe' ? 'Matang: ' : 'Busuk: '}
             {item.reminder_at ? formatShortDate(item.reminder_at) : '-'}
           </span>
         </div>
 
-        {/* Countdown & Freshness Score Row (80:20) */}
+        {/* Countdown (16px) & Freshness Score (14px) Row */}
         <div className="flex gap-2 mt-1">
           <div className="w-[80%]">
-            <div className={`w-full h-full flex items-center justify-center rounded-md py-1.5 text-[11px] font-bold ${countdown.bg} ${countdown.text}`}>
-              {countdown.btnText}
+            <div className={`w-full h-full flex items-center justify-center rounded-md py-1.5 text-base font-bold whitespace-nowrap overflow-hidden ${countdown.bg} ${countdown.text}`}>
+              <span className="truncate px-1">{countdown.btnText}</span>
             </div>
           </div>
           <div className="w-[20%]">
-            <ScoreBadge score={item.freshness_score_latest ?? item.freshness_score_initial} className="h-full py-1.5 text-[10px]" />
+            <ScoreBadge score={item.freshness_score_latest ?? item.freshness_score_initial} className="h-full py-1.5 text-sm" />
           </div>
         </div>
       </div>
@@ -223,7 +331,19 @@ const InventoryCard = ({ item, onClick }) => {
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 
 const Inventory = () => {
-  const [activeTab, setActiveTab] = useState('inventory');
+  const location = useLocation();
+  const [activeTab, setActiveTab] = useState(
+    () => location.state?.tab === 'history' ? 'history' : 'inventory'
+  );
+
+  // Sync tab when SideNav navigates here with { tab: 'history' } state
+  useEffect(() => {
+    if (location.state?.tab === 'history') {
+      setActiveTab('history');
+    } else if (location.state?.tab === 'inventory') {
+      setActiveTab('inventory');
+    }
+  }, [location.state]);
   const [inventoryData, setInventoryData] = useState([]);
   const [historyData, setHistoryData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -232,10 +352,12 @@ const Inventory = () => {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState(null);
 
-  const { viewport } = useViewport();
+  const { viewport, compactWidth, windowWidth } = useViewport();
   const isDesktop = viewport === 'desktop';
-  const isTablet  = viewport === 'tablet';
-  
+  const isTablet = viewport === 'tablet';
+  // Effective rendered width for layout decisions
+  const effectiveWidth = compactWidth ?? windowWidth;
+
   const [conditionFilter, setConditionFilter] = useState('all');
   const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
   const [showSortPopup, setShowSortPopup] = useState(false);
@@ -249,6 +371,11 @@ const Inventory = () => {
   // Floating tab
   const [showFloating, setShowFloating] = useState(false);
   const observerTarget = React.useRef(null);
+
+  // Detail modal sticky header visibility
+  const [showStickyHeader, setShowStickyHeader] = useState(false);
+  const fruitNameRef = useRef(null);
+  const scrollContainerRef = useRef(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -362,7 +489,7 @@ const Inventory = () => {
     const currentScore = selectedItem.freshness_score_latest ?? selectedItem.freshness_score_initial;
     const condition = (selectedItem.condition_latest || selectedItem.condition);
     const daysLeft = calculateDaysLeft(selectedItem.reminder_at);
-    
+
     const { suggestion, tierChanged } = getCachedSuggestion(selectedItem.scan_id, currentScore, condition, daysLeft);
 
     if (suggestion) {
@@ -375,11 +502,12 @@ const Inventory = () => {
         handleGetAiSuggestion(true);
       }
     } else {
-      // Nothing in cache, wait for user to click
       setAiSuggestion(null);
       setAiError(null);
       setAiLoading(false);
     }
+    // Reset sticky header on new item
+    setShowStickyHeader(false);
   }, [selectedItem?.id]);
 
   const handleGetAiSuggestion = async (isBackground = false) => {
@@ -415,6 +543,14 @@ const Inventory = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // Handle scroll to show/hide sticky header in detail modal
+  const handleDetailScroll = (e) => {
+    if (!fruitNameRef.current) return;
+    const scrollTop = e.target.scrollTop;
+    // Show sticky header after scrolling past ~60px
+    setShowStickyHeader(scrollTop > 60);
+  };
+
   return (
     <div className="flex flex-col h-full bg-gray-50 pb-32 no-scrollbar">
       {/* Sticky Header */}
@@ -437,26 +573,28 @@ const Inventory = () => {
           <div className="bg-gray-100 p-1 rounded-xl flex shadow-sm">
             <button
               onClick={() => setShowSortPopup(!showSortPopup)}
-              className="h-[44px] flex items-center justify-between gap-2 px-3 rounded-lg active:scale-95 transition-all bg-white text-scanora-green text-sm font-semibold shadow-[0_2px_8px_rgba(0,0,0,0.08)] whitespace-nowrap min-w-[44px] md:min-w-[160px]"
+              className="h-[44px] flex items-center justify-between gap-2 px-3 rounded-lg active:scale-95 transition-all bg-white text-scanora-green text-sm font-semibold shadow-[0_2px_8px_rgba(0,0,0,0.08)] whitespace-nowrap min-w-[44px]"
             >
-              <span className="hidden md:inline text-left flex-1">
-                {sortConfig.key === 'priority' ? 'Freshness Score' : 'Tanggal Foto'}
-              </span>
+              {effectiveWidth > 500 && (
+                <span className="text-left flex-1">
+                  {sortConfig.key === 'priority' ? 'Freshness Score' : 'Tanggal Foto'}
+                </span>
+              )}
               {getSortIcon()}
             </button>
           </div>
-          
+
           {showSortPopup && !showFloating && (
             <>
               <div className="fixed inset-0 z-[199]" onClick={() => setShowSortPopup(false)} />
               <div className="absolute top-[60px] right-0 bg-white rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.15)] border border-gray-100 p-2 min-w-[200px] flex flex-col gap-1 z-[200]">
                 <button onClick={() => handleSortSelect('priority')} className={`text-left px-3 py-2.5 text-sm rounded-lg flex justify-between items-center min-h-[44px] text-gray-600 hover:bg-gray-50`}>
-                    <span>Freshness Score</span>
-                    {sortConfig.key === 'priority' && sortConfig.direction === 'asc' ? <ArrowDown size={14} /> : <ArrowUp size={14} className={sortConfig.key === 'priority' ? '' : 'text-gray-400'} />}
+                  <span>Freshness Score</span>
+                  {sortConfig.key === 'priority' && sortConfig.direction === 'asc' ? <ArrowDown size={14} /> : <ArrowUp size={14} className={sortConfig.key === 'priority' ? '' : 'text-gray-400'} />}
                 </button>
                 <button onClick={() => handleSortSelect('date')} className={`text-left px-3 py-2.5 text-sm rounded-lg flex justify-between items-center min-h-[44px] text-gray-600 hover:bg-gray-50`}>
-                    <span>Tanggal Foto</span>
-                    {sortConfig.key === 'date' && sortConfig.direction === 'asc' ? <CalendarArrowDown size={14} /> : <CalendarArrowUp size={14} className={sortConfig.key === 'date' ? '' : 'text-gray-400'} />}
+                  <span>Tanggal Foto</span>
+                  {sortConfig.key === 'date' && sortConfig.direction === 'asc' ? <CalendarArrowDown size={14} /> : <CalendarArrowUp size={14} className={sortConfig.key === 'date' ? '' : 'text-gray-400'} />}
                 </button>
               </div>
             </>
@@ -466,17 +604,17 @@ const Inventory = () => {
 
       {/* ── Category Filter Pills (Inventori tab only) ── */}
       {activeTab === 'inventory' && (
-        <div className="px-4 pt-3 pb-1 flex gap-2 overflow-x-auto no-scrollbar min-h-[44px]">
+        <div className="px-4 pt-3 pb-1 flex gap-2 overflow-x-clip no-scrollbar">
           {[
-            { key: 'all',    label: 'Semua',  count: inventoryData.length,                                        active: 'bg-gray-800 text-white',                 inactive: 'border border-gray-200 text-gray-600 bg-transparent' },
-            { key: 'ripe',   label: 'Ripe',   count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'ripe').length,   active: 'bg-orange-main text-white',              inactive: 'border border-orange-200 text-orange-600 bg-transparent' },
-            { key: 'unripe', label: 'Unripe', count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'unripe').length, active: 'bg-scanora-green text-white',            inactive: 'border border-green-200 text-green-600 bg-transparent' },
-            { key: 'rotten', label: 'Rotten', count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'rotten').length, active: 'bg-[#8e0610] text-white',                inactive: 'border border-red-200 text-red-600 bg-transparent' },
+            { key: 'all', label: 'Semua', count: inventoryData.length, active: 'bg-gray-800 text-white', inactive: 'border border-gray-200 text-gray-600 bg-transparent' },
+            { key: 'ripe', label: 'Ripe', count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'ripe').length, active: 'bg-orange-main text-white', inactive: 'border border-orange-200 text-orange-600 bg-transparent' },
+            { key: 'unripe', label: 'Unripe', count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'unripe').length, active: 'bg-scanora-green text-white', inactive: 'border border-green-200 text-green-600 bg-transparent' },
+            { key: 'rotten', label: 'Rotten', count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'rotten').length, active: 'bg-red-main text-white', inactive: 'border border-red-200 text-red-600 bg-transparent' },
           ].map(pill => (
             <button
               key={pill.key}
               onClick={() => setConditionFilter(pill.key)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap flex-shrink-0 transition-all active:scale-95
+              className={`flex items-center gap-1.5 px-6 rounded-full text-sm font-semibold whitespace-nowrap flex-shrink-0 transition-all active:scale-95 min-h-[44px] cursor-pointer
                 ${conditionFilter === pill.key ? pill.active : pill.inactive}`}
             >
               {pill.label}
@@ -513,18 +651,18 @@ const Inventory = () => {
               {getSortIcon()}
             </button>
           </div>
-          
+
           {showSortPopup && showFloating && (
             <>
               <div className="fixed inset-0 z-[199]" onClick={() => setShowSortPopup(false)} />
               <div className="absolute bottom-16 right-0 bg-white rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.15)] border border-gray-100 p-2 min-w-[200px] flex flex-col gap-1 z-[200]">
                 <button onClick={() => handleSortSelect('priority')} className={`text-left px-3 py-2.5 text-sm rounded-lg flex justify-between items-center min-h-[44px] text-gray-600 hover:bg-gray-50`}>
-                    <span>Freshness Score</span>
-                    {sortConfig.key === 'priority' && sortConfig.direction === 'asc' ? <ArrowDown size={14} /> : <ArrowUp size={14} className={sortConfig.key === 'priority' ? '' : 'text-gray-400'} />}
+                  <span>Freshness Score</span>
+                  {sortConfig.key === 'priority' && sortConfig.direction === 'asc' ? <ArrowDown size={14} /> : <ArrowUp size={14} className={sortConfig.key === 'priority' ? '' : 'text-gray-400'} />}
                 </button>
                 <button onClick={() => handleSortSelect('date')} className={`text-left px-3 py-2.5 text-sm rounded-lg flex justify-between items-center min-h-[44px] text-gray-600 hover:bg-gray-50`}>
-                    <span>Tanggal Foto</span>
-                    {sortConfig.key === 'date' && sortConfig.direction === 'asc' ? <CalendarArrowDown size={14} /> : <CalendarArrowUp size={14} className={sortConfig.key === 'date' ? '' : 'text-gray-400'} />}
+                  <span>Tanggal Foto</span>
+                  {sortConfig.key === 'date' && sortConfig.direction === 'asc' ? <CalendarArrowDown size={14} /> : <CalendarArrowUp size={14} className={sortConfig.key === 'date' ? '' : 'text-gray-400'} />}
                 </button>
               </div>
             </>
@@ -570,9 +708,11 @@ const Inventory = () => {
             : sortedInventory.filter(i => (i.condition_latest || i.condition) === conditionFilter);
 
           return filteredInventory.length > 0 ? (
-            <div className={`grid gap-4 ${
-              isDesktop ? 'grid-cols-4' : isTablet ? 'grid-cols-3' : 'grid-cols-1 sm:grid-cols-2'
-            }`}>
+            <div className={`grid gap-4 ${effectiveWidth >= 1100 ? 'grid-cols-4'
+                : effectiveWidth >= 780 ? 'grid-cols-3'
+                  : effectiveWidth >= 500 ? 'grid-cols-2'
+                    : 'grid-cols-1'
+              }`}>
               {filteredInventory.map(item => (
                 <InventoryCard key={item.id} item={item} onClick={() => setSelectedItem(item)} />
               ))}
@@ -602,23 +742,24 @@ const Inventory = () => {
                   today.setHours(0, 0, 0, 0);
                   const itemDate = new Date(d);
                   itemDate.setHours(0, 0, 0, 0);
-                  
+
                   const diffTime = today.getTime() - itemDate.getTime();
                   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-                  
+
                   let key;
                   if (diffDays === 0) key = 'Hari Ini';
                   else if (diffDays === 1) key = 'Kemarin';
                   else if (diffDays <= 7) key = '7 Hari Terakhir';
                   else key = d.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
-                  
+
                   if (!acc[key]) acc[key] = [];
                   acc[key].push(item);
                   return acc;
                 }, {})
               ).map(([groupTitle, items]) => (
                 <div key={groupTitle}>
-                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 px-1">{groupTitle}</h3>
+                  {/* Capitalize, not uppercase */}
+                  <h3 className="text-sm font-medium text-gray-400 tracking-wider mb-3 px-1">{groupTitle}</h3>
                   <div className="space-y-3">
                     {items.map(item => (
                       <div
@@ -632,7 +773,7 @@ const Inventory = () => {
                               src={item.image_url}
                               alt={item.fruit_type}
                               className="w-full h-full object-cover"
-                              onError={(e) => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }}
+                              onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
                             />
                           ) : null}
                           <div className="w-full h-full items-center justify-center" style={{ display: item.image_url ? 'none' : 'flex' }}>
@@ -667,153 +808,218 @@ const Inventory = () => {
       {/* ── Detail Modal ── */}
       {selectedItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in" onClick={() => setSelectedItem(null)}>
-          <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl transform transition-all animate-slide-up" onClick={e => e.stopPropagation()}>
-            {/* Image banner */}
-            <div className="relative aspect-video bg-gradient-to-b from-sky-200 to-green-200 flex items-center justify-center overflow-hidden">
+          <div
+            className="bg-white rounded-3xl w-full max-w-md shadow-2xl transform transition-all animate-slide-up flex flex-col overflow-hidden"
+            style={{ maxHeight: '90dvh' }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Image banner — fixed, never scrolls */}
+            <div className="relative aspect-video bg-gradient-to-b from-sky-200 to-green-200 flex items-center justify-center overflow-hidden flex-shrink-0">
               {selectedItem.image_url ? (
                 <img
                   src={selectedItem.image_url}
                   alt={selectedItem.fruit_type}
                   className="w-full h-full object-cover"
-                  onError={(e) => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }}
+                  onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
                 />
               ) : null}
               <div
-                className="w-full h-full items-center justify-center flex-col gap-2 bg-gray-100"
+                className="w-full h-full items-center justify-center flex-col gap-2 bg-gradient-to-b from-sky-200 to-green-200"
                 style={{ display: selectedItem.image_url ? 'none' : 'flex' }}
               >
-                <ImageOff size={64} className="text-gray-400" strokeWidth={1.5} />
-                <span className="text-lg font-medium text-gray-400">Gambar tidak ditemukan</span>
+                <img
+                  src={getMascotSrc(selectedItem.fruit_type, (selectedItem.condition_latest || selectedItem.condition))}
+                  alt=""
+                  className="h-24 object-contain drop-shadow-lg"
+                  onError={(e) => { e.target.style.display = 'none'; }}
+                />
               </div>
               <button
                 onClick={() => setSelectedItem(null)}
-                className="absolute top-4 right-4 w-11 h-11 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 active:scale-95 transition-all"
+                className="absolute top-4 right-4 w-11 h-11 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 active:scale-95 transition-all cursor-pointer z-20"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <div className="p-5">
-              {/* Name + badge hug */}
-              <div className="flex items-center gap-4 mb-4">
-                <h2 className="text-2xl font-bold text-gray-900 capitalize leading-none">
-                  {getFruitLabel(selectedItem.fruit_type)}
-                </h2>
-                <span className={`text-[10px] font-bold px-2 py-1 rounded-md capitalize leading-none ${getConditionBadgeStyle((selectedItem.condition_latest || selectedItem.condition))}`}>
-                  {getConditionLabel((selectedItem.condition_latest || selectedItem.condition))}
-                </span>
-              </div>
+            {/* ── Sticky fruit header (appears when scrolled past fruit name) ── */}
+            <div
+              className={`flex items-center gap-2 px-5 py-3 bg-white border-b border-gray-100 transition-all duration-200 ${showStickyHeader ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}`}
+            >
+              <span className="text-[18px] font-bold text-gray-900 capitalize leading-none">
+                {getFruitLabel(selectedItem.fruit_type)}
+              </span>
+              <span className={`text-xs font-bold px-2 py-0.5 rounded-md capitalize ${getConditionBadgeStyle(selectedItem.condition_latest || selectedItem.condition)}`}>
+                {getConditionLabel(selectedItem.condition_latest || selectedItem.condition)}
+              </span>
+              <img
+                src={getMascotSrc(selectedItem.fruit_type, selectedItem.condition_latest || selectedItem.condition)}
+                alt=""
+                className="h-7 object-contain ml-auto"
+                onError={(e) => { e.target.style.display = 'none'; }}
+              />
+            </div>
 
-              {activeTab === 'inventory' ? (
-                <>
-                  {/* Date row */}
-                  <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-2">
-                    <div className="flex flex-col gap-3 mb-4">
-                      <p className="text-gray-500 font-medium text-sm flex items-center gap-2">
-                        <CalendarPlus size={16} />
-                        <span className="font-medium text-gray-500">
-                          Tgl. Foto: {formatShortDate(selectedItem.added_at || selectedItem.created_at)}
-                        </span>
-                      </p>
-                      <p className="text-gray-500 font-medium text-sm flex items-center gap-2">
-                        {(selectedItem.condition_latest || selectedItem.condition) === 'unripe' ? (
-                          <CalendarCheck size={16} />
-                        ) : (
-                          <CalendarX size={16} />
-                        )}
-                        <span className="font-medium text-gray-500">
-                          {(selectedItem.condition_latest || selectedItem.condition) === 'unripe' ? 'Matang saat:' : 'Batas Layak:'} {formatShortDate(selectedItem.reminder_at)}
-                        </span>
-                      </p>
-                    </div>
-                    <hr className="border-gray-200 mb-4" />
-                    <p className="text-[10px] text-gray-500 capitalize tracking-wide mb-2 font-bold text-center">Perubahan Freshness Score</p>
-                    
-                    {/* Freshness bar & Countdown */}
-                    <div className="flex items-center gap-2 mb-4">
-                        <div className="flex-1">
-                          <ScoreBadge score={selectedItem.freshness_score_initial} className="py-2 text-sm" />
-                        </div>
-                        <div className="flex -space-x-2">
-                          <ChevronRight size={20} className="text-gray-400 animate-pulse" style={{ animationDuration: '0.8s' }} />
-                          <ChevronRight size={20} className="text-gray-400 animate-pulse" style={{ animationDuration: '0.8s', animationDelay: '0.2s' }} />
-                        </div>
-                        <div className="flex-1">
-                          <ScoreBadge score={selectedItem.freshness_score_latest ?? selectedItem.freshness_score_initial} className="py-2 text-sm" />
-                        </div>
-                    </div>
-
-                    {(() => {
-                      const daysLeft = calculateDaysLeft(selectedItem.reminder_at);
-                      const countdown = getCountdownConfig((selectedItem.condition_latest || selectedItem.condition), daysLeft, (selectedItem.condition_latest || selectedItem.condition));
-                      return (
-                        <div className={`px-4 py-3 rounded-xl text-center text-sm font-bold w-full ${countdown.bg} ${countdown.text}`}>
-                          {countdown.btnText}
-                        </div>
-                      );
-                    })()}
+            {/* Scrollable middle content */}
+            <div
+              className="overflow-y-auto flex-1 no-scrollbar"
+              ref={scrollContainerRef}
+              onScroll={handleDetailScroll}
+            >
+              <div className="p-5 pb-2">
+                {/* Name + badge + Mascot — 1 row */}
+                <div ref={fruitNameRef} className="flex items-center justify-between mb-4 mt-2">
+                  <div className="flex flex-row items-center gap-2">
+                    <h2 className="text-3xl font-bold text-gray-900 capitalize leading-none">
+                      {getFruitLabel(selectedItem.fruit_type)}
+                    </h2>
+                    <span className={`text-sm font-bold px-2 py-1 rounded-md capitalize leading-none ${getConditionBadgeStyle(selectedItem.condition_latest || selectedItem.condition)}`}>
+                      {getConditionLabel(selectedItem.condition_latest || selectedItem.condition)}
+                    </span>
                   </div>
+                  <div className="relative w-20">
+                    <img
+                      src={getMascotSrc(selectedItem.fruit_type, selectedItem.condition_latest || selectedItem.condition)}
+                      alt=""
+                      className="absolute bottom-0 right-0 h-28 object-contain drop-shadow-md pointer-events-none"
+                      style={{ transform: 'translateY(10px)' }}
+                      onError={(e) => { e.target.style.display = 'none'; }}
+                    />
+                  </div>
+                </div>
 
-                  {/* Divider before actions */}
-                  <hr className="border-gray-100 mb-4" />
-                </>
-              ) : (
-                <div className="mb-6">
-                  <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
-                    <p className="text-[10px] text-gray-500 capitalize tracking-wide mb-2 font-bold text-center">Detail Scan</p>
-                    <div className="flex flex-col gap-3">
-                      <p className="text-gray-500 font-medium text-sm flex items-center gap-2">
-                        <CalendarPlus size={16} />
-                        <span className="font-medium text-gray-500">
-                          Tgl. Foto: {formatShortDate(selectedItem.scanned_at)}
-                        </span>
-                      </p>
+                {/* Detail Scan label — not bold, with colon */}
+                <p className="text-xs font-normal text-gray-400 text-center mb-2">Detail Scan:</p>
+
+                {activeTab === 'inventory' ? (
+                  <>
+                    {/* Date + score info box */}
+                    <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-3">
+                      <div className="flex flex-col gap-3 mb-4">
+                        <p className="text-gray-500 font-medium text-sm flex items-center gap-2">
+                          <Camera size={16} />
+                          <span>Tgl. Foto: {formatShortDate(selectedItem.added_at || selectedItem.created_at)}</span>
+                        </p>
+                        <p className="text-gray-500 font-medium text-sm flex items-center gap-2">
+                          {(selectedItem.condition_latest || selectedItem.condition) === 'unripe' ? (
+                            <SquareCheck size={16} />
+                          ) : (
+                            <SquareX size={16} />
+                          )}
+                          <span>
+                            {(selectedItem.condition_latest || selectedItem.condition) === 'unripe'
+                              ? 'Tgl. Matang:'
+                              : 'Tgl. Batas Layak:'}{' '}
+                            {formatShortDate(selectedItem.reminder_at)}
+                          </span>
+                        </p>
+                      </div>
+                      <hr className="border-gray-200 mb-4" />
+                      {/* Freshness score — animated chevrons */}
+                      <div className="flex items-center gap-3 mb-4">
+                        <p className="text-sm text-gray-500 font-medium whitespace-nowrap">Update Freshness Score:</p>
+                        <div className="flex items-center gap-1 flex-1 min-w-0">
+                          <div className="flex-1">
+                            <ScoreBadge score={selectedItem.freshness_score_initial} className="py-2 text-sm" />
+                          </div>
+                          <div className="flex -space-x-2 flex-shrink-0 animate-pulse">
+                            <ChevronRight size={18} className="text-gray-400" />
+                            <ChevronRight size={18} className="text-gray-400" />
+                          </div>
+                          <div className="flex-1">
+                            <ScoreBadge score={selectedItem.freshness_score_latest ?? selectedItem.freshness_score_initial} className="py-2 text-sm" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {(() => {
+                        const daysLeft = calculateDaysLeft(selectedItem.reminder_at);
+                        const countdown = getCountdownConfig((selectedItem.condition_latest || selectedItem.condition), daysLeft);
+                        return (
+                          <div className={`px-4 py-3 rounded-xl text-center text-base font-bold w-full ${countdown.bg} ${countdown.text}`}>
+                            {countdown.btnText}
+                          </div>
+                        );
+                      })()}
                     </div>
-                    <div className="flex items-center justify-between text-sm text-gray-600 mt-4">
-                      <div className="min-w-[88px]">
-                        <ScoreBadge score={selectedItem.freshness_score} className="py-1.5 text-sm" />
+
+                    <hr className="border-gray-100 mb-4" />
+                  </>
+                ) : (
+                  /* History tab: compact date + score in one row */
+                  <div className="mb-4">
+                    <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 text-gray-500 text-sm font-medium flex-1">
+                          <Camera size={16} />
+                          <span>Tgl. Foto: {formatShortDate(selectedItem.scanned_at)}</span>
+                        </div>
+                        <div className="min-w-[80px]">
+                          <ScoreBadge score={selectedItem.freshness_score} className="py-1.5 text-sm" />
+                        </div>
                       </div>
                     </div>
                   </div>
+                )}
+
+                {/* AI Suggestion Box */}
+                {selectedItem.scan_id && activeTab === 'inventory' && (
+                  <div className="mb-4 mt-2">
+                    {!aiSuggestion && !aiLoading && (
+                      <button
+                        onClick={handleGetAiSuggestion}
+                        className="w-full min-h-[44px] bg-green-50 hover:bg-green-100 border border-green-200 text-green-800 font-semibold rounded-2xl flex items-center justify-center gap-2 text-sm active:scale-95 transition-all cursor-pointer overflow-hidden relative"
+                      >
+                        <Sparkles size={16} className="text-green-600" />
+                        Minta Saran AI
+                      </button>
+                    )}
+
+                    {aiLoading && (
+                      <div className="w-full min-h-[44px] bg-green-50 border border-green-200 rounded-2xl flex flex-col items-center justify-center gap-2 px-4 py-3 overflow-hidden relative">
+                        <div className="flex items-center gap-3 w-full">
+                          <div className="w-5 h-5 border-2 border-green-400 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+                          <p className="text-sm text-green-700 font-medium">Scanora sedang berpikir...</p>
+                        </div>
+                        {/* Indeterminate loading bar */}
+                        <div className="w-full h-1 bg-green-100 rounded-full overflow-hidden">
+                          <div className="h-full bg-green-400 rounded-full animate-[indeterminate_1.5s_ease-in-out_infinite]" style={{ width: '40%', animation: 'indeterminate 1.5s ease-in-out infinite' }} />
+                        </div>
+                      </div>
+                    )}
+
+                    {aiSuggestion && !aiLoading && (
+                      <div className="bg-green-50 rounded-2xl p-4 border border-green-100">
+                        <h4 className="font-semibold text-green-800 text-sm flex items-center gap-1.5 mb-3">
+                          <Sparkles size={14} className="text-green-600" /> Saran AI Chef Scanora
+                        </h4>
+                        <div className="text-sm text-gray-700 leading-relaxed">
+                          {renderMarkdown(aiSuggestion)}
+                        </div>
+                      </div>
+                    )}
+
+                    {aiError && !aiLoading && (
+                      <div className="bg-red-50 rounded-2xl p-4 border border-red-100 flex items-center justify-between gap-2">
+                        <p className="text-sm text-red-600">{aiError}</p>
+                        <button onClick={handleGetAiSuggestion} className="text-xs text-red-600 font-bold underline">Coba Lagi</button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* ── Always-visible Disclaimer ── */}
+                <div className="flex items-start gap-3 bg-gray-100/80 border border-gray-200/70 rounded-2xl px-4 py-3 mb-4 mt-2">
+                  <Bot size={16} className="text-gray-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-[12px] text-gray-500 leading-relaxed">
+                    Estimasi berdasarkan skenario terbaik, kondisi asli bisa berbeda. Foto ulang untuk update.
+                  </p>
                 </div>
-              )}
+              </div>
+            </div>
 
-              {/* AI Suggestion — On-Demand Button */}
-              {selectedItem.scan_id && activeTab === 'inventory' && (
-                <div className="mb-4">
-                  {!aiSuggestion && !aiLoading && (
-                    <button
-                      onClick={handleGetAiSuggestion}
-                      className="w-full min-h-[44px] bg-green-50 hover:bg-green-100 border border-green-200 text-green-800 font-semibold rounded-2xl flex items-center justify-center gap-2 text-sm active:scale-95 transition-all"
-                    >
-                      💡 Minta Saran AI
-                    </button>
-                  )}
-
-                  {aiLoading && (
-                    <div className="bg-green-50 rounded-2xl p-4 border border-green-100 flex items-center gap-3">
-                      <div className="w-5 h-5 border-2 border-green-400 border-t-transparent rounded-full animate-spin flex-shrink-0" />
-                      <p className="text-sm text-green-700 font-medium">Scanora sedang berpikir...</p>
-                    </div>
-                  )}
-
-                  {aiSuggestion && !aiLoading && (
-                    <div className="bg-green-50 rounded-2xl p-4 border border-green-100">
-                      <h4 className="font-semibold text-green-800 text-sm flex items-center gap-1.5 mb-2">💡 Saran Chef Scanora</h4>
-                      <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{aiSuggestion}</p>
-                    </div>
-                  )}
-
-                  {aiError && !aiLoading && (
-                    <div className="bg-red-50 rounded-2xl p-4 border border-red-100 flex items-center justify-between gap-2">
-                      <p className="text-sm text-red-600">{aiError}</p>
-                      <button onClick={handleGetAiSuggestion} className="text-xs text-red-600 font-bold underline">Coba Lagi</button>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Actions */}
+            {/* Sticky CTAs — always at bottom */}
+            <div className="p-5 pt-3 flex-shrink-0 border-t border-gray-100">
               {activeTab === 'inventory' ? (
                 <div className="flex gap-4">
                   <button
@@ -824,19 +1030,23 @@ const Inventory = () => {
                         setSelectedItem(null);
                       } catch (err) { console.error(err); }
                     }}
-                    className="flex-1 min-h-[44px] bg-red-100 text-red-600 font-semibold rounded-xl hover:bg-red-200 active:scale-95 transition-all text-sm flex items-center justify-center gap-2"
+                    className="flex-1 min-h-[44px] bg-red-100 text-red-600 font-semibold rounded-xl hover:bg-red-200 active:scale-95 transition-all text-sm flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <Trash2 size={16} /> Dibuang
                   </button>
                   <button
                     onClick={async () => {
+                      if ((selectedItem.condition_latest || selectedItem.condition) === 'rotten') {
+                        alert('Buah yang sudah busuk tidak bisa dimakan!');
+                        return;
+                      }
                       try {
                         await api.delete(`/inventory/${selectedItem.id}`, { data: { outcome: 'consumed' } });
                         setInventoryData(prev => prev.filter(i => i.id !== selectedItem.id));
                         setSelectedItem(null);
                       } catch (err) { console.error(err); }
                     }}
-                    className="flex-1 min-h-[44px] bg-scanora-green text-white font-semibold rounded-xl hover:bg-scanora-dark active:scale-95 transition-all text-sm flex items-center justify-center gap-2"
+                    className={`flex-1 min-h-[44px] font-semibold rounded-xl active:scale-95 transition-all text-sm flex items-center justify-center gap-2 cursor-pointer ${(selectedItem.condition_latest || selectedItem.condition) === 'rotten' ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-scanora-green text-white hover:bg-scanora-dark'}`}
                   >
                     <Utensils size={16} /> Dikonsumsi
                   </button>
@@ -875,6 +1085,15 @@ const Inventory = () => {
           </div>
         </div>
       )}
+
+      {/* Indeterminate bar keyframe */}
+      <style>{`
+        @keyframes indeterminate {
+          0%   { transform: translateX(-100%); width: 40%; }
+          50%  { width: 60%; }
+          100% { transform: translateX(250%); width: 40%; }
+        }
+      `}</style>
     </div>
   );
 };

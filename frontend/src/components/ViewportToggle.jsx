@@ -1,70 +1,139 @@
 /**
- * ViewportToggle.jsx
+ * ViewportResizeHandle.jsx
  *
- * Single FAB button that toggles between Fullscreen (maximize) and Compact (minimize).
- * - Fullscreen: Expand icon  — app fills entire canvas
- * - Compact:    Minimize icon — app floats above live wallpaper, capped at Tablet
- *
- * Sizing by breakpoint:
- * - Mobile / Tablet (< 1024px): 44px  × 44px, bottom 14vh
- * - Laptop+ (≥ 1024px):         56px  × 56px, bottom 4vh
- *
- * Hides automatically when isHidden=true (scanner open, dialog active, etc.)
+ * A draggable edge handle that lets users resize the app shell width.
+ * - Shows as a pill/grip on the right edge of the app container
+ * - Drag left to shrink (compact), drag right to expand
+ * - Double-click to toggle fullscreen/compact preset
+ * - Tooltip shows current layout mode
  */
 
-import { useState } from 'react';
-import { Expand, Minimize } from 'lucide-react';
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { ChevronsLeftRight } from 'lucide-react';
 import { useViewport } from '../context/ViewportContext';
-import Tooltip from './Tooltip';
 
-const ViewportToggle = ({ isHidden = false }) => {
-  const { mode, setMode } = useViewport();
+const MIN_WIDTH = 375;
+
+const ViewportResizeHandle = ({ isHidden = false }) => {
+  const { compactWidth, windowWidth, isFullscreen, setCompactWidth } = useViewport();
+  const [isDragging, setIsDragging] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
   const [jiggle, setJiggle] = useState(false);
+  const dragStartX = useRef(0);
+  const dragStartWidth = useRef(0);
 
-  const isFullscreen = mode === 'fullscreen';
+  // Current effective width for display
+  const currentWidth = isFullscreen ? windowWidth : (compactWidth ?? windowWidth);
 
-  const handleToggle = () => {
-    setMode(isFullscreen ? 'compact' : 'fullscreen');
+
+  const handleTouchStart = useCallback((e) => {
+    dragStartX.current = e.touches[0].clientX;
+    dragStartWidth.current = currentWidth;
+    setIsDragging(true);
+  }, [currentWidth]);
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const onMove = (e) => {
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const delta = clientX - dragStartX.current;
+      const newWidth = Math.max(MIN_WIDTH, Math.min(windowWidth, dragStartWidth.current + delta));
+      setCompactWidth(newWidth >= windowWidth * 0.95 ? null : newWidth);
+    };
+
+    const onUp = () => setIsDragging(false);
+
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    window.addEventListener('touchmove', onMove, { passive: true });
+    window.addEventListener('touchend', onUp);
+
+    return () => {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', onUp);
+    };
+  }, [isDragging, windowWidth, setCompactWidth]);
+
+  const handleDoubleClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     setJiggle(true);
     setTimeout(() => setJiggle(false), 500);
+    // Toggle: compact → fullscreen, fullscreen → compact (430px)
+    setCompactWidth(isFullscreen ? 430 : null);
   };
 
-  const tooltipText = isFullscreen ? 'Compact Mode' : 'Fullscreen';
+  // Prevent single-click from stealing dblclick on some browsers
+  const handleMouseDown = useCallback((e) => {
+    // Only start drag on left-mouse-button and not a double-click sequence
+    if (e.detail >= 2) return; // ignore mousedown that's part of dblclick
+    e.preventDefault();
+    dragStartX.current = e.clientX;
+    dragStartWidth.current = currentWidth;
+    setIsDragging(true);
+  }, [currentWidth]);
+
+  const layoutLabel = isFullscreen
+    ? 'Fullscreen'
+    : currentWidth >= 1024 ? 'Desktop'
+    : currentWidth >= 640  ? 'Tablet'
+    : 'Mobile';
 
   return (
-    <>
+    <div
+      className={`fixed right-0 top-1/2 -translate-y-1/2 z-[998] transition-all duration-300 select-none
+        ${isHidden ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'}
+        ${isDragging ? 'cursor-col-resize' : 'cursor-ew-resize'}
+      `}
+      style={{ touchAction: 'none' }}
+    >
+      {/* Tooltip */}
+      {(showTooltip || isDragging) && (
+        <div className="absolute right-10 top-1/2 -translate-y-1/2 bg-gray-900 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow-xl pointer-events-none max-w-[110px] text-center leading-snug">
+          {isDragging
+            ? `${Math.round(currentWidth)}px · ${layoutLabel}`
+            : `Drag / Double Click\nto Resize`}
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 w-0 h-0 border-t-4 border-t-transparent border-b-4 border-b-transparent border-l-4 border-l-gray-900" />
+        </div>
+      )}
+
+      {/* Handle pill */}
       <div
-        className={`fixed right-[3vw] z-[999] transition-all duration-300
-          bottom-[14vh] lg:bottom-[4vh]
-          ${isHidden ? 'opacity-0 pointer-events-none scale-75' : 'opacity-100 pointer-events-auto scale-100'}
+        onMouseDown={handleMouseDown}
+        onTouchStart={handleTouchStart}
+        onDoubleClick={handleDoubleClick}
+        onMouseEnter={() => setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+        className={`
+          flex items-center justify-center
+          w-5 h-14 rounded-l-xl
+          bg-white border border-gray-200 border-r-0
+          shadow-[−2px_0_12px_rgba(0,0,0,0.1)]
+          transition-all duration-200
+          hover:bg-scanora-green/5 hover:border-scanora-green/30 hover:w-6
+          ${isDragging ? 'bg-scanora-green/10 border-scanora-green/40 w-6 shadow-lg' : ''}
+          ${jiggle ? 'animate-fab-jiggle' : ''}
         `}
       >
-        <Tooltip content={tooltipText} placement="left" delay={300}>
-          <button
-            id="viewport-toggle-btn"
-            onClick={handleToggle}
-            aria-label={tooltipText}
-            className={`
-              relative flex items-center justify-center gap-2
-              w-11 h-11 lg:w-14 lg:h-14
-              rounded-2xl bg-white border-gray-200 text-scanora-green shadow-xl hover:shadow-2xl hover:border-scanora-green/30
-              border-2 transition-all duration-300 active:scale-90
-              ${jiggle ? 'animate-fab-jiggle' : ''}
-            `}
-          >
-            {isFullscreen
-              ? <Minimize size={20} strokeWidth={2.2} className="lg:hidden" />
-              : <Expand   size={20} strokeWidth={2.2} className="lg:hidden" />
-            }
-            {isFullscreen
-              ? <Minimize size={22} strokeWidth={2.2} className="hidden lg:block" />
-              : <Expand   size={22} strokeWidth={2.2} className="hidden lg:block" />
-            }
-          </button>
-        </Tooltip>
+        <ChevronsLeftRight
+          size={14}
+          className={`transition-colors ${isDragging ? 'text-scanora-green' : 'text-gray-400'}`}
+          strokeWidth={2.5}
+        />
       </div>
-    </>
+
+      {/* Drag line overlay while resizing */}
+      {isDragging && (
+        <div
+          className="fixed inset-0 z-[997] cursor-col-resize"
+          style={{ pointerEvents: 'all' }}
+        />
+      )}
+    </div>
   );
 };
 
-export default ViewportToggle;
+export default ViewportResizeHandle;

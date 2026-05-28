@@ -74,6 +74,16 @@ const getInventorySummary = asyncHandler(async (req, res) => {
 const addInventory = asyncHandler(async (req, res) => {
   const { fruit_type, condition, scan_id } = req.body;
 
+  // ── Block rotten fruit: Inventori hanya untuk buah yang masih layak ──────────
+  if (condition?.toLowerCase() === 'rotten') {
+    return res.status(400).json({
+      success: false,
+      message: 'Buah ini sudah membusuk (Rotten) dan tidak bisa disimpan ke Inventori. Inventori hanya untuk buah yang masih Unripe atau Ripe.',
+      data: null,
+      code: 'ROTTEN_NOT_ALLOWED',
+    });
+  }
+
   let freshnessScore = 75;
   let aiSuggestion = null;
   if (scan_id) {
