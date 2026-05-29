@@ -2,6 +2,17 @@
 
 Semua perubahan yang signifikan pada proyek Scanora akan didokumentasikan dalam file ini.
 
+## [v1.9.0] - 2026-05-30
+### Added
+- **API Statistik Bulanan (`/inventory/monthly-stats`)**: Endpoint baru untuk mengakumulasi data "Dikonsumsi" dan "Dibuang" per bulan dari backend.
+- **Data Toggle Override (Alt+1)**: Menambahkan *shortcut* rahasia pada halaman Statistik untuk melakukan transisi secara instan antara Data Asli (Database) dan Data Sample.
+- **Empty State Statistik**: Menampilkan desain ilustrasi responsif saat pengguna belum memiliki riwayat aksi pembuangan atau konsumsi buah.
+
+### Changed
+- **Pembaruan Visual Statistik Aksi**: Mendesain ulang bagian *Skor Keberhasilan Terbaik* agar menggunakan gaya UI modern dan mengubah tombol menjadi filter interaktif berdasarkan bulan.
+- **Penyelarasan Warna**: Memperbaiki deklarasi warna `orange-main` di `tailwind.config.js` sehingga seragam menggunakan format heksadesimal standar Tailwind (#f97316).
+- **Animasi Loading AI**: Menyeragamkan transisi pemuatan *Saran AI* di seluruh aplikasi dengan menampilkan teks dan indikator tulang (*skeleton/shimmer effect*) yang *smooth* selayaknya pada halaman *Scanner*.
+- **Penyesuaian Istilah**: Mengubah semua penyebutan label "Tingkat Keberhasilan" menjadi "Skor Keberhasilan".
 ## [v1.8.1] - 2026-05-29
 ### Fixed
 - **Freshness Score Decay**: Memperbaiki masalah *bug* di `freshnessService.js` di mana *freshness score* buah yang bertransisi dari *unripe* (mentah) ke *ripe* (matang) turun terlalu cepat hingga 0%. Kini perhitungan *decay* menggunakan *base date* yang dikalkulasi secara dinamis sejak buah benar-benar matang.

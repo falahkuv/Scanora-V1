@@ -842,9 +842,9 @@ const Inventory = () => {
               </button>
             </div>
 
-            {/* ── Sticky fruit header (appears when scrolled past fruit name) ── */}
+            {/* ── Sticky fruit header (slides out from behind image banner) ── */}
             <div
-              className={`flex items-center gap-2 px-5 py-3 bg-white border-b border-gray-100 transition-all duration-200 ${showStickyHeader ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}`}
+              className={`absolute top-64 left-0 right-0 z-10 flex items-center gap-2 px-5 py-3 bg-white border-b border-gray-100 transition-all duration-300 ${showStickyHeader ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'}`}
             >
               <span className="text-[18px] font-bold text-gray-900 capitalize leading-none">
                 {getFruitLabel(selectedItem.fruit_type)}
@@ -881,8 +881,8 @@ const Inventory = () => {
                     <img
                       src={getMascotSrc(selectedItem.fruit_type, selectedItem.condition_latest || selectedItem.condition)}
                       alt=""
-                      className="absolute bottom-0 right-0 h-28 object-contain drop-shadow-md pointer-events-none"
-                      style={{ transform: 'translateY(10px)' }}
+                      className="absolute bottom-0 right-0 h-32 object-contain drop-shadow-md pointer-events-none"
+                      style={{ transform: 'translateY(64px)' }}
                       onError={(e) => { e.target.style.display = 'none'; }}
                     />
                   </div>
@@ -977,13 +977,18 @@ const Inventory = () => {
 
                     {aiLoading && (
                       <div className="w-full min-h-[44px] bg-green-50 border border-green-200 rounded-2xl flex flex-col items-center justify-center gap-2 px-4 py-3 overflow-hidden relative">
-                        <div className="flex items-center gap-3 w-full">
+                        <div className="flex items-center gap-3 w-full mb-1">
                           <div className="w-5 h-5 border-2 border-green-400 border-t-transparent rounded-full animate-spin flex-shrink-0" />
-                          <p className="text-sm text-green-700 font-medium">Scanora sedang berpikir...</p>
+                          <p className="text-sm text-green-700 font-medium animate-pulse">Scanora sedang berpikir...</p>
                         </div>
                         {/* Indeterminate loading bar */}
                         <div className="w-full h-1 bg-green-100 rounded-full overflow-hidden">
                           <div className="h-full bg-green-400 rounded-full animate-[indeterminate_1.5s_ease-in-out_infinite]" style={{ width: '40%', animation: 'indeterminate 1.5s ease-in-out infinite' }} />
+                        </div>
+                        <div className="animate-pulse flex flex-col gap-2 mt-2 w-full">
+                          <div className="h-3 bg-green-200/60 rounded-full w-full" />
+                          <div className="h-3 bg-green-200/60 rounded-full w-5/6" />
+                          <div className="h-3 bg-green-200/60 rounded-full w-4/6" />
                         </div>
                       </div>
                     )}
@@ -1036,17 +1041,13 @@ const Inventory = () => {
                   </button>
                   <button
                     onClick={async () => {
-                      if ((selectedItem.condition_latest || selectedItem.condition) === 'rotten') {
-                        alert('Buah yang sudah busuk tidak bisa dimakan!');
-                        return;
-                      }
                       try {
                         await api.delete(`/inventory/${selectedItem.id}`, { data: { outcome: 'consumed' } });
                         setInventoryData(prev => prev.filter(i => i.id !== selectedItem.id));
                         setSelectedItem(null);
                       } catch (err) { console.error(err); }
                     }}
-                    className={`flex-1 min-h-[44px] font-semibold rounded-xl active:scale-95 transition-all text-sm flex items-center justify-center gap-2 cursor-pointer ${(selectedItem.condition_latest || selectedItem.condition) === 'rotten' ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-scanora-green text-white hover:bg-scanora-dark'}`}
+                    className={`flex-1 min-h-[44px] font-semibold rounded-xl active:scale-95 transition-all text-sm flex items-center justify-center gap-2 cursor-pointer bg-scanora-green text-white hover:bg-scanora-dark`}
                   >
                     <Utensils size={16} /> Dikonsumsi
                   </button>

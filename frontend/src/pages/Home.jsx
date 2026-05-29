@@ -506,7 +506,7 @@ const Home = ({ onOpenScanner }) => {
               {saveRate !== null ? (
                 <div className="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col justify-center shadow-sm">
                   <div className="flex justify-between items-center mb-2">
-                    <p className="text-gray-500 text-xs font-semibold">Tingkat Keberhasilan</p>
+                    <p className="text-gray-500 text-xs font-semibold">Skor Keberhasilan</p>
                     <p className="text-scanora-green font-bold text-sm">{saveRate}%</p>
                   </div>
                   <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -554,7 +554,7 @@ const Home = ({ onOpenScanner }) => {
               {saveRate !== null ? (
                 <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
                   <div className="flex justify-between items-center mb-1.5">
-                    <p className="text-gray-500 text-xs font-semibold">Tingkat Keberhasilan</p>
+                    <p className="text-gray-500 text-xs font-semibold">Skor Keberhasilan</p>
                     <p className="text-scanora-green font-bold text-sm">{saveRate}%</p>
                   </div>
                   <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -655,42 +655,20 @@ const Home = ({ onOpenScanner }) => {
       {selectedItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in" onClick={() => setSelectedItem(null)}>
           <div
-            className="bg-white rounded-3xl w-full max-w-md shadow-2xl transform transition-all animate-slide-up flex flex-col overflow-hidden"
+            className="bg-white rounded-3xl w-full max-w-md shadow-2xl transform transition-all animate-slide-up flex flex-col overflow-hidden relative"
             style={{ maxHeight: '90dvh' }}
             onClick={e => e.stopPropagation()}
           >
-            {/* Image banner — fixed */}
-            <div className="relative aspect-video bg-gradient-to-b from-sky-200 to-green-200 flex items-center justify-center overflow-hidden flex-shrink-0">
-              {selectedItem.image_url ? (
-                <img
-                  src={selectedItem.image_url}
-                  alt={selectedItem.fruit_type}
-                  className="w-full h-full object-cover"
-                  onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
-                />
-              ) : null}
-              <div
-                className="w-full h-full items-center justify-center flex-col gap-2 bg-gradient-to-b from-sky-200 to-green-200"
-                style={{ display: selectedItem.image_url ? 'none' : 'flex' }}
-              >
-                <img
-                  src={getMascotSrc(selectedItem.fruit_type, selectedItem.condition)}
-                  alt=""
-                  className="h-24 object-contain drop-shadow-lg"
-                  onError={(e) => { e.target.style.display = 'none'; }}
-                />
-              </div>
-              <button
-                onClick={() => setSelectedItem(null)}
-                className="absolute top-4 right-4 w-11 h-11 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 active:scale-95 transition-all cursor-pointer z-20"
-              >
-                <X size={18} />
-              </button>
-            </div>
+            <button
+              onClick={() => setSelectedItem(null)}
+              className="absolute top-4 right-4 w-11 h-11 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 active:scale-95 transition-all cursor-pointer z-40"
+            >
+              <X size={18} />
+            </button>
 
             {/* ── Sticky fruit header ── */}
             <div
-              className={`flex items-center gap-2 px-5 py-3 bg-white border-b border-gray-100 transition-all duration-200 ${showStickyHeader ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+              className={`absolute top-0 left-0 right-0 z-30 flex items-center gap-2 px-5 py-5 bg-white border-b border-gray-100 transition-all duration-300 ${showStickyHeader ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'}`}
             >
               <span className="text-[18px] font-bold text-gray-900 capitalize leading-none">
                 {getFruitLabel(selectedItem.fruit_type)}
@@ -698,12 +676,6 @@ const Home = ({ onOpenScanner }) => {
               <span className={`text-xs font-bold px-2 py-0.5 rounded-md capitalize ${getConditionBadgeStyle(selectedItem.condition)}`}>
                 {getConditionLabel(selectedItem.condition)}
               </span>
-              <img
-                src={getMascotSrc(selectedItem.fruit_type, selectedItem.condition)}
-                alt=""
-                className="h-7 object-contain ml-auto"
-                onError={(e) => { e.target.style.display = 'none'; }}
-              />
             </div>
 
             {/* Scrollable content */}
@@ -712,6 +684,29 @@ const Home = ({ onOpenScanner }) => {
               ref={scrollContainerRef}
               onScroll={handleDetailScroll}
             >
+              {/* Image banner — scrolls away */}
+              <div className="relative aspect-video bg-gradient-to-b from-sky-200 to-green-200 flex items-center justify-center overflow-hidden flex-shrink-0 z-20">
+                {selectedItem.image_url ? (
+                  <img
+                    src={selectedItem.image_url}
+                    alt={selectedItem.fruit_type}
+                    className="w-full h-full object-cover"
+                    onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                  />
+                ) : null}
+                <div
+                  className="w-full h-full items-center justify-center flex-col gap-2 bg-gradient-to-b from-sky-200 to-green-200"
+                  style={{ display: selectedItem.image_url ? 'none' : 'flex' }}
+                >
+                  <img
+                    src={getMascotSrc(selectedItem.fruit_type, selectedItem.condition)}
+                    alt=""
+                    className="h-24 object-contain drop-shadow-lg"
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                </div>
+              </div>
+
               <div className="p-5 pb-2">
                 {/* Name + badge + Mascot — 1 row */}
                 <div className="flex items-center justify-between mb-4 mt-2">
@@ -727,8 +722,8 @@ const Home = ({ onOpenScanner }) => {
                     <img
                       src={getMascotSrc(selectedItem.fruit_type, selectedItem.condition)}
                       alt=""
-                      className="absolute bottom-0 right-0 h-28 object-contain drop-shadow-md pointer-events-none"
-                      style={{ transform: 'translateY(10px)' }}
+                      className="absolute bottom-0 right-0 h-32 object-contain drop-shadow-md pointer-events-none"
+                      style={{ transform: 'translateY(64px)' }}
                       onError={(e) => { e.target.style.display = 'none'; }}
                     />
                   </div>
@@ -799,12 +794,17 @@ const Home = ({ onOpenScanner }) => {
 
                     {aiLoading && (
                       <div className="w-full min-h-[44px] bg-green-50 border border-green-200 rounded-2xl flex flex-col items-center justify-center gap-2 px-4 py-3 overflow-hidden">
-                        <div className="flex items-center gap-3 w-full">
+                        <div className="flex items-center gap-3 w-full mb-1">
                           <div className="w-5 h-5 border-2 border-green-400 border-t-transparent rounded-full animate-spin flex-shrink-0" />
-                          <p className="text-sm text-green-700 font-medium">Scanora sedang berpikir...</p>
+                          <p className="text-sm text-green-700 font-medium animate-pulse">Scanora sedang berpikir...</p>
                         </div>
                         <div className="w-full h-1 bg-green-100 rounded-full overflow-hidden">
                           <div className="h-full bg-green-400 rounded-full" style={{ width: '40%', animation: 'indeterminate 1.5s ease-in-out infinite' }} />
+                        </div>
+                        <div className="animate-pulse flex flex-col gap-2 mt-2 w-full">
+                          <div className="h-3 bg-green-200/60 rounded-full w-full" />
+                          <div className="h-3 bg-green-200/60 rounded-full w-5/6" />
+                          <div className="h-3 bg-green-200/60 rounded-full w-4/6" />
                         </div>
                       </div>
                     )}

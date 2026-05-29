@@ -95,7 +95,7 @@ const ViewportResizeHandle = ({ isHidden = false }) => {
         <div className="absolute right-10 top-1/2 -translate-y-1/2 bg-gray-900 text-white text-xs font-semibold px-2.5 py-1.5 rounded-lg shadow-xl pointer-events-none max-w-[110px] text-center leading-snug">
           {isDragging
             ? `${Math.round(currentWidth)}px · ${layoutLabel}`
-            : `Drag / Double Click\nto Resize`}
+            : `Double Click/Drag\nto Resize`}
           <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1 w-0 h-0 border-t-4 border-t-transparent border-b-4 border-b-transparent border-l-4 border-l-gray-900" />
         </div>
       )}

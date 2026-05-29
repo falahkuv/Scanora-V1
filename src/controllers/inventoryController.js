@@ -192,9 +192,91 @@ const deleteInventory = asyncHandler(async (req, res) => {
   return sendSuccess(res, "Inventory item deleted", null);
 });
 
+const getInventoryMonthlyStats = asyncHandler(async (req, res) => {
+  const items = await prisma.inventory.findMany({
+    where: { userId: req.user.userId, outcome: { not: null } },
+  });
+
+  const monthsMap = {};
+
+  items.forEach(item => {
+    const date = item.outcomeAt ? new Date(item.outcomeAt) : new Date(item.addedAt);
+    
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const month = monthNames[date.getMonth()];
+    const year = date.getFullYear();
+    const key = `${month}-${year}`;
+
+    if (!monthsMap[key]) {
+      monthsMap[key] = {
+        name: month,
+        year: year,
+        consumed: 0,
+        discarded: 0,
+        distribution: {}
+      };
+    }
+
+    const m = monthsMap[key];
+    if (item.outcome === 'consumed') m.consumed += 1;
+    if (item.outcome === 'discarded') m.discarded += 1;
+
+    let fType = (item.fruitType || '').toLowerCase();
+    let dName = fType === 'banana' ? 'Pisang' : fType === 'apple' ? 'Apel' : fType === 'orange' ? 'Jeruk' : item.fruitType;
+    let color = fType === 'banana' ? '#fdc107' : fType === 'apple' ? '#bb0006' : fType === 'orange' ? '#f87305' : '#cccccc';
+
+    if (!m.distribution[dName]) {
+      m.distribution[dName] = { name: dName, consumed: 0, discarded: 0, color };
+    }
+    if (item.outcome === 'consumed') m.distribution[dName].consumed += 1;
+    if (item.outcome === 'discarded') m.distribution[dName].discarded += 1;
+  });
+
+  const result = Object.values(monthsMap).map(m => {
+    let topFruitName = 'Belum Ada';
+    let topFruitCount = 0;
+    let topFruitImg = '';
+    const distArray = Object.values(m.distribution);
+    
+    distArray.forEach(d => {
+      if (d.consumed > topFruitCount) {
+        topFruitCount = d.consumed;
+        topFruitName = d.name;
+      }
+    });
+
+    if (topFruitName === 'Pisang') topFruitImg = '/mascots/banana_ripe.png';
+    else if (topFruitName === 'Apel') topFruitImg = '/mascots/apple_ripe.png';
+    else if (topFruitName === 'Jeruk') topFruitImg = '/mascots/orange_ripe.png';
+    else topFruitImg = '/mascots/apple_ripe.png'; // fallback
+
+    return {
+      name: m.name,
+      year: m.year,
+      consumed: m.consumed,
+      discarded: m.discarded,
+      topFruit: {
+        name: topFruitName,
+        count: topFruitCount,
+        img: topFruitImg
+      },
+      distribution: distArray
+    };
+  });
+
+  const monthIndex = { 'Jan':0, 'Feb':1, 'Mar':2, 'Apr':3, 'Mei':4, 'Jun':5, 'Jul':6, 'Agu':7, 'Sep':8, 'Okt':9, 'Nov':10, 'Des':11 };
+  result.sort((a, b) => {
+    if (a.year !== b.year) return a.year - b.year;
+    return monthIndex[a.name] - monthIndex[b.name];
+  });
+
+  return sendSuccess(res, "Monthly stats retrieved", result);
+});
+
 module.exports = {
   getInventory,
   getInventorySummary,
+  getInventoryMonthlyStats,
   addInventory,
   updateReminder,
   deleteInventory

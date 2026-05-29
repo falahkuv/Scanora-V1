@@ -30,6 +30,10 @@ export default {
           '60%': { transform: 'rotate(-6deg) scale(1.04)' },
           '80%': { transform: 'rotate(4deg) scale(1.02)' },
         },
+        'indeterminate': {
+          '0%': { transform: 'translateX(-100%)' },
+          '100%': { transform: 'translateX(200%)' }
+        },
       },
       animation: {
         'page-in': 'page-in 500ms cubic-bezier(0.22, 1, 0.36, 1)',
@@ -41,7 +45,7 @@ export default {
         'scanora-green': '#10b981', // Emerald Green 500
         'scanora-dark': '#064e3b',  // Emerald Green 900
         'yellow-main': '#fdc107',
-        'orange-main': '#f87305',
+        'orange-main': '#f97316',
         'red-main': '#bb0006ff',
         'leaf-main': '#076a26',
         orange: {

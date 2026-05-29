@@ -191,7 +191,7 @@ export default function ImpactStats() {
         {/* ── Month Title — centered ── */}
         <div className="text-center pt-2">
           <p className="text-xs font-semibold text-gray-400 mb-1">Performa bulan ini:</p>
-          <h2 className="text-2xl font-extrabold text-gray-900">{current.name} '{String(current.year).slice(-2)}</h2>
+          <h2 className="text-2xl font-extrabold text-gray-900">{current.name} {current.year}</h2>
         </div>
 
         {/* ── Main Grid: Dikonsumsi | Dibuang | Tingkat Keberhasilan ── */}
@@ -347,23 +347,25 @@ export default function ImpactStats() {
           {/* Save Rate Terbaik */}
           <button
             onClick={() => {
-              // Navigate to history tab — month filtering is future enhancement
-              navigate('/inventory', { state: { tab: 'history' } });
+              setMonthIdx(bestMonthIdx);
+              setRekapExpanded(true);
             }}
-            className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col items-center text-center relative overflow-hidden hover:bg-gray-50 active:scale-95 transition-all"
+            className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm relative overflow-hidden flex flex-col hover:bg-gray-50 active:scale-95 transition-all text-left"
+            style={{ minHeight: '160px' }}
           >
-            <div className="absolute top-0 right-0 w-12 h-12 bg-scanora-green/10 rounded-bl-full" />
-            <p className="text-xs font-semibold text-gray-400 mb-2">Save Rate Terbaik</p>
-            <div className="w-11 h-11 bg-scanora-green/10 rounded-xl flex items-center justify-center mb-2">
-              <Star size={20} className="text-scanora-green" />
+            <div className="z-10 mb-4">
+              <p className="text-[11px] text-gray-500 font-semibold truncate">Skor Keberhasilan Terbaik</p>
             </div>
-            <p className="text-2xl font-extrabold text-scanora-green leading-none">
-              {getSaveRate(monthlyData[bestMonthIdx])}%
-            </p>
-            <p className="text-[11px] text-gray-400 mt-1">
-              {monthlyData[bestMonthIdx].name} '{String(monthlyData[bestMonthIdx].year).slice(-2)}
-            </p>
-            <p className="text-[10px] text-scanora-green font-semibold mt-1.5">Tap → Lihat Riwayat ↗</p>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2">
+              <p className="text-5xl font-extrabold text-gray-900 leading-none">
+                {getSaveRate(monthlyData[bestMonthIdx])}%
+              </p>
+            </div>
+            <div className="z-10 mt-auto">
+              <p className="text-sm text-gray-600 font-medium">
+                {monthlyData[bestMonthIdx].name} {monthlyData[bestMonthIdx].year}
+              </p>
+            </div>
           </button>
         </div>
 

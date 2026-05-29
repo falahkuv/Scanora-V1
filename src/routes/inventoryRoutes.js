@@ -9,6 +9,7 @@ const fruitTypes = ["apple", "banana", "orange"];
 const conditions = ["unripe", "ripe", "rotten"];
 
 router.get("/summary", authenticateToken, inventoryController.getInventorySummary);
+router.get("/monthly-stats", authenticateToken, inventoryController.getInventoryMonthlyStats);
 router.get("/", authenticateToken, inventoryController.getInventory);
 router.post(
 	"/",
