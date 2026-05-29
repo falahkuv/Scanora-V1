@@ -25,10 +25,10 @@ export default {
         },
         'fab-jiggle': {
           '0%, 100%': { transform: 'rotate(0deg) scale(1)' },
-          '20%':  { transform: 'rotate(-12deg) scale(1.12)' },
-          '40%':  { transform: 'rotate(10deg) scale(1.08)' },
-          '60%':  { transform: 'rotate(-6deg) scale(1.04)' },
-          '80%':  { transform: 'rotate(4deg) scale(1.02)' },
+          '20%': { transform: 'rotate(-12deg) scale(1.12)' },
+          '40%': { transform: 'rotate(10deg) scale(1.08)' },
+          '60%': { transform: 'rotate(-6deg) scale(1.04)' },
+          '80%': { transform: 'rotate(4deg) scale(1.02)' },
         },
       },
       animation: {
@@ -40,12 +40,9 @@ export default {
       colors: {
         'scanora-green': '#10b981', // Emerald Green 500
         'scanora-dark': '#064e3b',  // Emerald Green 900
-        'status-ripe': '#f97316',   // Orange 500
-        'status-unripe': '#22c55e', // Green 500
-        'status-rotten': '#ef4444', // Red 500
         'yellow-main': '#fdc107',
         'orange-main': '#f87305',
-        'red-main': '#e02224',
+        'red-main': '#bb0006ff',
         'leaf-main': '#076a26',
         orange: {
           700: '#cc4e00',
@@ -53,6 +50,10 @@ export default {
       },
       fontFamily: {
         sans: ['Nunito', 'sans-serif'],
+      },
+      fontSize: {
+        'fruit-name': ['28px', { lineHeight: '1.1', fontWeight: '700' }],
+        'fruit-name-sm': ['22px', { lineHeight: '1.1', fontWeight: '700' }],
       }
     },
   },

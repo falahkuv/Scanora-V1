@@ -16,141 +16,102 @@ import LoadingScreen from './components/LoadingScreen';
 import { initializeAuth } from './api';
 import { ViewportProvider, useViewport } from './context/ViewportContext';
 
-// Pages where nav/toggle should NOT appear
-const NO_NAV_PATHS = ['/login', '/register', '/onboarding', '/stats'];
+// Pages where nav should NOT appear
+const NO_NAV_PATHS = ['/login', '/register', '/onboarding'];
 
 // ─── Inner shell: needs Router context for useLocation ───────────────────────
 function AppShell({ isScannerOpen, setIsScannerOpen, isAppEntering, isSplashVisible }) {
-  const { mode, layout } = useViewport();
+  const { layout, compactWidth, windowWidth, isFullscreen } = useViewport();
   const location = useLocation();
 
   const isNoNav   = NO_NAV_PATHS.includes(location.pathname);
   const isDesktop = layout === 'desktop';
-  const isCompact = mode === 'compact';
 
-  // ── Shell sizing ────────────────────────────────────────────────────────
-  // FULLSCREEN: always w-full, no max-w, no mx-auto. Layout uses flex-row/col.
-  // COMPACT:    always forced to Phone layout (Mobile L / Pro Max max-w-[430px]), centred.
-  let shellClass;
-  if (isCompact) {
-    // Compact: forced mobile layout
-    shellClass = 'max-w-[430px] w-full mx-auto flex flex-col';
-  } else {
-    // Fullscreen: fill everything
-    shellClass = isDesktop
-      ? 'w-full flex flex-row'
-      : 'w-full flex flex-col';
-  }
+  // Shell width: null = fill entire window, number = pixel width (compact mode)
+  const shellWidthStyle = (isFullscreen || compactWidth === null)
+    ? {}
+    : { width: `${compactWidth}px`, maxWidth: `${compactWidth}px` };
 
-  // ── Metallic border for Compact (phone-bezel effect) ────────────────────
-  // Outer wrapper handles the border; inner div is the app shell.
-  const compactWrapper = isCompact ? (
-    <div
-      className={`relative z-10 my-auto ${isAppEntering ? 'app-enter' : ''} ${isSplashVisible ? 'app-hidden' : ''}`}
-      style={{
-        padding: '4px',
-        borderRadius: '32px',
-        background: 'linear-gradient(145deg, #404040 0%, #171717 20%, #262626 40%, #000000 60%, #171717 80%, #333333 100%)',
-        boxShadow: '0 32px 80px rgba(0,0,0,0.8), 0 8px 24px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.15)',
-        height: '96dvh',
-      }}
-    >
-      {/* inner shell */}
-      <div
-        className={`
-          ${shellClass}
-          h-full bg-gray-50 dark:bg-gray-900 overflow-hidden transition-colors app-shell
-        `}
-        style={{ borderRadius: '26px' }}
-      >
-        {/* Main scrollable content (compact never has desktop SideNav) */}
-        <main className="flex-1 overflow-y-auto no-scrollbar w-full">
-          <Routes>
-            <Route path="/"           element={<Home onOpenScanner={() => setIsScannerOpen(true)} />} />
-            <Route path="/inventory"  element={<Inventory />} />
-            <Route path="/profile"    element={<Profile />} />
-            <Route path="/onboarding" element={<Onboarding />} />
-            <Route path="/login"      element={<Login />} />
-            <Route path="/register"   element={<Register />} />
-            <Route path="/stats"      element={<ImpactStats />} />
-            <Route path="*"           element={<Navigate to="/" replace />} />
-          </Routes>
-        </main>
-
-        {!isNoNav && (
-          <Routes>
-            <Route path="/login"      element={null} />
-            <Route path="/register"   element={null} />
-            <Route path="/profile"    element={null} />
-            <Route path="/onboarding" element={null} />
-            <Route path="/stats"      element={null} />
-            <Route path="*" element={<BottomNav onOpenScanner={() => setIsScannerOpen(true)} />} />
-          </Routes>
-        )}
-
-        <ScannerSheet isOpen={isScannerOpen} onClose={() => setIsScannerOpen(false)} />
-      </div>
-    </div>
-  ) : null;
+  const isCompact = !isFullscreen;
 
   return (
     <>
       {/* ── Live Wallpaper (Compact only, fills entire screen behind shell) ── */}
       {isCompact && <LiveWallpaper />}
 
-      {isCompact ? (
-        // Compact: wallpaper fills fixed viewport, shell floats centered
-        <div className="fixed inset-0 flex items-center justify-center overflow-hidden">
-          {compactWrapper}
-        </div>
-      ) : (
-        // Fullscreen: shell IS the viewport — no wrapper, no constraint
+      {/* ── App Container ── */}
+      <div
+        className={`
+          ${isCompact ? 'fixed inset-0 flex items-center justify-center overflow-hidden' : ''}
+        `}
+      >
+        {/* Metallic bezel wrapper for compact */}
         <div
           className={`
-            ${shellClass}
-            h-[100dvh] bg-gray-50 dark:bg-gray-900 relative overflow-hidden transition-colors app-shell
+            relative z-10
             ${isAppEntering ? 'app-enter' : ''}
             ${isSplashVisible ? 'app-hidden' : ''}
+            ${isCompact ? '' : 'w-full'}
           `}
+          style={isCompact ? {
+            padding: '4px',
+            borderRadius: '32px',
+            background: 'linear-gradient(145deg, #404040 0%, #171717 20%, #262626 40%, #000000 60%, #171717 80%, #333333 100%)',
+            boxShadow: '0 32px 80px rgba(0,0,0,0.8), 0 8px 24px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.15)',
+            height: '96dvh',
+            ...shellWidthStyle,
+          } : {}}
         >
-          {isDesktop && !isNoNav && (
-            <SideNav onOpenScanner={() => setIsScannerOpen(true)} />
-          )}
+          <div
+            className={`
+              ${isCompact ? 'h-full overflow-hidden' : 'h-[100dvh] overflow-hidden'}
+              ${isDesktop && !isCompact ? 'flex flex-row' : 'flex flex-col'}
+              bg-gray-50 dark:bg-gray-900 relative transition-colors app-shell
+              ${isCompact ? '' : (isAppEntering ? 'app-enter' : '') + (isSplashVisible ? ' app-hidden' : '')}
+            `}
+            style={{
+              borderRadius: isCompact ? '26px' : undefined,
+              ...(isCompact ? {} : shellWidthStyle),
+            }}
+          >
+            {isDesktop && !isCompact && !isNoNav && (
+              <SideNav onOpenScanner={() => setIsScannerOpen(true)} />
+            )}
 
-          <main className="flex-1 overflow-y-auto no-scrollbar w-full">
-            <Routes>
-              <Route path="/"           element={<Home onOpenScanner={() => setIsScannerOpen(true)} />} />
-              <Route path="/inventory"  element={<Inventory />} />
-              <Route path="/profile"    element={<Profile />} />
-              <Route path="/onboarding" element={<Onboarding />} />
-              <Route path="/login"      element={<Login />} />
-              <Route path="/register"   element={<Register />} />
-              <Route path="/stats"      element={<ImpactStats />} />
-              <Route path="*"           element={<Navigate to="/" replace />} />
-            </Routes>
-          </main>
+            <main className="flex-1 overflow-y-auto no-scrollbar w-full">
+              <Routes>
+                <Route path="/"           element={<Home onOpenScanner={() => setIsScannerOpen(true)} />} />
+                <Route path="/inventory"  element={<Inventory />} />
+                <Route path="/profile"    element={<Profile />} />
+                <Route path="/onboarding" element={<Onboarding />} />
+                <Route path="/login"      element={<Login />} />
+                <Route path="/register"   element={<Register />} />
+                <Route path="/stats"      element={<ImpactStats />} />
+                <Route path="*"           element={<Navigate to="/" replace />} />
+              </Routes>
+            </main>
 
-          {!isDesktop && !isNoNav && (
-            <Routes>
-              <Route path="/login"      element={null} />
-              <Route path="/register"   element={null} />
-              <Route path="/profile"    element={null} />
-              <Route path="/onboarding" element={null} />
-              <Route path="/stats"      element={null} />
-              <Route path="*" element={<BottomNav onOpenScanner={() => setIsScannerOpen(true)} />} />
-            </Routes>
-          )}
+            {/* BottomNav: show for non-desktop or compact mode */}
+            {(!isDesktop || isCompact) && !isNoNav && (
+              <Routes>
+                <Route path="/login"      element={null} />
+                <Route path="/register"   element={null} />
+                <Route path="/profile"    element={null} />
+                <Route path="/onboarding" element={null} />
+                <Route path="*" element={<BottomNav onOpenScanner={() => setIsScannerOpen(true)} />} />
+              </Routes>
+            )}
 
-          <ScannerSheet isOpen={isScannerOpen} onClose={() => setIsScannerOpen(false)} />
+            <ScannerSheet isOpen={isScannerOpen} onClose={() => setIsScannerOpen(false)} />
+          </div>
         </div>
-      )}
+      </div>
 
-      {/* ── Floating Viewport Toggle (outside shell) ── */}
+      {/* ── Resize Handle (always outside shell) ── */}
       {!isNoNav && <ViewportToggle isHidden={isScannerOpen} />}
     </>
   );
 }
-
 
 
 // ─── Root App ─────────────────────────────────────────────────────────────────
