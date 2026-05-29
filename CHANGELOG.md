@@ -2,6 +2,10 @@
 
 Semua perubahan yang signifikan pada proyek Scanora akan didokumentasikan dalam file ini.
 
+## [v1.8.1] - 2026-05-29
+### Fixed
+- **Freshness Score Decay**: Memperbaiki masalah *bug* di `freshnessService.js` di mana *freshness score* buah yang bertransisi dari *unripe* (mentah) ke *ripe* (matang) turun terlalu cepat hingga 0%. Kini perhitungan *decay* menggunakan *base date* yang dikalkulasi secara dinamis sejak buah benar-benar matang.
+- **Auto-Transition Ripe to Rotten**: Menambahkan logika *auto-transition* baru di `inventoryController.js` agar buah yang berstatus *ripe* dan telah melewati batas kedaluwarsanya otomatis berubah menjadi *rotten* (busuk), sehingga tidak tertahan di status matang selamanya dengan skor 0.
 ## [v1.8.0] - 2026-05-24
 ### Added
 - **Halaman Statistik Aksi (`/stats`)**: Halaman baru dengan animasi *page-in*, dibangun ulang menggunakan **Chart.js + react-chartjs-2**. Menampilkan dua section utama:

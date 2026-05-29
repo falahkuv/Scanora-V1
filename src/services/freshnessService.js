@@ -119,10 +119,10 @@ const calculateReminderAt = (fruitType, condition, freshnessScore, baseDate = ne
  * @param {string} condition
  * @param {string} fruitType
  * @param {number} maxDays       - total estimated shelf life in days
- * @param {Date}   addedAt       - when item was added to inventory
+ * @param {Date}   baseDate      - base date for decay (addedAt or ripened date)
  * @returns {number} - score 0.0–1.0
  */
-const calculateCurrentFreshnessScore = (initialScore, condition, fruitType, maxDays, addedAt) => {
+const calculateCurrentFreshnessScore = (initialScore, condition, fruitType, maxDays, baseDate) => {
   const cond = normalizeCondition(condition, fruitType);
 
   // Unripe: no decay — stays at full freshness, countdown shows ripening time
@@ -132,14 +132,14 @@ const calculateCurrentFreshnessScore = (initialScore, condition, fruitType, maxD
   if (cond === "rotten" || maxDays <= 0) return 0;
 
   const score = normalizeFreshnessScore(initialScore, condition, fruitType);
-  const daysElapsed = (Date.now() - new Date(addedAt)) / (1000 * 60 * 60 * 24);
+  const daysElapsed = (Date.now() - new Date(baseDate)) / (1000 * 60 * 60 * 24);
 
   // Linear decay: score reaches 0 exactly at maxDays (expiry)
   // current = initialScore × (1 - daysElapsed / maxDays)
   const decayRatio = daysElapsed / maxDays;
   const current = score * (1 - decayRatio);
 
-  return Math.max(0, Math.round(current * 100) / 100);
+  return Math.max(0, Math.min(1.0, Math.round(current * 100) / 100));
 };
 
 /**
@@ -156,27 +156,36 @@ const calculateCurrentFreshnessScore = (initialScore, condition, fruitType, maxD
  */
 const toPercent = (value) => Math.round(value * 10000) / 100;
 
-const getFreshnessData = (fruitType, condition, rawFreshnessScore, addedAt) => {
+const getFreshnessData = (fruitType, condition, rawFreshnessScore, addedAt, currentReminderAt = null) => {
   const scoreNormalized = normalizeFreshnessScore(rawFreshnessScore, condition, fruitType);
 
-  const { reminderAt, maxDays, label } = calculateReminderAt(
-    fruitType,
-    condition,
-    scoreNormalized,
-    new Date(addedAt)
-  );
+  let baseDate = new Date(addedAt);
+
+  // Determine maxDays to potentially reverse-engineer baseDate
+  const tempCalc = calculateReminderAt(fruitType, condition, scoreNormalized, baseDate);
+  const maxDays = tempCalc.maxDays;
+  const label = tempCalc.label;
+
+  // If it's ripe and we have a reminderAt (which represents the expiry date),
+  // the base date when it became ripe is (reminderAt - maxDays)
+  if (condition.toLowerCase() === 'ripe' && currentReminderAt && maxDays > 0) {
+    baseDate = new Date(new Date(currentReminderAt).getTime() - (maxDays * 24 * 60 * 60 * 1000));
+  }
+
+  // Recalculate reminderAt based on the correct baseDate
+  const { reminderAt } = calculateReminderAt(fruitType, condition, scoreNormalized, baseDate);
 
   const freshnessScoreLatest = calculateCurrentFreshnessScore(
     scoreNormalized,
     condition,
     fruitType,
     maxDays,
-    addedAt
+    baseDate
   );
 
   let conditionLatest = condition;
   if (condition.toLowerCase() === 'unripe') {
-    const daysElapsed = (Date.now() - new Date(addedAt)) / (1000 * 60 * 60 * 24);
+    const daysElapsed = (Date.now() - baseDate) / (1000 * 60 * 60 * 24);
     if (daysElapsed >= maxDays) {
       conditionLatest = 'ripe';
     }

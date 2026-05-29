@@ -35,6 +35,19 @@ const getInventory = asyncHandler(async (req, res) => {
       item.condition = "ripe";
       item.reminderAt = newReminderAt ?? null;
     }
+    
+    // ── Auto-transition: ripe items that have passed their rotten date → rotten ──
+    if (
+      item.condition === "ripe" &&
+      item.reminderAt &&
+      new Date(item.reminderAt) <= now
+    ) {
+      await prisma.inventory.update({
+        where: { id: item.id },
+        data: { condition: "rotten" },
+      });
+      item.condition = "rotten";
+    }
   }
 
   const enriched = items.map(item => {
@@ -44,7 +57,8 @@ const getInventory = asyncHandler(async (req, res) => {
       item.fruitType,
       item.condition,
       rawScore,
-      item.addedAt
+      item.addedAt,
+      item.reminderAt
     );
     return {
       ...base,
