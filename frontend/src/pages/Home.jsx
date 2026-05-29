@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { User, AlertCircle, X, Utensils, Trash2, Salad, Sprout, ImageOff, ChevronRight, SquareCheck, SquareX, Bell, Camera, BarChart2, Sparkles, Bot } from 'lucide-react';
+import { User, AlertCircle, X, Utensils, Trash2, Salad, Sprout, ImageOff, ChevronRight, SquareCheck, SquareX, Bell, Camera, BarChart2, Sparkles, Bot, Package } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { useViewport } from '../context/ViewportContext';
@@ -468,9 +468,9 @@ const Home = ({ onOpenScanner }) => {
           </div>
           <button
             onClick={() => navigate('/stats')}
-            className="px-3 py-1.5 bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 rounded-full text-xs font-bold transition-all active:scale-95"
+            className="px-3 py-1.5 bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 rounded-full text-sm font-bold transition-all active:scale-95"
           >
-            Detail
+            Lihat Statistik
           </button>
         </div>
         <div className="bg-transparent">
@@ -541,15 +541,15 @@ const Home = ({ onOpenScanner }) => {
                     <p className={`text-red-700 text-[10px] font-medium ${isTablet ? 'mt-0.5' : 'mt-1'}`}>Dibuang</p>
                   </div>
                 </div>
-                  <div className={`bg-orange-main/15 border border-orange-main/20 backdrop-blur-md rounded-xl p-3 ${isTablet ? 'flex items-center gap-4' : 'text-center'}`}>
-                    <div className={`w-8 h-8 bg-orange-main/20 rounded-full flex items-center justify-center flex-shrink-0 ${isTablet ? '' : 'mx-auto mb-1.5'}`}>
-                      <Package size={16} className="text-orange-main" />
-                    </div>
-                    <div className={isTablet ? 'flex flex-col text-left' : ''}>
-                      <p className={`${isTablet ? 'text-xl' : 'text-2xl'} font-extrabold leading-none text-orange-main`}>{impact.saved}</p>
-                      <p className={`text-orange-main text-[10px] font-medium ${isTablet ? 'mt-0.5' : 'mt-1'}`}>Disimpan</p>
-                    </div>
+                <div className={`bg-orange-main/15 border border-orange-main/20 backdrop-blur-md rounded-xl p-3 ${isTablet ? 'flex items-center gap-4' : 'text-center'}`}>
+                  <div className={`w-8 h-8 bg-orange-main/20 rounded-full flex items-center justify-center flex-shrink-0 ${isTablet ? '' : 'mx-auto mb-1.5'}`}>
+                    <Package size={16} className="text-orange-main" />
                   </div>
+                  <div className={isTablet ? 'flex flex-col text-left' : ''}>
+                    <p className={`${isTablet ? 'text-xl' : 'text-2xl'} font-extrabold leading-none text-orange-main`}>{impact.saved}</p>
+                    <p className={`text-orange-main text-[10px] font-medium ${isTablet ? 'mt-0.5' : 'mt-1'}`}>Disimpan</p>
+                  </div>
+                </div>
               </div>
               {saveRate !== null ? (
                 <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">

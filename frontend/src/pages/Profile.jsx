@@ -132,7 +132,7 @@ const Profile = () => {
             </button>
           </div>
 
-          <div className="p-4 flex justify-between items-center border-b border-gray-100 dark:border-gray-700 gap-4">
+          <div className="p-4 flex justify-between items-center gap-4">
             <div className="flex items-center gap-4 flex-1 pr-2 min-w-0">
               <div className="w-10 h-10 bg-scanora-green/10 dark:bg-scanora-green/20 rounded-full flex-shrink-0 flex items-center justify-center text-scanora-green">
                 <Bell size={20} />
@@ -149,7 +149,9 @@ const Profile = () => {
               <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform ${notifEnabled ? 'translate-x-6' : 'translate-x-1'}`}></div>
             </button>
           </div>
+        </div>
 
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-6 transition-colors">
           <div 
             onClick={() => navigate('/stats')}
             className="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 active:bg-gray-100 dark:active:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700"
@@ -168,7 +170,7 @@ const Profile = () => {
 
           <div 
             onClick={installPwa}
-            className="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 active:bg-gray-100 dark:active:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700"
+            className="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 active:bg-gray-100 dark:active:bg-gray-700 transition-colors"
           >
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 bg-scanora-green/10 dark:bg-scanora-green/20 rounded-full flex items-center justify-center text-scanora-green">
@@ -180,7 +182,9 @@ const Profile = () => {
               </div>
             </div>
           </div>
+        </div>
 
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-6 transition-colors">
           <div 
             onClick={handleLogout}
             className="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 active:bg-gray-100 dark:active:bg-gray-700 transition-colors"

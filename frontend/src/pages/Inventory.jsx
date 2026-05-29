@@ -806,42 +806,20 @@ const Inventory = () => {
       {selectedItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in" onClick={() => setSelectedItem(null)}>
           <div
-            className="bg-white rounded-3xl w-full max-w-md shadow-2xl transform transition-all animate-slide-up flex flex-col overflow-hidden"
+            className="bg-white rounded-3xl w-full max-w-md shadow-2xl transform transition-all animate-slide-up flex flex-col overflow-hidden relative"
             style={{ maxHeight: '90dvh' }}
             onClick={e => e.stopPropagation()}
           >
-            {/* Image banner — fixed, never scrolls */}
-            <div className="relative aspect-video bg-gradient-to-b from-sky-200 to-green-200 flex items-center justify-center overflow-hidden flex-shrink-0">
-              {selectedItem.image_url ? (
-                <img
-                  src={selectedItem.image_url}
-                  alt={selectedItem.fruit_type}
-                  className="w-full h-full object-cover"
-                  onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
-                />
-              ) : null}
-              <div
-                className="w-full h-full items-center justify-center flex-col gap-2 bg-gradient-to-b from-sky-200 to-green-200"
-                style={{ display: selectedItem.image_url ? 'none' : 'flex' }}
-              >
-                <img
-                  src={getMascotSrc(selectedItem.fruit_type, (selectedItem.condition_latest || selectedItem.condition))}
-                  alt=""
-                  className="h-24 object-contain drop-shadow-lg"
-                  onError={(e) => { e.target.style.display = 'none'; }}
-                />
-              </div>
-              <button
-                onClick={() => setSelectedItem(null)}
-                className="absolute top-4 right-4 w-11 h-11 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 active:scale-95 transition-all cursor-pointer z-20"
-              >
-                <X size={18} />
-              </button>
-            </div>
+            <button
+              onClick={() => setSelectedItem(null)}
+              className="absolute top-4 right-4 w-11 h-11 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 active:scale-95 transition-all cursor-pointer z-40"
+            >
+              <X size={18} />
+            </button>
 
-            {/* ── Sticky fruit header (slides out from behind image banner) ── */}
+            {/* ── Sticky fruit header ── */}
             <div
-              className={`absolute top-64 left-0 right-0 z-10 flex items-center gap-2 px-5 py-3 bg-white border-b border-gray-100 transition-all duration-300 ${showStickyHeader ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'}`}
+              className={`absolute top-0 left-0 right-0 z-30 flex items-center gap-2 px-5 py-5 bg-white border-b border-gray-100 transition-all duration-300 ${showStickyHeader ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'}`}
             >
               <span className="text-[18px] font-bold text-gray-900 capitalize leading-none">
                 {getFruitLabel(selectedItem.fruit_type)}
@@ -849,20 +827,37 @@ const Inventory = () => {
               <span className={`text-xs font-bold px-2 py-0.5 rounded-md capitalize ${getConditionBadgeStyle(selectedItem.condition_latest || selectedItem.condition)}`}>
                 {getConditionLabel(selectedItem.condition_latest || selectedItem.condition)}
               </span>
-              <img
-                src={getMascotSrc(selectedItem.fruit_type, selectedItem.condition_latest || selectedItem.condition)}
-                alt=""
-                className="h-7 object-contain ml-auto"
-                onError={(e) => { e.target.style.display = 'none'; }}
-              />
             </div>
 
-            {/* Scrollable middle content */}
+            {/* Scrollable content */}
             <div
               className="overflow-y-auto flex-1 no-scrollbar"
               ref={scrollContainerRef}
               onScroll={handleDetailScroll}
             >
+              {/* Image banner — scrolls away */}
+              <div className="relative aspect-video bg-gradient-to-b from-sky-200 to-green-200 flex items-center justify-center overflow-hidden flex-shrink-0 z-20">
+                {selectedItem.image_url ? (
+                  <img
+                    src={selectedItem.image_url}
+                    alt={selectedItem.fruit_type}
+                    className="w-full h-full object-cover"
+                    onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                  />
+                ) : null}
+                <div
+                  className="w-full h-full items-center justify-center flex-col gap-2 bg-gradient-to-b from-sky-200 to-green-200"
+                  style={{ display: selectedItem.image_url ? 'none' : 'flex' }}
+                >
+                  <img
+                    src={getMascotSrc(selectedItem.fruit_type, selectedItem.condition_latest || selectedItem.condition)}
+                    alt=""
+                    className="h-24 object-contain drop-shadow-lg"
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                </div>
+              </div>
+
               <div className="p-5 pb-2">
                 {/* Name + badge + Mascot — 1 row */}
                 <div ref={fruitNameRef} className="flex items-center justify-between mb-4 mt-2">
@@ -885,12 +880,12 @@ const Inventory = () => {
                   </div>
                 </div>
 
-                {/* Detail Scan label — not bold, with colon */}
+                {/* Detail Scan label — not bold */}
                 <p className="text-xs font-normal text-gray-400 text-center mb-2">Detail Scan:</p>
 
                 {activeTab === 'inventory' ? (
                   <>
-                    {/* Date + score info box */}
+                    {/* Date + score card */}
                     <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-3">
                       <div className="flex flex-col gap-3 mb-4">
                         <p className="text-gray-500 font-medium text-sm flex items-center gap-2">
@@ -904,15 +899,13 @@ const Inventory = () => {
                             <SquareX size={16} />
                           )}
                           <span>
-                            {(selectedItem.condition_latest || selectedItem.condition) === 'unripe'
-                              ? 'Tgl. Matang:'
-                              : 'Tgl. Batas Layak:'}{' '}
+                            {(selectedItem.condition_latest || selectedItem.condition) === 'unripe' ? 'Tgl. Matang:' : 'Tgl. Batas Layak:'}{' '}
                             {formatShortDate(selectedItem.reminder_at)}
                           </span>
                         </p>
                       </div>
                       <hr className="border-gray-200 mb-4" />
-                      {/* Freshness score — animated chevrons */}
+                      {/* Freshness score row — animated chevrons */}
                       <div className="flex items-center gap-3 mb-4">
                         <p className="text-sm text-gray-500 font-medium whitespace-nowrap">Update Freshness Score:</p>
                         <div className="flex items-center gap-1 flex-1 min-w-0">
@@ -928,7 +921,6 @@ const Inventory = () => {
                           </div>
                         </div>
                       </div>
-
                       {(() => {
                         const daysLeft = calculateDaysLeft(selectedItem.reminder_at);
                         const countdown = getCountdownConfig((selectedItem.condition_latest || selectedItem.condition), daysLeft);
@@ -939,8 +931,6 @@ const Inventory = () => {
                         );
                       })()}
                     </div>
-
-                    <hr className="border-gray-100 mb-4" />
                   </>
                 ) : (
                   /* History tab: compact date + score in one row */
@@ -978,7 +968,6 @@ const Inventory = () => {
                           <div className="w-5 h-5 border-2 border-green-400 border-t-transparent rounded-full animate-spin flex-shrink-0" />
                           <p className="text-sm text-green-700 font-medium animate-pulse">Scanora sedang berpikir...</p>
                         </div>
-                        {/* Indeterminate loading bar */}
                         <div className="w-full h-1 bg-green-100 rounded-full overflow-hidden">
                           <div className="h-full bg-green-400 rounded-full animate-[indeterminate_1.5s_ease-in-out_infinite]" style={{ width: '40%', animation: 'indeterminate 1.5s ease-in-out infinite' }} />
                         </div>
@@ -1009,10 +998,10 @@ const Inventory = () => {
                 )}
 
                 {/* ── Always-visible Disclaimer ── */}
-                <div className="flex items-start gap-3 bg-gray-100/80 border border-gray-200/70 rounded-2xl px-4 py-3 mb-4 mt-2">
+                <div className="flex items-start gap-3 bg-gray-100/80 border border-gray-200/70 rounded-2xl px-4 py-3 mb-5 mt-2">
                   <Bot size={16} className="text-gray-400 flex-shrink-0 mt-0.5" />
                   <p className="text-[12px] text-gray-500 leading-relaxed">
-                    Estimasi berdasarkan skenario terbaik, kondisi asli bisa berbeda. Foto ulang untuk update.
+                    Estimasi berdasarkan skenario terbaik. Kondisi asli bisa berbeda. Foto ulang untuk update.
                   </p>
                 </div>
               </div>
