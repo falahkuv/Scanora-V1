@@ -1,6 +1,17 @@
 # Changelog
 
-Semua perubahan yang signifikan pada proyek Scanora akan didokumentasikan dalam file in.
+Semua perubahan yang signifikan pada proyek Scanora akan didokumentasikan dalam file ini.
+
+## [v1.9.2] - 2026-05-30
+### Added
+- **PWA (Progressive Web App)**: Scanora kini mendukung instalasi PWA. Pengguna dapat menambahkan aplikasi langsung ke Home Screen smartphone tanpa perlu melalui App Store atau Play Store.
+- **Navigasi Profil**: Menambahkan menu "Statistik Performa" dan "Install Aplikasi (PWA)" pada halaman profil untuk kemudahan navigasi.
+
+### Changed
+- **Statistik Aksi UX**: Menyederhanakan penulisan tahun (contoh: '26 menjadi 2026), memperhalus border card, menambahkan animasi *loading* dengan kalimat interaktif `"Mengumpulkan data statistikmu..."`, serta memperbaiki bug rotasi ikon *dropdown*.
+- **Animasi Loading AI**: Merampingkan *skeleton loader* pada fitur "Minta Saran AI" menjadi lebih elegan (1 baris *pulse* dipadu dengan *indeterminate progress bar*) lintas halaman (`Home`, `Inventory`, dan `Scanner`).
+- **Ikonografi & Warna**: Menyeragamkan warna palet utama (`orange-main` dan `scanora-green`) pada antarmuka Profil dan badge inventori. 
+- **Tombol Konsumsi & Buang**: Logika UI diseragamkan sehingga buah berstatus busuk (*rotten*) di Inventori tetap dapat dieksekusi (Dikonsumsi/Dibuang).
 
 ## [v1.8.1] - 2026-05-29
 ### Fixed

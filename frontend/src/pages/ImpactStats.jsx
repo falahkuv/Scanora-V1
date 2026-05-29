@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, TrendingUp, Utensils, Trash2, Star, BarChart2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronDown, TrendingUp, Utensils, Trash2, Star, BarChart2 } from 'lucide-react';
 import { useViewport } from '../context/ViewportContext';
 import api from '../api';
 import {
@@ -111,7 +111,12 @@ export default function ImpactStats() {
   }, [useMock]);
 
   if (isLoading) {
-    return <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-500 font-bold">Loading...</div>;
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center text-gray-500 font-bold p-6 text-center">
+        <div className="w-10 h-10 border-4 border-scanora-green border-t-transparent rounded-full animate-spin mb-4" />
+        <p>Mengumpulkan data statistikmu...</p>
+      </div>
+    );
   }
 
   if (monthlyData.length === 0) {
@@ -258,7 +263,7 @@ export default function ImpactStats() {
             <ChevronLeft size={20} />
           </button>
           <div className="flex items-center px-2 font-bold text-gray-700 text-sm">
-            {current.name} '{String(current.year).slice(-2)}
+            {current.name} {current.year}
           </div>
           <button
             onClick={() => setMonthIdx(i => Math.min(monthlyData.length - 1, i + 1))}
@@ -276,7 +281,7 @@ export default function ImpactStats() {
         {/* ── Month Title — centered ── */}
         <div className="text-center pt-2">
           <p className="text-xs font-semibold text-gray-400 mb-1">Performa bulan ini:</p>
-          <h2 className="text-2xl font-extrabold text-gray-900">{current.name} '{String(current.year).slice(-2)}</h2>
+          <h2 className="text-2xl font-extrabold text-gray-900">{current.name} {current.year}</h2>
         </div>
 
         {/* ── Main Grid: Dikonsumsi | Dibuang | Tingkat Keberhasilan ── */}
@@ -376,10 +381,8 @@ export default function ImpactStats() {
 
           {/* Skor Keberhasilan Terbaik */}
           <button
-            onClick={() => {
-              navigate('/inventory', { state: { tab: 'history' } });
-            }}
-            className="bg-white border-2 border-gray-900 rounded-2xl p-4 shadow-sm relative overflow-hidden flex flex-col hover:bg-gray-50 active:scale-95 transition-all text-left"
+            onClick={() => setMonthIdx(bestMonthIdx)}
+            className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm relative overflow-hidden flex flex-col hover:bg-gray-50 active:scale-95 transition-all text-left"
             style={{ minHeight: '160px' }}
           >
             <div className="z-10 mb-4">
@@ -392,7 +395,7 @@ export default function ImpactStats() {
             </div>
             <div className="z-10 mt-auto">
               <p className="text-sm text-gray-600 font-medium">
-                {monthlyData[bestMonthIdx].name} '{String(monthlyData[bestMonthIdx].year).slice(-2)}
+                {monthlyData[bestMonthIdx].name} {monthlyData[bestMonthIdx].year}
               </p>
             </div>
           </button>
@@ -407,9 +410,9 @@ export default function ImpactStats() {
             <div className="flex items-center gap-2">
               Lihat Bulan Lainnya
             </div>
-            <ChevronRight
+            <ChevronDown
               size={18}
-              className={`text-gray-400 transition-transform duration-300 ${rekapExpanded ? 'rotate-90' : ''}`}
+              className={`text-gray-400 transition-transform duration-300 ${rekapExpanded ? 'rotate-180' : ''}`}
             />
           </button>
 

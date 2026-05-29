@@ -40,7 +40,7 @@ const getConditionLabel = (condition) => {
 const getConditionBadgeStyle = (condition) => {
   const c = (condition || '').toLowerCase();
   if (c === 'unripe') return 'bg-green-100 text-green-700';
-  if (c === 'ripe') return 'bg-orange-100 text-orange-700';
+  if (c === 'ripe') return 'bg-orange-main/15 text-orange-main';
   if (c === 'rotten') return 'bg-red-100 text-red-700';
   return 'bg-gray-100 text-gray-600';
 };
@@ -162,9 +162,6 @@ const InventoryCard = ({ item, onClick, isTablet }) => {
   const daysLeft = calculateDaysLeft(item.reminder_at);
   const countdown = getCountdownConfig((item.condition_latest || item.condition), daysLeft);
 
-  // Sky/grass background gradient for the card header
-  const headerBg = 'bg-gradient-to-b from-sky-200 via-sky-100 to-green-200';
-
   if (isTablet) {
     // Tablet: horizontal card — photo left, info right
     return (
@@ -174,7 +171,7 @@ const InventoryCard = ({ item, onClick, isTablet }) => {
         style={{ minHeight: '130px' }}
       >
         {/* Left: photo */}
-        <div className={`relative ${headerBg} flex-shrink-0 w-[130px]`}>
+        <div className={`relative bg-gray-100 flex-shrink-0 w-[130px]`}>
           {/* Condition Badge */}
           <span className={`absolute top-2 left-2 px-2 py-1 z-20 rounded-md text-sm font-bold shadow-sm leading-none capitalize ${getConditionBadgeStyle((item.condition_latest || item.condition))}`}>
             {getConditionLabel((item.condition_latest || item.condition))}
@@ -250,7 +247,7 @@ const InventoryCard = ({ item, onClick, isTablet }) => {
     >
       <div className="relative">
         {/* ── Top half: image area ── */}
-        <div className={`relative ${headerBg} flex-shrink-0 rounded-xl overflow-hidden aspect-square`}>
+        <div className={`relative bg-gray-100 flex-shrink-0 rounded-xl overflow-hidden aspect-square`}>
           {/* Condition Badge — min 14px */}
           <span className={`absolute top-2 left-2 px-2 py-1 z-20 rounded-md text-[14px] font-bold shadow-sm leading-none capitalize ${getConditionBadgeStyle((item.condition_latest || item.condition))}`}>
             {getConditionLabel((item.condition_latest || item.condition))}
@@ -607,7 +604,7 @@ const Inventory = () => {
         <div className="px-4 pt-3 pb-1 flex gap-2 overflow-x-clip no-scrollbar">
           {[
             { key: 'all', label: 'Semua', count: inventoryData.length, active: 'bg-gray-800 text-white', inactive: 'border border-gray-200 text-gray-600 bg-transparent' },
-            { key: 'ripe', label: 'Ripe', count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'ripe').length, active: 'bg-orange-main text-white', inactive: 'border border-orange-200 text-orange-600 bg-transparent' },
+            { key: 'ripe', label: 'Ripe', count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'ripe').length, active: 'bg-orange-main text-white', inactive: 'border border-orange-main/30 text-orange-main bg-transparent' },
             { key: 'unripe', label: 'Unripe', count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'unripe').length, active: 'bg-scanora-green text-white', inactive: 'border border-green-200 text-green-600 bg-transparent' },
             { key: 'rotten', label: 'Rotten', count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'rotten').length, active: 'bg-red-main text-white', inactive: 'border border-red-200 text-red-600 bg-transparent' },
           ].map(pill => (
@@ -979,11 +976,14 @@ const Inventory = () => {
                       <div className="w-full min-h-[44px] bg-green-50 border border-green-200 rounded-2xl flex flex-col items-center justify-center gap-2 px-4 py-3 overflow-hidden relative">
                         <div className="flex items-center gap-3 w-full">
                           <div className="w-5 h-5 border-2 border-green-400 border-t-transparent rounded-full animate-spin flex-shrink-0" />
-                          <p className="text-sm text-green-700 font-medium">Scanora sedang berpikir...</p>
+                          <p className="text-sm text-green-700 font-medium animate-pulse">Scanora sedang berpikir...</p>
                         </div>
                         {/* Indeterminate loading bar */}
                         <div className="w-full h-1 bg-green-100 rounded-full overflow-hidden">
                           <div className="h-full bg-green-400 rounded-full animate-[indeterminate_1.5s_ease-in-out_infinite]" style={{ width: '40%', animation: 'indeterminate 1.5s ease-in-out infinite' }} />
+                        </div>
+                        <div className="animate-pulse flex flex-col gap-2 mt-2 w-full">
+                          <div className="h-3 bg-green-200/60 rounded-full w-full" />
                         </div>
                       </div>
                     )}

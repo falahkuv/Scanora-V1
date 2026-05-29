@@ -640,8 +640,6 @@ const ScannerSheet = ({ isOpen, onClose }) => {
                       </div>
                       <div className="animate-pulse flex flex-col gap-2 mt-2">
                         <div className="h-3 bg-green-200/60 rounded-full w-full" />
-                        <div className="h-3 bg-green-200/60 rounded-full w-5/6" />
-                        <div className="h-3 bg-green-200/60 rounded-full w-4/6" />
                       </div>
                     </div>
                   )}

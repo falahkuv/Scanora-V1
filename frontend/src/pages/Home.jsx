@@ -541,15 +541,15 @@ const Home = ({ onOpenScanner }) => {
                     <p className={`text-red-700 text-[10px] font-medium ${isTablet ? 'mt-0.5' : 'mt-1'}`}>Dibuang</p>
                   </div>
                 </div>
-                <div className={`bg-orange-500/10 border border-orange-500/20 backdrop-blur-md rounded-xl p-3 ${isTablet ? 'flex items-center gap-4' : 'text-center'}`}>
-                  <div className={`w-8 h-8 bg-orange-500/20 rounded-full flex items-center justify-center flex-shrink-0 ${isTablet ? '' : 'mx-auto mb-1.5'}`}>
-                    <Salad size={16} className="text-orange-700" />
+                  <div className={`bg-orange-main/15 border border-orange-main/20 backdrop-blur-md rounded-xl p-3 ${isTablet ? 'flex items-center gap-4' : 'text-center'}`}>
+                    <div className={`w-8 h-8 bg-orange-main/20 rounded-full flex items-center justify-center flex-shrink-0 ${isTablet ? '' : 'mx-auto mb-1.5'}`}>
+                      <Package size={16} className="text-orange-main" />
+                    </div>
+                    <div className={isTablet ? 'flex flex-col text-left' : ''}>
+                      <p className={`${isTablet ? 'text-xl' : 'text-2xl'} font-extrabold leading-none text-orange-main`}>{impact.saved}</p>
+                      <p className={`text-orange-main text-[10px] font-medium ${isTablet ? 'mt-0.5' : 'mt-1'}`}>Disimpan</p>
+                    </div>
                   </div>
-                  <div className={isTablet ? 'flex flex-col text-left' : ''}>
-                    <p className={`${isTablet ? 'text-xl' : 'text-2xl'} font-extrabold leading-none text-orange-700`}>{impact.saved}</p>
-                    <p className={`text-orange-700 text-[10px] font-medium ${isTablet ? 'mt-0.5' : 'mt-1'}`}>Disimpan</p>
-                  </div>
-                </div>
               </div>
               {saveRate !== null ? (
                 <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
@@ -796,10 +796,13 @@ const Home = ({ onOpenScanner }) => {
                       <div className="w-full min-h-[44px] bg-green-50 border border-green-200 rounded-2xl flex flex-col items-center justify-center gap-2 px-4 py-3 overflow-hidden">
                         <div className="flex items-center gap-3 w-full">
                           <div className="w-5 h-5 border-2 border-green-400 border-t-transparent rounded-full animate-spin flex-shrink-0" />
-                          <p className="text-sm text-green-700 font-medium">Scanora sedang berpikir...</p>
+                          <p className="text-sm text-green-700 font-medium animate-pulse">Scanora sedang berpikir...</p>
                         </div>
                         <div className="w-full h-1 bg-green-100 rounded-full overflow-hidden">
                           <div className="h-full bg-green-400 rounded-full" style={{ width: '40%', animation: 'indeterminate 1.5s ease-in-out infinite' }} />
+                        </div>
+                        <div className="animate-pulse flex flex-col gap-2 mt-2 w-full">
+                          <div className="h-3 bg-green-200/60 rounded-full w-full" />
                         </div>
                       </div>
                     )}

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Moon, Sun, LogOut, ChevronLeft, User, Languages, Bell } from 'lucide-react';
+import { Moon, Sun, LogOut, ChevronLeft, User, Languages, Bell, ChartColumnBig, Download } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useViewport } from '../context/ViewportContext';
 
@@ -61,6 +61,12 @@ const Profile = () => {
     }
   };
 
+  const installPwa = () => {
+    // If the browser provides a beforeinstallprompt event, we can capture it here
+    // For now, prompt the user with instructions since this is typically captured at root level
+    alert('Untuk meng-install aplikasi ini ke layar beranda Anda:\n\nAndroid: Tap tombol titik tiga (⋮) di Chrome lalu pilih "Add to Home screen"\n\niOS: Tap ikon Share (kotak dengan panah) di Safari, lalu pilih "Add to Home Screen"');
+  };
+
   const { viewport } = useViewport();
   const isDesktop = viewport === 'desktop';
   const isTablet = viewport === 'tablet';
@@ -92,7 +98,7 @@ const Profile = () => {
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-6 transition-colors">
           <div className="p-4 flex justify-between items-center border-b border-gray-100 dark:border-gray-700">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-blue-500">
+              <div className="w-10 h-10 bg-scanora-green/10 dark:bg-scanora-green/20 rounded-full flex items-center justify-center text-scanora-green">
                 {isDark ? <Moon size={20} /> : <Sun size={20} />}
               </div>
               <div>
@@ -110,7 +116,7 @@ const Profile = () => {
 
           <div className="p-4 flex justify-between items-center border-b border-gray-100 dark:border-gray-700">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-orange-50 dark:bg-orange-main/30 rounded-full flex items-center justify-center text-orange-main">
+              <div className="w-10 h-10 bg-scanora-green/10 dark:bg-scanora-green/20 rounded-full flex items-center justify-center text-scanora-green">
                 <Languages size={20} />
               </div>
               <div>
@@ -128,7 +134,7 @@ const Profile = () => {
 
           <div className="p-4 flex justify-between items-center border-b border-gray-100 dark:border-gray-700 gap-4">
             <div className="flex items-center gap-4 flex-1 pr-2 min-w-0">
-              <div className="w-10 h-10 bg-purple-50 dark:bg-purple-900/30 rounded-full flex-shrink-0 flex items-center justify-center text-purple-500">
+              <div className="w-10 h-10 bg-scanora-green/10 dark:bg-scanora-green/20 rounded-full flex-shrink-0 flex items-center justify-center text-scanora-green">
                 <Bell size={20} />
               </div>
               <div className="flex-1 min-w-0">
@@ -142,6 +148,37 @@ const Profile = () => {
             >
               <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform ${notifEnabled ? 'translate-x-6' : 'translate-x-1'}`}></div>
             </button>
+          </div>
+
+          <div 
+            onClick={() => navigate('/stats')}
+            className="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 active:bg-gray-100 dark:active:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-scanora-green/10 dark:bg-scanora-green/20 rounded-full flex items-center justify-center text-scanora-green">
+                <ChartColumnBig size={20} />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 dark:text-white">Statistik Performa</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Lihat rekap pemindaian dan tingkat keberhasilan</p>
+              </div>
+            </div>
+            <ChevronLeft size={20} className="text-gray-400 rotate-180" />
+          </div>
+
+          <div 
+            onClick={installPwa}
+            className="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 active:bg-gray-100 dark:active:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-scanora-green/10 dark:bg-scanora-green/20 rounded-full flex items-center justify-center text-scanora-green">
+                <Download size={20} />
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 dark:text-white">Install Aplikasi (PWA)</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Tambahkan Scanora ke Home Screen</p>
+              </div>
+            </div>
           </div>
 
           <div 
@@ -173,7 +210,7 @@ const Profile = () => {
             <span className="font-bold tracking-wide">Scanora</span>
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-            v1.8.0 Beta &middot; Mei 2026
+            v1.9.2 Beta &middot; Mei 2026
           </p>
           <p className="text-xs italic text-gray-500 dark:text-gray-400 mb-3">
             "Choose Better, Waste Less."
