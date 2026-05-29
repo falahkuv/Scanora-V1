@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { X, HelpCircle, ImageIcon, RefreshCw, Zap, ZapOff, CheckCircle, CircleX, ChevronDown, Check, Camera, Bot, Sparkles, Ban } from 'lucide-react';
+import { X, HelpCircle, ImageIcon, RefreshCw, Zap, ZapOff, CheckCircle, CircleX, ChevronDown, Check, Camera, Bot } from 'lucide-react';
 import imageCompression from 'browser-image-compression';
 import api from '../api';
 import { getCachedSuggestion, saveSuggestionToCache } from '../lib/aiSuggestionCache';
@@ -15,22 +15,16 @@ const ScannerSheet = ({ isOpen, onClose }) => {
   const [toast, setToast] = useState({ msg: '', type: 'success', show: false });
   const [aiSuggestion, setAiSuggestion] = useState('');
   const [isLoadingTips, setIsLoadingTips] = useState(false);
-  // Help popup state
-  const [showHelpPopup, setShowHelpPopup] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === 'Escape' && isOpen) {
-        if (showHelpPopup) {
-          setShowHelpPopup(false);
-        } else {
-          onClose();
-        }
+        onClose();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose, showHelpPopup]);
+  }, [isOpen, onClose]);
 
   const closeCard = () => {
     setScanState('closing');
@@ -110,7 +104,6 @@ const ScannerSheet = ({ isOpen, onClose }) => {
       setCapturedImage(null);
       setAiSuggestion('');
       setIsLoadingTips(false);
-      setShowHelpPopup(false);
       startCamera();
     } else {
       stopCamera();
@@ -120,12 +113,12 @@ const ScannerSheet = ({ isOpen, onClose }) => {
 
   const processBlob = async (blob) => {
     setScanState('scanning');
-    setErrorMsg('');
+    setErrorMsg(''); // Fix: Clear previous errors when starting a new scan
     stopCamera();
 
     try {
       const options = {
-        maxSizeMB: 0.2,
+        maxSizeMB: 0.2, // Compressed for faster upload speeds
         maxWidthOrHeight: 600,
         useWebWorker: true,
       };
@@ -174,6 +167,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
   };
 
   const fetchAiSuggestion = async (scanId, freshnessScore) => {
+    // Optional: Check cache first even in ScannerSheet (though it's usually a new scan)
     const condition = result?.condition;
     const { suggestion, tierChanged } = getCachedSuggestion(scanId, freshnessScore, condition, undefined);
     if (suggestion && !tierChanged) {
@@ -206,10 +200,13 @@ const ScannerSheet = ({ isOpen, onClose }) => {
     const vw = videoRef.current.videoWidth;
     const vh = videoRef.current.videoHeight;
 
+    // ── Crop to viewfinder square (288px on screen, offset -60px Y) ──
+    // The viewfinder is centered on screen. We calculate the crop region
+    // in video-pixel space that corresponds to the 288×288 box.
     const displayW = videoRef.current.clientWidth  || window.innerWidth;
     const displayH = videoRef.current.clientHeight || window.innerHeight;
-    const viewfinderPx = 288;
-    const offsetYPx    = -60;
+    const viewfinderPx = 288; // matches the w-72 / h-72 div
+    const offsetYPx    = -60;  // matches translateY(-60px)
 
     const scaleX = vw / displayW;
     const scaleY = vh / displayH;
@@ -238,17 +235,12 @@ const ScannerSheet = ({ isOpen, onClose }) => {
     const url = URL.createObjectURL(file);
     setCapturedImage(url);
     processBlob(file);
+    // Clear input so the same file can be selected again
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleSaveToInventory = async () => {
     if (!result || isSaving) return;
-
-    if (result.condition?.toLowerCase() === 'rotten') {
-      showToast('Buah sudah busuk — tidak bisa disimpan ke Inventori', 'error');
-      return;
-    }
-
     setIsSaving(true);
 
     try {
@@ -261,14 +253,11 @@ const ScannerSheet = ({ isOpen, onClose }) => {
       setCapturedImage(null);
       setResult(null);
       startCamera();
-      const label = result.fruit_type.charAt(0).toUpperCase() + result.fruit_type.slice(1);
-      const mascot = getMascotEmoji(result.fruit_type);
-      showToast(`Berhasil disimpan: ${label} ${mascot}`, 'success');
+      showToast(`Berhasil disimpan: ${result.fruit_type.charAt(0).toUpperCase() + result.fruit_type.slice(1)} ${getFruitEmoji(result.fruit_type)}`, 'success');
       window.dispatchEvent(new Event('scanora:inventoryUpdated'));
     } catch (err) {
       console.error('Failed to save', err);
-      const msg = err.response?.data?.message || 'Gagal menyimpan ke inventori.';
-      showToast(msg, 'error');
+      alert('Gagal menyimpan ke inventori.');
     } finally {
       setIsSaving(false);
     }
@@ -292,21 +281,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   // Helpers
-  const normalizeFruitType = (type) => {
-    const t = type?.toLowerCase() || '';
-    if (t.includes('pisang') || t.includes('banana')) return 'banana';
-    if (t.includes('apel') || t.includes('apple')) return 'apple';
-    if (t.includes('jeruk') || t.includes('orange')) return 'orange';
-    return 'apple';
-  };
-
-  const getMascotSrc = (fruitType, condition) => {
-    const fruit = normalizeFruitType(fruitType);
-    const cond = (condition || 'ripe').toLowerCase();
-    return `/mascots/${fruit}_${cond}.png`;
-  };
-
-  const getMascotEmoji = (type) => {
+  const getFruitEmoji = (type) => {
     const t = type?.toLowerCase() || '';
     if (t.includes('pisang') || t.includes('banana')) return '🍌';
     if (t.includes('apel') || t.includes('apple')) return '🍎';
@@ -314,13 +289,11 @@ const ScannerSheet = ({ isOpen, onClose }) => {
     return '🍎';
   };
 
-  const getFruitEmoji = getMascotEmoji;
-
   const getConditionColor = (condition) => {
     const c = condition?.toLowerCase() || '';
     if (c === 'ripe') return { text: 'text-orange-main', bg: 'bg-orange-main/10', dot: 'bg-orange-main', stroke: '#f87305' };
     if (c === 'unripe') return { text: 'text-green-700', bg: 'bg-green-50', dot: 'bg-green-500', stroke: '#22c55e' };
-    if (c === 'rotten') return { text: 'text-red-main', bg: 'bg-red-50', dot: 'bg-red-main', stroke: '#bb0006' };
+    if (c === 'rotten') return { text: 'text-red-700', bg: 'bg-red-50', dot: 'bg-red-500', stroke: '#ef4444' };
     return { text: 'text-gray-700', bg: 'bg-gray-50', dot: 'bg-gray-500', stroke: '#9ca3af' };
   };
 
@@ -347,9 +320,6 @@ const ScannerSheet = ({ isOpen, onClose }) => {
         onClick={() => {
           if (scanState === 'full-result') {
             closeCard();
-          }
-          if (showHelpPopup) {
-            setShowHelpPopup(false);
           }
         }}
       >
@@ -435,38 +405,9 @@ const ScannerSheet = ({ isOpen, onClose }) => {
              <img src="/logo-long.png" alt="Scanora" className="h-20 object-contain drop-shadow-md" />
           </div>
 
-          {/* "?" button — shows popup below */}
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowHelpPopup(prev => !prev);
-            }}
-            className="w-12 h-12 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-black/60 active:scale-95 transition-all cursor-pointer"
-          >
+          <button className="w-12 h-12 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-black/60 active:scale-95 transition-all">
             <HelpCircle size={24} />
           </button>
-        </div>
-
-        {/* Help Popup — slides up below the top controls */}
-        <div
-          className={`absolute left-4 right-4 z-40 transition-all duration-300 ease-out ${showHelpPopup ? 'top-28 opacity-100 pointer-events-auto' : 'top-24 opacity-0 pointer-events-none'}`}
-          onClick={e => e.stopPropagation()}
-        >
-          <div className="bg-white/95 backdrop-blur-md rounded-2xl px-5 py-4 shadow-2xl border border-white/20">
-            <div className="flex items-start justify-between gap-3">
-              <p className="text-gray-800 text-sm font-medium leading-relaxed flex-1">
-                Arahkan apel, jeruk, atau pisang ke bingkai pemindai. Atau pilih foto dari galeri.
-              </p>
-              <button
-                onClick={() => setShowHelpPopup(false)}
-                className="w-7 h-7 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 flex-shrink-0 active:scale-95 transition-all"
-              >
-                <X size={14} />
-              </button>
-            </div>
-          </div>
-          {/* Arrow pointing up */}
-          <div className="absolute -top-2 right-[52px] w-0 h-0 border-l-8 border-l-transparent border-r-8 border-r-transparent border-b-8 border-b-white/95" />
         </div>
 
         {/* Bottom Camera Controls */}
@@ -572,16 +513,16 @@ const ScannerSheet = ({ isOpen, onClose }) => {
             <>
               {/* Top Row: Info and Icon */}
               <div className="flex items-center justify-between mt-2">
-                {/* Left Col: Fruit Name & Ripeness — 1 row */}
-                <div className="flex flex-row items-center gap-3 text-left">
+                {/* Left Col: Fruit Name & Ripeness */}
+                <div className="flex flex-col text-left">
                   <h2 className="text-3xl font-bold text-gray-900 capitalize">{result.fruit_type}</h2>
-                  <div className={`inline-flex items-center px-3 py-1.5 rounded-full font-semibold w-fit text-sm capitalize ${condColor.bg} ${condColor.text}`}>
-                    {result.condition?.toLowerCase() !== 'rotten' && <span className={`w-2 h-2 rounded-full mr-2 ${condColor.dot}`}></span>}
+                  <div className={`inline-flex items-center gap-2 mt-2 px-3 py-1.5 rounded-full font-semibold w-fit text-sm capitalize ${condColor.bg} ${condColor.text}`}>
+                    <span className={`w-2 h-2 rounded-full ${condColor.dot}`}></span>
                     {result.condition}
                   </div>
                 </div>
 
-                {/* Right Col: Freshness Score & Mascot */}
+                {/* Right Col: Freshness Score & Icon */}
                 <div className="flex flex-col items-center justify-center">
                   <div className="w-20 h-20 relative">
                     <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
@@ -596,14 +537,8 @@ const ScannerSheet = ({ isOpen, onClose }) => {
                         className="transition-all duration-1000 ease-out"
                       />
                     </svg>
-                    {/* Mascot PNG */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <img
-                        src={getMascotSrc(result.fruit_type, result.condition)}
-                        alt={result.fruit_type}
-                        className="w-12 h-12 object-contain drop-shadow-sm"
-                        onError={(e) => { e.target.style.display='none'; }}
-                      />
+                    <div className="absolute inset-0 flex items-center justify-center text-3xl">
+                      {getFruitEmoji(result.fruit_type)}
                     </div>
                   </div>
                 </div>
@@ -612,79 +547,57 @@ const ScannerSheet = ({ isOpen, onClose }) => {
               {/* Full View */}
               <div className="mt-6">
                 <div className="bg-green-50 rounded-2xl p-5 mb-6 border border-green-100">
-                  <h3 className="font-semibold text-scanora-dark mb-3 flex items-center gap-2">
-                    <Sparkles size={18} className="text-scanora-green" /> AI Chef Scanora
-                  </h3>
+                  <h3 className="font-semibold text-scanora-dark mb-3 flex items-center gap-2">💡 Saran AI Chef Scanora</h3>
 
-                  {/* Not yet requested */}
+                  {/* Belum diminta */}
                   {!aiSuggestion && !isLoadingTips && (
                     <button
                       onClick={() => fetchAiSuggestion(result.scan_id, result.freshness_score)}
-                      className="w-full py-2.5 bg-white border border-green-200 text-green-700 font-semibold rounded-xl text-sm hover:bg-green-100 active:scale-95 transition-all cursor-pointer relative overflow-hidden"
+                      className="w-full py-2.5 bg-white border border-green-200 text-green-700 font-semibold rounded-xl text-sm hover:bg-green-100 active:scale-95 transition-all"
                     >
-                      <span className="relative z-10 flex items-center justify-center gap-2">
-                        <Sparkles size={18} /> Minta Saran AI
-                      </span>
+                      Minta Saran AI ✨
                     </button>
                   )}
 
-                  {/* Loading — spinner + indeterminate bar */}
+                  {/* Loading skeleton */}
                   {isLoadingTips && (
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-5 h-5 border-2 border-green-400 border-t-transparent rounded-full animate-spin flex-shrink-0" />
-                        <p className="text-sm text-green-700 font-medium animate-pulse">Scanora sedang berpikir...</p>
-                      </div>
-                      <div className="w-full h-1 bg-green-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-green-400 rounded-full" style={{ width: '40%', animation: 'indeterminate 1.5s ease-in-out infinite' }} />
-                      </div>
-                      <div className="animate-pulse flex flex-col gap-2 mt-2">
-                        <div className="h-3 bg-green-200/60 rounded-full w-full" />
-                        <div className="h-3 bg-green-200/60 rounded-full w-5/6" />
-                        <div className="h-3 bg-green-200/60 rounded-full w-4/6" />
-                      </div>
+                    <div className="animate-pulse flex flex-col gap-2">
+                      <div className="h-4 bg-green-200/50 rounded w-full" />
+                      <div className="h-4 bg-green-200/50 rounded w-5/6" />
+                      <div className="h-4 bg-green-200/50 rounded w-4/6" />
                     </div>
                   )}
 
-                  {/* AI result */}
+                  {/* Hasil saran */}
                   {aiSuggestion && !isLoadingTips && (
                     <div>
                       <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{aiSuggestion}</p>
                     </div>
                   )}
-
-                  {/* Rotten: block save — shown ABOVE disclaimer */}
-                  {result.condition?.toLowerCase() === 'rotten' && (
-                    <div className="mt-3 bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2">
-                      <Ban className="text-red-main flex-shrink-0 mt-0.5" size={16} />
-                      <p className="text-xs text-red-600 font-medium leading-relaxed">
-                        Buah sudah busuk. Hanya buah Unripe atau Ripe yang dapat disimpan ke Inventori
-                      </p>
-                    </div>
-                  )}
                 </div>
 
-                {/* ── AI Disclaimer ── */}
+                {/* ── AI Disclaimer ───────────────────────────────────── */}
                 <div className="flex items-center gap-4 bg-gray-100/80 border border-gray-200/70 rounded-2xl px-4 py-3 mb-5">
                   <Bot size={16} className="text-gray-400 flex-shrink-0" />
-                  <p className="text-[12px] text-gray-500 leading-relaxed">
-                    AI hanya menilai visual dan tidak bisa 100% akurat
+                  <p className="text-[11px] text-gray-500 leading-relaxed">
+                    Hasil ini dianalisis dari satu foto — kondisi buah nyatanya bisa berbeda.
+                    {' '}Scan ulang kapan saja untuk mendapatkan pembacaan terbaru.
                   </p>
                 </div>
 
                 <div className="flex gap-4">
                   <button
                     onClick={closeCard}
-                    className="flex-1 min-h-[44px] py-3.5 bg-gray-100 text-gray-700 font-semibold rounded-xl flex items-center justify-center hover:bg-gray-200 active:scale-95 transition-all cursor-pointer"
+                    className="flex-1 min-h-[44px] py-3.5 bg-gray-100 text-gray-700 font-semibold rounded-xl flex items-center justify-center hover:bg-gray-200 active:scale-95 transition-all"
                   >
                     Tutup
                   </button>
                   <button
                     onClick={handleSaveToInventory}
-                    disabled={isSaving || result.condition?.toLowerCase() === 'rotten'}
-                    className="flex-1 min-h-[44px] py-3.5 bg-scanora-green text-white font-semibold rounded-xl shadow-lg shadow-scanora-green/30 flex items-center justify-center hover:bg-scanora-dark active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    disabled={isSaving}
+                    className="flex-1 min-h-[44px] py-3.5 bg-scanora-green text-white font-semibold rounded-xl shadow-lg shadow-scanora-green/30 flex items-center justify-center hover:bg-scanora-dark active:scale-95 transition-all disabled:opacity-70"
                   >
-                    {isSaving ? 'Menyimpan...' : result.condition?.toLowerCase() === 'rotten' ? 'Tidak Bisa Disimpan' : 'Simpan ke Inventori'}
+                    {isSaving ? 'Menyimpan...' : 'Simpan'}
                   </button>
                 </div>
               </div>
@@ -693,14 +606,6 @@ const ScannerSheet = ({ isOpen, onClose }) => {
         </div>
       </div>
       </div>
-
-      <style>{`
-        @keyframes indeterminate {
-          0%   { transform: translateX(-100%); width: 40%; }
-          50%  { width: 60%; }
-          100% { transform: translateX(250%); width: 40%; }
-        }
-      `}</style>
     </div>
   );
 };

@@ -1,23 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
-import { User, AlertCircle, X, Utensils, Trash2, Salad, Sprout, ImageOff, ChevronRight, SquareCheck, SquareX, Bell, Camera, BarChart2, Sparkles, Bot } from 'lucide-react';
+import { User, AlertCircle, X, Utensils, Trash2, Salad, Sprout, ImageOff, ChevronRight, CalendarCheck, CalendarX, Bell, CalendarPlus, BarChart2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { useViewport } from '../context/ViewportContext';
 import { getCachedSuggestion, saveSuggestionToCache } from '../lib/aiSuggestionCache';
 import Tooltip from '../components/Tooltip';
 
-const normalizeFruit = (type) => {
-  const t = (type || '').toLowerCase();
-  if (t.includes('pisang') || t.includes('banana')) return 'banana';
-  if (t.includes('apel') || t.includes('apple')) return 'apple';
-  if (t.includes('jeruk') || t.includes('orange')) return 'orange';
-  return 'apple';
-};
-
-const getMascotSrc = (fruitType, condition) => {
-  const fruit = normalizeFruit(fruitType);
-  const cond = (condition || 'ripe').toLowerCase();
-  return `/mascots/${fruit}_${cond}.png`;
+const getFruitIcon = (type) => {
+  const t = type?.toLowerCase() || '';
+  if (t.includes('pisang') || t.includes('banana')) return '🍌';
+  if (t.includes('apel') || t.includes('apple')) return '🍎';
+  if (t.includes('jeruk') || t.includes('orange')) return '🍊';
+  return '🍎';
 };
 
 const getFruitLabel = (type) => {
@@ -60,39 +54,13 @@ const formatShortDate = (dateStr) => {
 
 const ScoreBadge = ({ score, className = "py-1 text-[11px]" }) => {
   const pct = Math.round(score ?? 0);
-  const bg = pct >= 70 ? 'bg-green-100' : pct > 0 ? 'bg-orange-main/15' : 'bg-red-100';
-  const text = pct >= 70 ? 'text-green-700' : pct > 0 ? 'text-orange-main' : 'text-red-700';
+  const bg = pct >= 70 ? 'bg-green-100' : pct > 0 ? 'bg-orange-main/15' : 'bg-red-800';
+  const text = pct >= 70 ? 'text-green-700' : pct > 0 ? 'text-orange-main' : 'text-white';
   return (
     <div className={`px-2 rounded w-full text-center font-bold flex items-center justify-center ${bg} ${text} ${className}`}>
       {pct}%
     </div>
   );
-};
-
-/** Render AI markdown: **bold**, *italic*, bullet lists */
-const renderMarkdown = (text) => {
-  if (!text) return null;
-  const lines = text.split('\n');
-  return lines.map((line, i) => {
-    const isBullet = /^[-*•]\s+/.test(line);
-    const content = line.replace(/^[-*•]\s+/, '');
-    const parseInline = (str) => {
-      const parts = str.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
-      return parts.map((part, j) => {
-        if (/^\*\*[^*]+\*\*$/.test(part)) return <strong key={j}>{part.slice(2, -2)}</strong>;
-        if (/^\*[^*]+\*$/.test(part)) return <em key={j}>{part.slice(1, -1)}</em>;
-        return part;
-      });
-    };
-    if (isBullet) return (
-      <div key={i} className="flex gap-2 mt-1">
-        <span className="text-green-600 font-bold mt-0.5">•</span>
-        <span>{parseInline(content)}</span>
-      </div>
-    );
-    if (!line.trim()) return <div key={i} className="mt-2" />;
-    return <p key={i} className="mt-1">{parseInline(line)}</p>;
-  });
 };
 
 const formatDate = (dateStr) => {
@@ -106,27 +74,27 @@ const getCountdownConfig = (condition, daysLeft) => {
   const isExpired = cond === 'rotten' || daysLeft === null || daysLeft < 0;
 
   if (isExpired) {
-    return { bg: 'bg-red-main', text: 'text-white', btnText: 'Tidak Layak', isExpired: true };
+    return { bg: 'bg-gray-100', text: 'text-gray-500', btnText: 'Tidak Layak', isExpired: true };
   }
 
   if (cond === 'unripe') {
     if (daysLeft === null) {
-      return { bg: 'bg-red-main', text: 'text-white', btnText: 'Tidak Akan Matang', isExpired: true };
+      return { bg: 'bg-gray-100', text: 'text-gray-500', btnText: 'Tidak Akan Matang', isExpired: true };
     }
     return { bg: 'bg-scanora-green', text: 'text-white', btnText: daysLeft > 0 ? `Matang ${daysLeft} Hari Lagi` : 'Siap Matang', isExpired: false };
   }
 
   if (daysLeft === 0) {
-    return { bg: 'bg-red-main', text: 'text-white', btnText: `Hari ini!`, isExpired: false };
+    return { bg: 'bg-[#e02224]', text: 'text-white', btnText: `Hari ini!`, isExpired: false };
   }
   if (daysLeft === 1) {
-    return { bg: 'bg-red-main', text: 'text-white', btnText: `Sisa 1 Hari Lagi`, isExpired: false };
+    return { bg: 'bg-[#e02224]', text: 'text-white', btnText: `Sisa 1 Hari Lagi`, isExpired: false };
   }
   if (daysLeft > 1) {
-    return { bg: 'bg-orange-main', text: 'text-white', btnText: `Sisa ${daysLeft} Hari Lagi`, isExpired: false };
+    return { bg: 'bg-orange-400', text: 'text-white', btnText: `Sisa ${daysLeft} Hari Lagi`, isExpired: false };
   }
 
-  return { bg: 'bg-red-main', text: 'text-white', btnText: 'Tidak Layak', isExpired: true };
+  return { bg: 'bg-gray-100', text: 'text-gray-500', btnText: 'Tidak Layak', isExpired: true };
 };
 
 const NotificationItem = ({ notif, onDelete }) => {
@@ -144,7 +112,7 @@ const NotificationItem = ({ notif, onDelete }) => {
     if (!isSwiping) return;
     const currentX = e.touches[0].clientX;
     const diff = currentX - startXRef.current;
-    if (diff < 0) {
+    if (diff < 0) { // Only allow swiping left
       setTranslateX(diff);
       currentXRef.current = diff;
     }
@@ -152,25 +120,28 @@ const NotificationItem = ({ notif, onDelete }) => {
 
   const handleTouchEnd = () => {
     setIsSwiping(false);
-    if (currentXRef.current < -80) {
-      setTranslateX(-window.innerWidth);
-      setTimeout(() => onDelete(notif.id), 300);
+    if (currentXRef.current < -80) { // Threshold to delete
+      setTranslateX(-window.innerWidth); // Animate out
+      setTimeout(() => onDelete(notif.id), 300); // Delete after animation
     } else {
-      setTranslateX(0);
+      setTranslateX(0); // Snap back
     }
   };
 
   return (
     <div className="relative mb-3 overflow-hidden rounded-2xl bg-red-100 dark:bg-red-900/40">
+      {/* Delete Background / Icon */}
       <div className="absolute right-0 top-0 bottom-0 w-20 flex items-center justify-center text-red-600 dark:text-red-400">
         <Trash2 size={24} />
       </div>
-      <div
+      
+      {/* Draggable Card */}
+      <div 
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         className="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm relative z-10 flex gap-4"
-        style={{
+        style={{ 
           transform: `translateX(${translateX}px)`,
           transition: isSwiping ? 'none' : 'transform 0.3s ease-out'
         }}
@@ -195,14 +166,10 @@ const Home = ({ onOpenScanner }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const notifBtnRef = useRef(null);
-
+  
   const [aiSuggestion, setAiSuggestion] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState(null);
-
-  // Sticky header state for detail modal
-  const [showStickyHeader, setShowStickyHeader] = useState(false);
-  const scrollContainerRef = useRef(null);
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -227,7 +194,7 @@ const Home = ({ onOpenScanner }) => {
     const currentScore = selectedItem.freshness_score_latest ?? selectedItem.freshness_score_initial;
     const condition = selectedItem.condition;
     const daysLeft = calculateDaysLeft(selectedItem.reminder_at);
-
+    
     const { suggestion, tierChanged } = getCachedSuggestion(selectedItem.scan_id, currentScore, condition, daysLeft);
 
     if (suggestion) {
@@ -243,7 +210,6 @@ const Home = ({ onOpenScanner }) => {
       setAiError(null);
       setAiLoading(false);
     }
-    setShowStickyHeader(false);
   }, [selectedItem?.id]);
 
   const handleGetAiSuggestion = async (isBackground = false) => {
@@ -268,7 +234,7 @@ const Home = ({ onOpenScanner }) => {
     }
   };
 
-  // ── Notification read-state helpers ──────────────────────────────────────
+  // ── Notification read-state helpers (persisted via localStorage) ──────────
   const getReadIds = () => {
     try { return new Set(JSON.parse(localStorage.getItem('scanora_read_notifs') || '[]')); }
     catch { return new Set(); }
@@ -281,10 +247,12 @@ const Home = ({ onOpenScanner }) => {
     notifList.forEach(n => ids.add(n.id));
     saveReadIds(ids);
   };
+  // ─────────────────────────────────────────────────────────────────────────
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const firstName = user.name ? user.name.split(' ')[0] : 'Sobat';
 
+  // ── Request notification permission ──────────────────────────────────────
   const ensureNotifPermission = async () => {
     if (!('Notification' in window)) return false;
     if (Notification.permission === 'granted') return true;
@@ -298,8 +266,10 @@ const Home = ({ onOpenScanner }) => {
   };
 
   const handleOpenNotifications = async () => {
+    // Ask permission if not yet decided
     await ensureNotifPermission();
     setShowNotifications(true);
+    // Mark all current notifs as read and persist
     setNotifications(prev => {
       const updated = prev.map(n => ({ ...n, isRead: true }));
       markAllAsRead(updated);
@@ -324,7 +294,8 @@ const Home = ({ onOpenScanner }) => {
 
       if (invRes.data.success) {
         const allItems = invRes.data.data;
-
+        
+        // Urgent items for main view
         const urgent = allItems
           .map(item => ({ ...item, daysLeft: calculateDaysLeft(item.reminder_at) }))
           .filter(item => item.condition === 'ripe')
@@ -332,46 +303,50 @@ const Home = ({ onOpenScanner }) => {
         setUrgentItems(urgent);
         setImpact(prev => ({ ...prev, saved: allItems.length }));
 
+        // --- DYNAMIC NOTIFICATIONS GENERATION ---
         const readIds = getReadIds();
         const newNotifs = [];
         allItems.forEach(item => {
-          const dLeft = calculateDaysLeft(item.reminder_at);
-          if (dLeft === null || dLeft > 3 || dLeft < 0) return;
-
-          const fruitName = getFruitLabel(item.fruit_type);
-          let title = '';
-          let body = '';
-
-          if (dLeft === 3 || dLeft === 2) {
-            title = `🥗 Jangan Lupa ${fruitName} Kamu!`;
-            body = `Mengingatkan: ${fruitName} kamu tinggal ${dLeft} hari lagi sebelum mulai membusuk.`;
-          } else if (dLeft === 1) {
-            title = `⚠️ ${fruitName} Hampir Busuk!`;
-            body = `Perhatian! ${fruitName} yang kamu simpan sisa 1 hari lagi.`;
-          } else if (dLeft === 0) {
-            title = `🚨 Hari Terakhir untuk ${fruitName}!`;
-            body = `${fruitName} kamu diperkirakan sudah mencapai batas maksimal kesegarannya hari ini.`;
-          }
-
-          const addedDate = item.added_at || item.created_at;
-          const dateStr = addedDate ? new Date(addedDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
-
-          if (title) {
-            const notifId = `notif-${item.id}`;
-            newNotifs.push({
-              id: notifId,
-              title,
-              message: body,
-              isRead: readIds.has(notifId),
-              date: `Difoto pada: ${dateStr}`,
-              daysLeft: dLeft
-            });
-          }
+           const dLeft = calculateDaysLeft(item.reminder_at);
+           // Only notify for items within 3 days (and not negative)
+           if (dLeft === null || dLeft > 3 || dLeft < 0) return;
+           
+           const fruitName = getFruitLabel(item.fruit_type);
+           let title = '';
+           let body = '';
+           
+           if (dLeft === 3 || dLeft === 2) {
+              title = `🥗 Jangan Lupa ${fruitName} Kamu!`;
+              body = `Mengingatkan: ${fruitName} kamu tinggal ${dLeft} hari lagi sebelum mulai membusuk. Yuk, jadwalkan untuk dikonsumsi!`;
+           } else if (dLeft === 1) {
+              title = `⚠️ ${fruitName} Hampir Busuk!`;
+              body = `Perhatian! ${fruitName} yang kamu simpan sisa 1 hari lagi. Segera konsumsi atau olah menjadi jus hari ini!`;
+           } else if (dLeft === 0) {
+              title = `🚨 HARI TERAKHIR untuk ${fruitName}!`;
+              body = `${fruitName} kamu diperkirakan sudah mencapai batas maksimal kesegarannya HARI INI. Konsumsi sekarang sebelum terbuang sia-sia!`;
+           }
+           
+           const addedDate = item.added_at || item.created_at;
+           const dateStr = addedDate ? new Date(addedDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
+           
+           if (title) {
+               const notifId = `notif-${item.id}`;
+               newNotifs.push({
+                   id: notifId,
+                   title,
+                   message: body,
+                   // Restore isRead from localStorage — survives page navigation!
+                   isRead: readIds.has(notifId),
+                   date: `Difoto pada: ${dateStr}`,
+                   daysLeft: dLeft
+               });
+           }
         });
-
+        
         newNotifs.sort((a, b) => a.daysLeft - b.daysLeft);
         setNotifications(newNotifs);
 
+        // ── In-App false-safe push notification (fires once per session) ──
         const sessionKey = 'scanora_push_sent_session';
         const alreadySentThisSession = sessionStorage.getItem(sessionKey);
         if (!alreadySentThisSession && Notification.permission === 'granted') {
@@ -385,11 +360,12 @@ const Home = ({ onOpenScanner }) => {
                   icon: '/icons/icon-192x192.png',
                   tag: n.id,
                 });
-              } catch (e) { /* Silent fail */ }
-            }, idx * 1500);
+              } catch (e) { /* Silent fail on unsupported browsers */ }
+            }, idx * 1500); // Stagger each notification by 1.5s
           });
         }
       }
+
 
       if (summaryRes.data.success) {
         const s = summaryRes.data.data;
@@ -412,16 +388,12 @@ const Home = ({ onOpenScanner }) => {
   const saveRate = total > 0 ? Math.round((impact.consumed / total) * 100) : null;
   const prideMsg = saveRate === null ? null
     : saveRate >= 80 ? 'Luar biasa! Hampir semua buahmu terselamatkan. 🌟'
-      : saveRate >= 50 ? 'Lumayan! Terus kurangi pemborosan ya. 👍'
-        : 'Masih banyak yang dibuang. Yuk lebih bijak! 😬';
+    : saveRate >= 50 ? 'Lumayan! Terus kurangi pemborosan ya. 👍'
+    : 'Masih banyak yang dibuang. Yuk lebih bijak! 😬';
 
   const { viewport } = useViewport();
   const isDesktop = viewport === 'desktop';
-  const isTablet = viewport === 'tablet';
-
-  const handleDetailScroll = (e) => {
-    setShowStickyHeader(e.target.scrollTop > 60);
-  };
+  const isTablet  = viewport === 'tablet';
 
   return (
     <div className={`${isDesktop ? 'p-8 pb-8' : 'p-6 pb-32'} bg-gray-50 dark:bg-gray-900 transition-colors min-h-screen`}>
@@ -466,7 +438,7 @@ const Home = ({ onOpenScanner }) => {
             <Sprout className="text-scanora-green" size={20} />
             <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Performa Bulan Ini</h2>
           </div>
-          <button
+          <button 
             onClick={() => navigate('/stats')}
             className="px-3 py-1.5 bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 rounded-full text-xs font-bold transition-all active:scale-95"
           >
@@ -475,7 +447,9 @@ const Home = ({ onOpenScanner }) => {
         </div>
         <div className="bg-transparent">
           {isDesktop ? (
+            // Desktop: 4-column horizontal cards
             <div className="grid grid-cols-4 gap-4">
+              {/* Dikonsumsi */}
               <div className="bg-green-500/10 border border-green-500/20 rounded-2xl p-4 flex items-center gap-4">
                 <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
                   <Utensils size={22} className="text-green-700" />
@@ -485,6 +459,7 @@ const Home = ({ onOpenScanner }) => {
                   <p className="text-green-700 text-xs font-medium mt-1">Dikonsumsi</p>
                 </div>
               </div>
+              {/* Dibuang */}
               <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 flex items-center gap-4">
                 <div className="w-12 h-12 bg-red-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
                   <Trash2 size={22} className="text-red-700" />
@@ -494,6 +469,7 @@ const Home = ({ onOpenScanner }) => {
                   <p className="text-red-700 text-xs font-medium mt-1">Dibuang</p>
                 </div>
               </div>
+              {/* Disimpan */}
               <div className="bg-orange-500/10 border border-orange-500/20 rounded-2xl p-4 flex items-center gap-4">
                 <div className="w-12 h-12 bg-orange-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
                   <Salad size={22} className="text-orange-700" />
@@ -503,6 +479,7 @@ const Home = ({ onOpenScanner }) => {
                   <p className="text-orange-700 text-xs font-medium mt-1">Disimpan</p>
                 </div>
               </div>
+              {/* Tingkat Keberhasilan */}
               {saveRate !== null ? (
                 <div className="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col justify-center shadow-sm">
                   <div className="flex justify-between items-center mb-2">
@@ -521,6 +498,7 @@ const Home = ({ onOpenScanner }) => {
               )}
             </div>
           ) : (
+            // Mobile / Tablet: 3-col grid + bar below
             <>
               <div className="grid grid-cols-3 gap-4 mb-4">
                 <div className={`bg-green-500/10 border border-green-500/20 backdrop-blur-md rounded-xl p-3 ${isTablet ? 'flex items-center gap-4' : 'text-center'}`}>
@@ -575,8 +553,7 @@ const Home = ({ onOpenScanner }) => {
       {/* Urgent Action */}
       <section>
         <div className="flex items-center gap-2 mb-4">
-          {/* AlertCircle with orange-main */}
-          <AlertCircle className="text-orange-main" size={20} />
+          <AlertCircle className="text-status-ripe" size={20} />
           <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Segera Konsumsi {!loading && `(${urgentItems.length})`}</h2>
         </div>
 
@@ -597,45 +574,41 @@ const Home = ({ onOpenScanner }) => {
           <div className={`space-y-3 ${isDesktop ? 'pb-2' : 'max-h-[340px] overflow-y-auto no-scrollbar pb-8 pr-1 [mask-image:linear-gradient(to_bottom,black_85%,transparent)]'}`}>
             {urgentItems.map(item => {
               const dotColor = item.daysLeft === 0
-                ? 'bg-red-main'
+                ? 'bg-[#8e0610]'
                 : item.daysLeft < 5
-                  ? 'bg-orange-main'
-                  : 'bg-scanora-green';
+                ? 'bg-orange-main'
+                : 'bg-scanora-green';
               return (
                 <div
                   key={item.id}
                   onClick={() => setSelectedItem(item)}
-                  className="bg-white dark:bg-gray-800 rounded-2xl p-4 flex items-center gap-3 shadow-sm border border-gray-100 dark:border-gray-700 cursor-pointer active:scale-95 transition-all hover:shadow-md"
+                  className="bg-white dark:bg-gray-800 rounded-2xl p-4 flex items-center gap-4 shadow-sm border border-gray-100 dark:border-gray-700 cursor-pointer active:scale-95 transition-all"
                 >
-                  {/* Thumbnail */}
-                  <div className="w-14 h-14 bg-gray-50 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0 relative">
+                  <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0">
                     {item.image_url ? (
                       <img src={item.image_url} alt={item.fruit_type} className="w-full h-full object-cover"
-                        onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                        onError={(e) => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }}
                       />
                     ) : null}
                     <div className="w-full h-full items-center justify-center bg-gray-100 flex-col gap-1" style={{ display: item.image_url ? 'none' : 'flex' }}>
                       <ImageOff size={20} className="text-gray-400" strokeWidth={1.5} />
                     </div>
                   </div>
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    {/* Fruit name: 18px */}
-                    <h3 className="font-bold text-gray-900 capitalize leading-tight" style={{ fontSize: '18px' }}>{getFruitLabel(item.fruit_type)}</h3>
-                    <div className="flex items-center gap-2 mt-1 overflow-hidden whitespace-nowrap">
-                      <span className="text-sm text-gray-400 flex items-center gap-1.5 flex-shrink-0">
-                        <Camera size={14} />
-                        {item.added_at ? new Date(item.added_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : '-'}
-                      </span>
-                      <span className="text-gray-300 text-sm flex-shrink-0">·</span>
-                      <span className={`text-sm font-bold truncate ${dotColor === 'bg-red-main' ? 'text-red-main' : dotColor === 'bg-orange-main' ? 'text-orange-main' : 'text-scanora-green'}`}>
-                        {item.daysLeft === 0 ? 'Hari ini!' : `Sisa ${item.daysLeft} hari`}
-                      </span>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900 capitalize">{getFruitLabel(item.fruit_type)}</h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={`w-2 h-2 rounded-full ${dotColor}`} />
+                      <span className="text-xs text-gray-500">{item.daysLeft === 0 ? 'Hari ini!' : `Sisa ${item.daysLeft} hari`}</span>
                     </div>
+                    {isDesktop && (
+                      <div className="flex items-center gap-1 mt-1 text-xs text-gray-400">
+                        <CalendarPlus size={12} />
+                        <span>Tgl. Foto: {item.added_at ? new Date(item.added_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : '-'}</span>
+                      </div>
+                    )}
                   </div>
-                  {/* Score */}
-                  <div className="w-14 flex-shrink-0">
-                    <ScoreBadge score={item.freshness_score_latest ?? item.freshness_score_initial} className="py-1.5 text-sm" />
+                  <div className="w-16 flex-shrink-0">
+                    <ScoreBadge score={item.freshness_score_latest ?? item.freshness_score_initial} className="py-1 text-[12px]" />
                   </div>
                 </div>
               );
@@ -645,7 +618,7 @@ const Home = ({ onOpenScanner }) => {
           <div className="flex flex-col items-center justify-center py-8 px-4 text-center border border-dashed border-gray-200 dark:border-gray-700 rounded-2xl bg-gray-50 dark:bg-gray-800/50">
             <p className="text-gray-500 text-sm mb-3">Semua buah masih aman! 🌿</p>
             {urgentItems.length === 0 && (
-              <button onClick={() => onOpenScanner?.() || document.getElementById('viewport-toggle-btn')?.click()} className="bg-scanora-green text-white font-bold py-2 px-4 rounded-xl text-xs shadow-md active:scale-95 transition-all cursor-pointer">Scan Buah Sekarang</button>
+              <button onClick={() => onOpenScanner?.() || document.getElementById('viewport-toggle-btn')?.click()} className="bg-scanora-green text-white font-bold py-2 px-4 rounded-xl text-xs shadow-md active:scale-95 transition-all">Scan Buah Sekarang</button>
             )}
           </div>
         )}
@@ -654,193 +627,128 @@ const Home = ({ onOpenScanner }) => {
       {/* ── Detail Modal ── */}
       {selectedItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in" onClick={() => setSelectedItem(null)}>
-          <div
-            className="bg-white rounded-3xl w-full max-w-md shadow-2xl transform transition-all animate-slide-up flex flex-col overflow-hidden"
-            style={{ maxHeight: '90dvh' }}
-            onClick={e => e.stopPropagation()}
-          >
-            {/* Image banner — fixed */}
-            <div className="relative aspect-video bg-gradient-to-b from-sky-200 to-green-200 flex items-center justify-center overflow-hidden flex-shrink-0">
+          <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl transform transition-all animate-slide-up" onClick={e => e.stopPropagation()}>
+            {/* Image banner */}
+            <div className="relative aspect-video bg-gradient-to-b from-sky-200 to-green-200 flex items-center justify-center overflow-hidden">
               {selectedItem.image_url ? (
                 <img
                   src={selectedItem.image_url}
                   alt={selectedItem.fruit_type}
                   className="w-full h-full object-cover"
-                  onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                  onError={(e) => { e.target.style.display='none'; e.target.nextSibling.style.display='flex'; }}
                 />
               ) : null}
               <div
-                className="w-full h-full items-center justify-center flex-col gap-2 bg-gradient-to-b from-sky-200 to-green-200"
+                className="w-full h-full items-center justify-center flex-col gap-2 bg-gray-100"
                 style={{ display: selectedItem.image_url ? 'none' : 'flex' }}
               >
-                <img
-                  src={getMascotSrc(selectedItem.fruit_type, selectedItem.condition)}
-                  alt=""
-                  className="h-24 object-contain drop-shadow-lg"
-                  onError={(e) => { e.target.style.display = 'none'; }}
-                />
+                <ImageOff size={64} className="text-gray-400" strokeWidth={1.5} />
+                <span className="text-lg font-medium text-gray-400">Gambar tidak ditemukan</span>
               </div>
               <button
                 onClick={() => setSelectedItem(null)}
-                className="absolute top-4 right-4 w-11 h-11 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 active:scale-95 transition-all cursor-pointer z-20"
+                className="absolute top-4 right-4 w-11 h-11 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 active:scale-95 transition-all"
               >
                 <X size={18} />
               </button>
             </div>
 
-            {/* ── Sticky fruit header ── */}
-            <div
-              className={`flex items-center gap-2 px-5 py-3 bg-white border-b border-gray-100 transition-all duration-200 ${showStickyHeader ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
-            >
-              <span className="text-[18px] font-bold text-gray-900 capitalize leading-none">
-                {getFruitLabel(selectedItem.fruit_type)}
-              </span>
-              <span className={`text-xs font-bold px-2 py-0.5 rounded-md capitalize ${getConditionBadgeStyle(selectedItem.condition)}`}>
-                {getConditionLabel(selectedItem.condition)}
-              </span>
-              <img
-                src={getMascotSrc(selectedItem.fruit_type, selectedItem.condition)}
-                alt=""
-                className="h-7 object-contain ml-auto"
-                onError={(e) => { e.target.style.display = 'none'; }}
-              />
-            </div>
+            <div className="p-5">
+              {/* Name + badge hug */}
+              <div className="flex items-center gap-4 mb-4">
+                <h2 className="text-2xl font-bold text-gray-900 capitalize leading-none">
+                  {getFruitLabel(selectedItem.fruit_type)}
+                </h2>
+                <span className={`text-[10px] font-bold px-2 py-1 rounded-md capitalize leading-none ${getConditionBadgeStyle(selectedItem.condition)}`}>
+                  {getConditionLabel(selectedItem.condition)}
+                </span>
+              </div>
 
-            {/* Scrollable content */}
-            <div
-              className="overflow-y-auto flex-1 no-scrollbar"
-              ref={scrollContainerRef}
-              onScroll={handleDetailScroll}
-            >
-              <div className="p-5 pb-2">
-                {/* Name + badge + Mascot — 1 row */}
-                <div className="flex items-center justify-between mb-4 mt-2">
-                  <div className="flex flex-row items-center gap-2">
-                    <h2 className="text-3xl font-bold text-gray-900 capitalize leading-none">
-                      {getFruitLabel(selectedItem.fruit_type)}
-                    </h2>
-                    <span className={`text-sm font-bold px-2 py-1 rounded-md capitalize leading-none ${getConditionBadgeStyle(selectedItem.condition)}`}>
-                      {getConditionLabel(selectedItem.condition)}
+              {/* Date row */}
+              <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-2">
+                <div className="flex flex-col gap-3 mb-4">
+                  <p className="text-gray-500 font-medium text-sm flex items-center gap-2">
+                    <CalendarPlus size={16} />
+                    <span className="font-medium text-gray-500">
+                      Tgl. Foto: {formatShortDate(selectedItem.added_at)}
                     </span>
-                  </div>
-                  <div className="relative w-20">
-                    <img
-                      src={getMascotSrc(selectedItem.fruit_type, selectedItem.condition)}
-                      alt=""
-                      className="absolute bottom-0 right-0 h-28 object-contain drop-shadow-md pointer-events-none"
-                      style={{ transform: 'translateY(10px)' }}
-                      onError={(e) => { e.target.style.display = 'none'; }}
-                    />
-                  </div>
-                </div>
-
-                {/* Detail Scan label — not bold */}
-                <p className="text-xs font-normal text-gray-400 text-center mb-2">Detail Scan:</p>
-
-                {/* Date + score card */}
-                <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-3">
-                  <div className="flex flex-col gap-3 mb-4">
-                    <p className="text-gray-500 font-medium text-sm flex items-center gap-2">
-                      <Camera size={16} />
-                      <span>Tgl. Foto: {formatShortDate(selectedItem.added_at)}</span>
-                    </p>
-                    <p className="text-gray-500 font-medium text-sm flex items-center gap-2">
-                      {selectedItem.condition === 'unripe' ? (
-                        <SquareCheck size={16} />
-                      ) : (
-                        <SquareX size={16} />
-                      )}
-                      <span>
-                        {selectedItem.condition === 'unripe' ? 'Tgl. Matang:' : 'Tgl. Batas Layak:'}{' '}
-                        {formatShortDate(selectedItem.reminder_at)}
-                      </span>
-                    </p>
-                  </div>
-                  <hr className="border-gray-200 mb-4" />
-                  {/* Freshness score row — animated chevrons */}
-                  <div className="flex items-center gap-3 mb-4">
-                    <p className="text-sm text-gray-500 font-medium whitespace-nowrap">Update Freshness Score:</p>
-                    <div className="flex items-center gap-1 flex-1 min-w-0">
-                      <div className="flex-1">
-                        <ScoreBadge score={selectedItem.freshness_score_initial} className="py-2 text-sm" />
-                      </div>
-                      <div className="flex -space-x-2 flex-shrink-0 animate-pulse">
-                        <ChevronRight size={18} className="text-gray-400" />
-                        <ChevronRight size={18} className="text-gray-400" />
-                      </div>
-                      <div className="flex-1">
-                        <ScoreBadge score={selectedItem.freshness_score_latest ?? selectedItem.freshness_score_initial} className="py-2 text-sm" />
-                      </div>
-                    </div>
-                  </div>
-                  {(() => {
-                    const daysLeft = calculateDaysLeft(selectedItem.reminder_at);
-                    const countdown = getCountdownConfig(selectedItem.condition, daysLeft);
-                    return (
-                      <div className={`px-4 py-3 rounded-xl text-center text-base font-bold w-full ${countdown.bg} ${countdown.text}`}>
-                        {countdown.btnText}
-                      </div>
-                    );
-                  })()}
-                </div>
-
-                {/* AI Suggestion Box */}
-                {selectedItem.scan_id && (
-                  <div className="mb-4 mt-2">
-                    {!aiSuggestion && !aiLoading && (
-                      <button
-                        onClick={() => handleGetAiSuggestion()}
-                        className="w-full min-h-[44px] bg-green-50 hover:bg-green-100 border border-green-200 text-green-800 font-semibold rounded-2xl flex items-center justify-center gap-2 text-sm active:scale-95 transition-all cursor-pointer"
-                      >
-                        <Sparkles size={16} className="text-green-600" />
-                        Minta Saran AI
-                      </button>
+                  </p>
+                  <p className="text-gray-500 font-medium text-sm flex items-center gap-2">
+                    {selectedItem.condition === 'unripe' ? (
+                      <CalendarCheck size={16} />
+                    ) : (
+                      <CalendarX size={16} />
                     )}
-
-                    {aiLoading && (
-                      <div className="w-full min-h-[44px] bg-green-50 border border-green-200 rounded-2xl flex flex-col items-center justify-center gap-2 px-4 py-3 overflow-hidden">
-                        <div className="flex items-center gap-3 w-full">
-                          <div className="w-5 h-5 border-2 border-green-400 border-t-transparent rounded-full animate-spin flex-shrink-0" />
-                          <p className="text-sm text-green-700 font-medium">Scanora sedang berpikir...</p>
-                        </div>
-                        <div className="w-full h-1 bg-green-100 rounded-full overflow-hidden">
-                          <div className="h-full bg-green-400 rounded-full" style={{ width: '40%', animation: 'indeterminate 1.5s ease-in-out infinite' }} />
-                        </div>
-                      </div>
-                    )}
-
-                    {aiSuggestion && !aiLoading && (
-                      <div className="bg-green-50 rounded-2xl p-4 border border-green-100">
-                        <h4 className="font-semibold text-green-800 text-sm flex items-center gap-1.5 mb-3">
-                          <Sparkles size={14} className="text-green-600" /> Saran Chef Scanora
-                        </h4>
-                        <div className="text-sm text-gray-700 leading-relaxed">
-                          {renderMarkdown(aiSuggestion)}
-                        </div>
-                      </div>
-                    )}
-
-                    {aiError && !aiLoading && (
-                      <div className="bg-red-50 rounded-2xl p-4 border border-red-100 flex items-center justify-between gap-2">
-                        <p className="text-sm text-red-600">{aiError}</p>
-                        <button onClick={() => handleGetAiSuggestion()} className="text-xs text-red-600 font-bold underline">Coba Lagi</button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* ── Always-visible Disclaimer ── */}
-                <div className="flex items-start gap-3 bg-gray-100/80 border border-gray-200/70 rounded-2xl px-4 py-3 mb-5 mt-2">
-                  <Bot size={16} className="text-gray-400 flex-shrink-0 mt-0.5" />
-                  <p className="text-[12px] text-gray-500 leading-relaxed">
-                    Estimasi berdasarkan skenario terbaik. Kondisi asli bisa berbeda. Foto ulang untuk update.
+                    <span className="font-medium text-gray-500">
+                      {selectedItem.condition === 'unripe' ? 'Matang saat:' : 'Batas Layak:'} {formatShortDate(selectedItem.reminder_at)}
+                    </span>
                   </p>
                 </div>
-              </div>
-            </div>
+                <hr className="border-gray-200 mb-4" />
+                <p className="text-[10px] text-gray-500 capitalize tracking-wide mb-2 font-bold text-center">Perubahan Freshness Score</p>
+                <div className="flex items-center gap-2">
+                    <div className="flex-1">
+                      <ScoreBadge score={selectedItem.freshness_score_initial} className="py-2 text-sm" />
+                    </div>
+                    <div className="flex -space-x-2">
+                      <ChevronRight size={20} className="text-gray-400 animate-pulse" style={{ animationDuration: '0.8s' }} />
+                      <ChevronRight size={20} className="text-gray-400 animate-pulse" style={{ animationDuration: '0.8s', animationDelay: '0.2s' }} />
+                    </div>
+                    <div className="flex-1">
+                      <ScoreBadge score={selectedItem.freshness_score_latest ?? selectedItem.freshness_score_initial} className="py-2 text-sm" />
+                    </div>
+                  </div>
+                </div>
 
-            {/* Sticky CTAs — always at bottom */}
-            <div className="p-5 pt-3 flex-shrink-0 border-t border-gray-100">
+                {(() => {
+                  const daysLeft = calculateDaysLeft(selectedItem.reminder_at);
+                  const countdown = getCountdownConfig(selectedItem.condition, daysLeft);
+                  return (
+                    <div className={`px-4 py-3 rounded-xl text-center text-sm font-bold w-full ${countdown.bg} ${countdown.text}`}>
+                      {countdown.btnText}
+                    </div>
+                  );
+                })()}
+              
+              {/* Divider before actions */}
+              <hr className="border-gray-100 mb-4 mt-6" />
+
+              {/* AI Suggestion Box */}
+              {selectedItem.scan_id && (
+                <div className="mb-4">
+                  {!aiSuggestion && !aiLoading && (
+                    <button
+                      onClick={() => handleGetAiSuggestion()}
+                      className="w-full min-h-[44px] bg-green-50 hover:bg-green-100 border border-green-200 text-green-800 font-semibold rounded-2xl flex items-center justify-center gap-2 text-sm active:scale-95 transition-all"
+                    >
+                      💡 Minta Saran AI
+                    </button>
+                  )}
+
+                  {aiLoading && (
+                    <div className="bg-green-50 rounded-2xl p-4 border border-green-100 flex items-center gap-3">
+                      <div className="w-5 h-5 border-2 border-green-400 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+                      <p className="text-sm text-green-700 font-medium">Scanora sedang berpikir...</p>
+                    </div>
+                  )}
+
+                  {aiSuggestion && !aiLoading && (
+                    <div className="bg-green-50 rounded-2xl p-4 border border-green-100">
+                      <h4 className="font-semibold text-green-800 text-sm flex items-center gap-1.5 mb-2">💡 Saran Chef Scanora</h4>
+                      <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{aiSuggestion}</p>
+                    </div>
+                  )}
+
+                  {aiError && !aiLoading && (
+                    <div className="bg-red-50 rounded-2xl p-4 border border-red-100 flex items-center justify-between gap-2">
+                      <p className="text-sm text-red-600">{aiError}</p>
+                      <button onClick={() => handleGetAiSuggestion()} className="text-xs text-red-600 font-bold underline">Coba Lagi</button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Actions */}
               <div className="flex gap-4">
                 <button
                   onClick={async () => {
@@ -851,7 +759,7 @@ const Home = ({ onOpenScanner }) => {
                       fetchHomeData();
                     } catch (err) { console.error(err); }
                   }}
-                  className="flex-1 min-h-[44px] bg-red-100 text-red-600 font-semibold rounded-xl hover:bg-red-200 active:scale-95 transition-all text-sm flex items-center justify-center gap-2 cursor-pointer"
+                  className="flex-1 min-h-[44px] bg-red-100 text-red-600 font-semibold rounded-xl hover:bg-red-200 active:scale-95 transition-all text-sm flex items-center justify-center gap-2"
                 >
                   <Trash2 size={16} /> Dibuang
                 </button>
@@ -864,7 +772,7 @@ const Home = ({ onOpenScanner }) => {
                       fetchHomeData();
                     } catch (err) { console.error(err); }
                   }}
-                  className="flex-1 min-h-[44px] bg-scanora-green text-white font-semibold rounded-xl hover:bg-scanora-dark active:scale-95 transition-all text-sm flex items-center justify-center gap-2 cursor-pointer"
+                  className="flex-1 min-h-[44px] bg-scanora-green text-white font-semibold rounded-xl hover:bg-scanora-dark active:scale-95 transition-all text-sm flex items-center justify-center gap-2"
                 >
                   <Utensils size={16} /> Dikonsumsi
                 </button>
@@ -874,7 +782,8 @@ const Home = ({ onOpenScanner }) => {
         </div>
       )}
 
-      {/* Notifications */}
+
+      {/* Notifications — Desktop: mini dropdown, Mobile: half-page sheet */}
       {showNotifications && (
         isDesktop ? (
           <div className="fixed inset-0 z-50" onClick={() => setShowNotifications(false)}>
@@ -943,13 +852,6 @@ const Home = ({ onOpenScanner }) => {
         )
       )}
 
-      <style>{`
-        @keyframes indeterminate {
-          0%   { transform: translateX(-100%); width: 40%; }
-          50%  { width: 60%; }
-          100% { transform: translateX(250%); width: 40%; }
-        }
-      `}</style>
     </div>
   );
 };

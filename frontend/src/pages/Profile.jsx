@@ -63,7 +63,6 @@ const Profile = () => {
 
   const { viewport } = useViewport();
   const isDesktop = viewport === 'desktop';
-  const isTablet = viewport === 'tablet';
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-32 transition-colors">
@@ -78,11 +77,11 @@ const Profile = () => {
 
       <div className="p-6">
         <div className={`bg-white dark:bg-gray-800 rounded-2xl p-6 mb-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors
-          ${(isDesktop || isTablet) ? 'flex flex-row items-center gap-5' : 'flex flex-col items-center text-center gap-4'}`}>
+          ${isDesktop ? 'flex flex-row items-center gap-5' : 'flex flex-col items-center text-center gap-4'}`}>
           <div className="w-20 h-20 bg-scanora-green/10 rounded-full flex-shrink-0 flex items-center justify-center text-scanora-green">
             <User size={40} />
           </div>
-          <div className={`flex flex-col overflow-hidden ${(isDesktop || isTablet) ? '' : 'items-center'}`}>
+          <div className={`flex flex-col overflow-hidden ${isDesktop ? '' : 'items-center'}`}>
             <h2 className="text-xl font-bold text-gray-900 dark:text-white truncate">{firstName}</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 truncate mb-1.5">{user.email || 'sobat@scanora.app'}</p>
             <p className="text-xs font-medium text-scanora-green bg-scanora-green/10 w-fit px-2.5 py-1 rounded-md">Sobat Scanora sejak {joinDate}</p>
@@ -110,7 +109,7 @@ const Profile = () => {
 
           <div className="p-4 flex justify-between items-center border-b border-gray-100 dark:border-gray-700">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-orange-50 dark:bg-orange-main/30 rounded-full flex items-center justify-center text-orange-main">
+              <div className="w-10 h-10 bg-orange-50 dark:bg-orange-900/30 rounded-full flex items-center justify-center text-orange-500">
                 <Languages size={20} />
               </div>
               <div>
@@ -149,11 +148,11 @@ const Profile = () => {
             className="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 active:bg-gray-100 dark:active:bg-gray-700 transition-colors"
           >
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-red-50 dark:bg-red-main/30 rounded-full flex items-center justify-center text-red-main">
+              <div className="w-10 h-10 bg-red-50 dark:bg-red-900/30 rounded-full flex items-center justify-center text-red-500">
                 <LogOut size={20} />
               </div>
               <div>
-                <h3 className="font-semibold text-red-main">{t('profile.logout')}</h3>
+                <h3 className="font-semibold text-red-500">{t('profile.logout')}</h3>
               </div>
             </div>
           </div>
@@ -169,7 +168,7 @@ const Profile = () => {
         {/* Footer App Version */}
         <div className="mt-12 mb-8 flex flex-col items-center justify-center text-center opacity-80">
           <div className="flex items-center gap-1.5 mb-1.5 text-gray-500 dark:text-gray-400">
-            <img src="/mascots/apple_ripe.png" alt="Scanora Logo" className="w-5 h-5 opacity-80" />
+            <span className="text-lg">🍎</span>
             <span className="font-bold tracking-wide">Scanora</span>
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
