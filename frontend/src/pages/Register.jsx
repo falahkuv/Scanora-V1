@@ -88,7 +88,7 @@ const Register = () => {
           </div>
 
           {errorMessage && (
-            <div className="text-sm text-red-500 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+            <div className="text-sm text-red-main bg-red-50 border border-red-100 rounded-xl px-4 py-3">
               {errorMessage}
             </div>
           )}
