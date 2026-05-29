@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, TrendingUp, Utensils, Trash2, Star, BarChart2 } from 'lucide-react';
 import { useViewport } from '../context/ViewportContext';
+import api from '../api';
 import {
   Chart as ChartJS,
   ArcElement,
@@ -14,8 +15,7 @@ import ChartDataLabels from 'chartjs-plugin-datalabels';
 ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels);
 
 // ── Mock Data ───────────────────────────────────────────────────────────────────
-// Structure ready for API swap: replace monthlyData with API response
-const monthlyData = [
+const mockMonthlyData = [
   {
     name: 'Jan', year: 2026, consumed: 12, discarded: 4,
     topFruit: { name: 'Pisang', count: 7, img: '/mascots/banana_ripe.png' },
@@ -63,38 +63,117 @@ const monthlyData = [
   },
 ];
 
-// All-time aggregate (from all months combined)
-const allTimeFavFruit = (() => {
-  const counts = {};
-  monthlyData.forEach(m => {
-    m.distribution.forEach(d => {
-      counts[d.name] = (counts[d.name] || 0) + d.consumed;
-    });
-  });
-  const best = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
-  const imgMap = { 'Pisang': '/mascots/banana_ripe.png', 'Apel': '/mascots/apple_ripe.png', 'Jeruk': '/mascots/orange_ripe.png' };
-  return { name: best[0], count: best[1], img: imgMap[best[0]] || '' };
-})();
-
-const getSaveRate = (d) => {
-  const total = d.consumed + d.discarded;
-  if (total === 0) return 0;
-  return Math.round((d.consumed / total) * 100);
-};
-
-const bestMonthIdx = monthlyData.reduce(
-  (bestIdx, m, i, arr) => getSaveRate(m) > getSaveRate(arr[bestIdx]) ? i : bestIdx,
-  0
-);
-
 // ── Component ───────────────────────────────────────────────────────────────────
 export default function ImpactStats() {
   const navigate = useNavigate();
   const { viewport } = useViewport();
   const isDesktop = viewport === 'desktop';
 
-  const [monthIdx, setMonthIdx] = useState(monthlyData.length - 1);
+  const [monthlyData, setMonthlyData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [useMock, setUseMock] = useState(false);
+  const [monthIdx, setMonthIdx] = useState(0);
   const [rekapExpanded, setRekapExpanded] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.altKey && e.key === '1') {
+        setUseMock(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    if (useMock) {
+      setMonthlyData(mockMonthlyData);
+      setMonthIdx(mockMonthlyData.length - 1);
+      setIsLoading(false);
+      return;
+    }
+    
+    setIsLoading(true);
+    api.get('/inventory/monthly-stats')
+      .then(res => {
+        if (res.data?.data && res.data.data.length > 0) {
+          setMonthlyData(res.data.data);
+          setMonthIdx(res.data.data.length - 1);
+        } else {
+          setMonthlyData([]);
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        setMonthlyData([]);
+      })
+      .finally(() => setIsLoading(false));
+  }, [useMock]);
+
+  if (isLoading) {
+    return <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-500 font-bold">Loading...</div>;
+  }
+
+  if (monthlyData.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 pb-20 relative flex flex-col">
+        {/* Header */}
+        <div className="bg-white px-6 pt-6 pb-4 shadow-sm z-10 sticky top-0 border-b border-gray-100 flex items-center gap-4">
+          {!isDesktop && (
+            <button onClick={() => navigate(-1)} className="text-gray-500 hover:text-gray-900 transition-colors active:scale-95">
+              <ChevronLeft size={24} />
+            </button>
+          )}
+          <h1 className="text-xl font-bold text-gray-900">Statistik Performa</h1>
+          {isDesktop && (
+            <button onClick={() => navigate(-1)} className="ml-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-bold text-gray-700 transition-colors active:scale-95">
+              Tutup
+            </button>
+          )}
+        </div>
+        
+        {/* Empty State */}
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+          <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mb-6">
+            <BarChart2 size={40} className="text-gray-400" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Belum Ada Data Statistik</h2>
+          <p className="text-sm text-gray-500 mb-8 max-w-[250px]">
+            Statistik akan muncul setelah kamu membuang atau mengonsumsi buah dari inventori.
+          </p>
+          <button onClick={() => navigate('/inventory')} className="px-6 py-3 bg-scanora-green text-white font-bold rounded-xl active:scale-95 transition-all shadow-md">
+            Cek Inventori
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const allTimeFavFruit = (() => {
+    const counts = {};
+    monthlyData.forEach(m => {
+      m.distribution.forEach(d => {
+        counts[d.name] = (counts[d.name] || 0) + d.consumed;
+      });
+    });
+    const entries = Object.entries(counts);
+    if (entries.length === 0) return { name: '-', count: 0, img: '' };
+    const best = entries.sort((a, b) => b[1] - a[1])[0];
+    const imgMap = { 'Pisang': '/mascots/banana_ripe.png', 'Apel': '/mascots/apple_ripe.png', 'Jeruk': '/mascots/orange_ripe.png' };
+    return { name: best[0], count: best[1], img: imgMap[best[0]] || '/mascots/apple_ripe.png' };
+  })();
+
+  const getSaveRate = (d) => {
+    if (!d) return 0;
+    const total = d.consumed + d.discarded;
+    if (total === 0) return 0;
+    return Math.round((d.consumed / total) * 100);
+  };
+
+  const bestMonthIdx = monthlyData.reduce(
+    (bestIdx, m, i, arr) => getSaveRate(m) > getSaveRate(arr[bestIdx]) ? i : bestIdx,
+    0
+  );
 
   const current = monthlyData[monthIdx];
   const saveRate = getSaveRate(current);
@@ -131,7 +210,7 @@ export default function ImpactStats() {
           label: (ctx) => {
             const val = ctx.parsed;
             const pct = pieTotal > 0 ? ((val / pieTotal) * 100).toFixed(1).replace('.', ',') : '0';
-            return `  ${ctx.label}: ${val} buah (${pct}%)`;
+            return `  ${ctx.label}: ${pct}%`;
           },
         },
       },
@@ -141,7 +220,7 @@ export default function ImpactStats() {
         formatter: (value, ctx) => {
           const pct = pieTotal > 0 ? Math.round((value / pieTotal) * 100) : 0;
           if (pct < 8) return ''; // hide label on tiny slices
-          return `${value}\n(${pct}%)`;
+          return `${pct}%`;
         },
         textAlign: 'center',
         anchor: 'center',
@@ -168,22 +247,28 @@ export default function ImpactStats() {
         )}
       </div>
 
-      {/* ── Floating Month Prev/Next buttons ── */}
-      <button
-        onClick={() => setMonthIdx(i => Math.max(0, i - 1))}
-        disabled={monthIdx === 0}
-        className={`fixed left-3 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full shadow-xl flex items-center justify-center transition-all active:scale-90 ${monthIdx === 0 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-        style={{ marginLeft: isDesktop ? '256px' : '0' }}
-      >
-        <ChevronLeft size={20} />
-      </button>
-      <button
-        onClick={() => setMonthIdx(i => Math.min(monthlyData.length - 1, i + 1))}
-        disabled={monthIdx === monthlyData.length - 1}
-        className={`fixed right-3 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full shadow-xl flex items-center justify-center transition-all active:scale-90 ${monthIdx === monthlyData.length - 1 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
-      >
-        <ChevronRight size={20} />
-      </button>
+      {/* ── Floating Month Nav Pill ── */}
+      <div className={`fixed left-0 right-0 z-30 flex justify-center transition-all duration-300 ease-out ${isDesktop ? 'bottom-12 pl-[256px]' : 'bottom-24'} pointer-events-none`}>
+        <div className="bg-gray-100/90 backdrop-blur-md p-1.5 rounded-full flex gap-2 shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-gray-200 pointer-events-auto">
+          <button
+            onClick={() => setMonthIdx(i => Math.max(0, i - 1))}
+            disabled={monthIdx === 0}
+            className={`flex items-center justify-center w-10 h-10 rounded-full transition-all active:scale-95 ${monthIdx === 0 ? 'text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:text-gray-900 shadow-sm'}`}
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <div className="flex items-center px-2 font-bold text-gray-700 text-sm">
+            {current.name} '{String(current.year).slice(-2)}
+          </div>
+          <button
+            onClick={() => setMonthIdx(i => Math.min(monthlyData.length - 1, i + 1))}
+            disabled={monthIdx === monthlyData.length - 1}
+            className={`flex items-center justify-center w-10 h-10 rounded-full transition-all active:scale-95 ${monthIdx === monthlyData.length - 1 ? 'text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:text-gray-900 shadow-sm'}`}
+          >
+            <ChevronRight size={20} />
+          </button>
+        </div>
+      </div>
 
       {/* ── Content ── */}
       <div className="p-5 max-w-2xl mx-auto space-y-6">
@@ -191,7 +276,7 @@ export default function ImpactStats() {
         {/* ── Month Title — centered ── */}
         <div className="text-center pt-2">
           <p className="text-xs font-semibold text-gray-400 mb-1">Performa bulan ini:</p>
-          <h2 className="text-2xl font-extrabold text-gray-900">{current.name} {current.year}</h2>
+          <h2 className="text-2xl font-extrabold text-gray-900">{current.name} '{String(current.year).slice(-2)}</h2>
         </div>
 
         {/* ── Main Grid: Dikonsumsi | Dibuang | Tingkat Keberhasilan ── */}
@@ -212,47 +297,26 @@ export default function ImpactStats() {
             <p className="text-3xl font-extrabold leading-none text-red-main">{current.discarded}</p>
             <p className="text-red-main text-xs font-semibold mt-1.5">Dibuang</p>
           </div>
-          {/* Tingkat Keberhasilan */}
+          {/* Skor Keberhasilan */}
           <div className="bg-scanora-green/10 border border-scanora-green/20 rounded-2xl p-4 flex flex-col items-center text-center">
             <div className="w-11 h-11 bg-scanora-green/20 rounded-xl flex items-center justify-center mb-2">
               <TrendingUp size={20} className="text-scanora-green" />
             </div>
             <p className="text-3xl font-extrabold leading-none text-scanora-green">{saveRate}%</p>
-            <p className="text-scanora-green text-xs font-semibold mt-1.5">Tingkat Keberhasilan</p>
+            <p className="text-scanora-green text-xs font-semibold mt-1.5">Skor Keberhasilan</p>
           </div>
         </div>
 
-        {/* ── Row: Top Fruit + Pie Chart ── */}
-        <div className="grid grid-cols-2 gap-3">
-          {/* Top Fruit this month */}
-          <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col items-center text-center justify-center">
-            <p className="text-xs font-semibold text-gray-400 mb-2">Paling Banyak Dikonsumsi</p>
-            <img
-              src={current.topFruit.img}
-              alt={current.topFruit.name}
-              className="h-14 object-contain drop-shadow-md mb-2"
-              onError={(e) => { e.target.style.display = 'none'; }}
-            />
-            <p className="text-base font-bold text-gray-800">{current.topFruit.name}</p>
-            <p className="text-xs text-gray-400 mt-0.5">{current.topFruit.count}× dikonsumsi</p>
-          </div>
-
-          {/* Pie Chart: distribution */}
-          <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col">
-            <p className="text-xs font-semibold text-gray-400 mb-2">Distribusi Buah</p>
-            <div className="flex-1" style={{ minHeight: '130px' }}>
-              {pieTotal > 0 ? (
-                <Pie data={pieData} options={pieOptions} />
-              ) : (
-                <div className="flex items-center justify-center h-full text-gray-300 text-xs">Tidak ada data</div>
-              )}
-            </div>
-            {/* Compact legend */}
-            <div className="mt-2 space-y-1">
+        {/* ── Row: Legend + Pie Chart + Top Fruit ── */}
+        <div className="grid grid-cols-3 gap-3">
+          {/* Legend */}
+          <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col justify-center">
+            <p className="text-xs font-semibold text-gray-400 mb-3">Distribusi Buah</p>
+            <div className="space-y-2">
               {current.distribution.filter(d => d.consumed + d.discarded > 0).map(d => (
                 <div key={d.name} className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
+                  <div className="flex items-center gap-2">
+                    <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
                     <span className="text-gray-600 font-medium">{d.name}</span>
                   </div>
                   <span className="text-gray-400 font-semibold">{d.consumed + d.discarded} buah</span>
@@ -260,17 +324,88 @@ export default function ImpactStats() {
               ))}
             </div>
           </div>
+
+          {/* Pie Chart: distribution */}
+          <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col items-center justify-center">
+            <div className="w-full" style={{ height: '130px' }}>
+              {pieTotal > 0 ? (
+                <Pie data={pieData} options={pieOptions} />
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-300 text-xs">Tidak ada data</div>
+              )}
+            </div>
+          </div>
+
+          {/* Top Fruit this month */}
+          <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm relative overflow-hidden flex flex-col justify-between" style={{ minHeight: '160px' }}>
+            <div className="z-10">
+              <p className="text-[11px] text-gray-400 font-semibold">Buah Favorit</p>
+              <p className="text-xl font-bold text-gray-800 mt-1">{current.topFruit.name}</p>
+            </div>
+            <p className="text-xl text-gray-500 mt-4 z-10 font-bold">{current.topFruit.count} Kali</p>
+            <img
+              src={current.topFruit.img}
+              alt={current.topFruit.name}
+              className="absolute bottom-4 right-2 h-24 object-contain drop-shadow-md"
+              onError={(e) => { e.target.style.display = 'none'; }}
+            />
+          </div>
         </div>
 
-        {/* ── Rekap Bulanan Toggle ── */}
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+        {/* ── Rekap Perjalanan Header ── */}
+        <div className="text-center mt-8 mb-4">
+          <h3 className="text-lg font-bold text-gray-900">Rekap Perjalanan:</h3>
+        </div>
+
+        {/* ── All-time insight cards ── */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          {/* Buah Favorit Sepanjang Masa */}
+          <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm relative overflow-hidden flex flex-col justify-between" style={{ minHeight: '160px' }}>
+            <div className="z-10">
+              <p className="text-[11px] text-gray-400 font-semibold truncate">Buah Favorit Sepanjang Masa</p>
+              <p className="text-xl font-bold text-gray-800 mt-1">{allTimeFavFruit.name}</p>
+            </div>
+            <p className="text-xl text-gray-500 mt-4 z-10 font-bold">{allTimeFavFruit.count} Kali</p>
+            <img
+              src={allTimeFavFruit.img}
+              alt={allTimeFavFruit.name}
+              className="absolute bottom-4 right-2 h-24 object-contain drop-shadow-md"
+              onError={(e) => { e.target.style.display = 'none'; }}
+            />
+          </div>
+
+          {/* Skor Keberhasilan Terbaik */}
+          <button
+            onClick={() => {
+              navigate('/inventory', { state: { tab: 'history' } });
+            }}
+            className="bg-white border-2 border-gray-900 rounded-2xl p-4 shadow-sm relative overflow-hidden flex flex-col hover:bg-gray-50 active:scale-95 transition-all text-left"
+            style={{ minHeight: '160px' }}
+          >
+            <div className="z-10 mb-4">
+              <p className="text-[11px] text-gray-500 font-semibold truncate">Skor Keberhasilan Terbaik</p>
+            </div>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2">
+              <p className="text-5xl font-extrabold text-gray-900 leading-none">
+                {getSaveRate(monthlyData[bestMonthIdx])}%
+              </p>
+            </div>
+            <div className="z-10 mt-auto">
+              <p className="text-sm text-gray-600 font-medium">
+                {monthlyData[bestMonthIdx].name} '{String(monthlyData[bestMonthIdx].year).slice(-2)}
+              </p>
+            </div>
+          </button>
+        </div>
+
+        {/* ── Lihat Bulan Lainnya Toggle ── */}
+        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden mb-4">
           <button
             onClick={() => setRekapExpanded(prev => !prev)}
             className="w-full flex items-center justify-between px-5 py-4 text-sm font-bold text-gray-800 hover:bg-gray-50 active:scale-95 transition-all"
           >
             <div className="flex items-center gap-2">
-              <BarChart2 size={18} className="text-scanora-green" />
-              Rekap Bulanan
+              Lihat Bulan Lainnya
             </div>
             <ChevronRight
               size={18}
@@ -289,6 +424,7 @@ export default function ImpactStats() {
                   const total = m.consumed + m.discarded;
                   const heightPct = maxVal > 0 ? (total / maxVal) * 100 : 0;
                   const consumedPct = total > 0 ? (m.consumed / total) * 100 : 0;
+                  const discardedPct = total > 0 ? (m.discarded / total) * 100 : 0;
                   const isFocused = i === monthIdx;
                   return (
                     <button
@@ -296,15 +432,23 @@ export default function ImpactStats() {
                       onClick={() => setMonthIdx(i)}
                       className={`flex-1 flex flex-col items-center gap-1 transition-all active:scale-95 rounded-t-lg cursor-pointer ${isFocused ? 'opacity-100' : 'opacity-40 hover:opacity-70'}`}
                     >
+                      {/* Value above bar */}
+                      <span className={`text-[10px] font-bold mb-0.5 ${isFocused ? 'text-gray-800' : 'text-gray-400'}`}>
+                        {total}
+                      </span>
                       {/* Bar */}
                       <div
-                        className="w-full rounded-t-lg overflow-hidden flex flex-col-reverse transition-all duration-500"
+                        className="w-full rounded-t-lg overflow-hidden flex flex-col-reverse transition-all duration-500 relative"
                         style={{ height: `${Math.max(8, heightPct * 1.3)}px` }}
                       >
                         {/* Discarded (red, bottom) */}
-                        <div className="bg-red-main/70" style={{ height: `${100 - consumedPct}%` }} />
+                        <div className="bg-red-main/70 relative flex items-center justify-center" style={{ height: `${discardedPct}%` }}>
+                          {m.discarded > 0 && <span className="text-[9px] font-bold text-white leading-none">{m.discarded}</span>}
+                        </div>
                         {/* Consumed (green, top) */}
-                        <div className="bg-scanora-green" style={{ height: `${consumedPct}%` }} />
+                        <div className="bg-scanora-green relative flex items-center justify-center" style={{ height: `${consumedPct}%` }}>
+                          {m.consumed > 0 && <span className="text-[9px] font-bold text-white leading-none">{m.consumed}</span>}
+                        </div>
                       </div>
                       <span className={`text-[10px] font-bold ${isFocused ? 'text-scanora-green' : 'text-gray-400'}`}>
                         {m.name}
@@ -324,49 +468,6 @@ export default function ImpactStats() {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* ── All-time insight cards ── */}
-        <div className="grid grid-cols-2 gap-3">
-          {/* Buah Favorit Sepanjang Masa */}
-          <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col items-center text-center relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-12 h-12 bg-yellow-main/10 rounded-bl-full" />
-            <p className="text-xs font-semibold text-gray-400 mb-2">Buah Favorit</p>
-            <img
-              src={allTimeFavFruit.img}
-              alt={allTimeFavFruit.name}
-              className="h-12 object-contain drop-shadow-md mb-2"
-              onError={(e) => { e.target.style.display = 'none'; }}
-            />
-            <p className="text-base font-bold text-gray-800">{allTimeFavFruit.name}</p>
-            <p className="text-[11px] text-gray-400 mt-0.5">
-              <span className="font-bold text-scanora-green">{allTimeFavFruit.count}×</span> dikonsumsi
-            </p>
-          </div>
-
-          {/* Save Rate Terbaik */}
-          <button
-            onClick={() => {
-              setMonthIdx(bestMonthIdx);
-              setRekapExpanded(true);
-            }}
-            className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm relative overflow-hidden flex flex-col hover:bg-gray-50 active:scale-95 transition-all text-left"
-            style={{ minHeight: '160px' }}
-          >
-            <div className="z-10 mb-4">
-              <p className="text-[11px] text-gray-500 font-semibold truncate">Skor Keberhasilan Terbaik</p>
-            </div>
-            <div className="absolute right-4 top-1/2 -translate-y-1/2">
-              <p className="text-5xl font-extrabold text-gray-900 leading-none">
-                {getSaveRate(monthlyData[bestMonthIdx])}%
-              </p>
-            </div>
-            <div className="z-10 mt-auto">
-              <p className="text-sm text-gray-600 font-medium">
-                {monthlyData[bestMonthIdx].name} {monthlyData[bestMonthIdx].year}
-              </p>
-            </div>
-          </button>
         </div>
 
       </div>

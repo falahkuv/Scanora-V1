@@ -977,18 +977,13 @@ const Inventory = () => {
 
                     {aiLoading && (
                       <div className="w-full min-h-[44px] bg-green-50 border border-green-200 rounded-2xl flex flex-col items-center justify-center gap-2 px-4 py-3 overflow-hidden relative">
-                        <div className="flex items-center gap-3 w-full mb-1">
+                        <div className="flex items-center gap-3 w-full">
                           <div className="w-5 h-5 border-2 border-green-400 border-t-transparent rounded-full animate-spin flex-shrink-0" />
-                          <p className="text-sm text-green-700 font-medium animate-pulse">Scanora sedang berpikir...</p>
+                          <p className="text-sm text-green-700 font-medium">Scanora sedang berpikir...</p>
                         </div>
                         {/* Indeterminate loading bar */}
                         <div className="w-full h-1 bg-green-100 rounded-full overflow-hidden">
                           <div className="h-full bg-green-400 rounded-full animate-[indeterminate_1.5s_ease-in-out_infinite]" style={{ width: '40%', animation: 'indeterminate 1.5s ease-in-out infinite' }} />
-                        </div>
-                        <div className="animate-pulse flex flex-col gap-2 mt-2 w-full">
-                          <div className="h-3 bg-green-200/60 rounded-full w-full" />
-                          <div className="h-3 bg-green-200/60 rounded-full w-5/6" />
-                          <div className="h-3 bg-green-200/60 rounded-full w-4/6" />
                         </div>
                       </div>
                     )}

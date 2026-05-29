@@ -45,7 +45,7 @@ export default {
         'scanora-green': '#10b981', // Emerald Green 500
         'scanora-dark': '#064e3b',  // Emerald Green 900
         'yellow-main': '#fdc107',
-        'orange-main': '#f97316',
+        'orange-main': '#f87305',
         'red-main': '#bb0006ff',
         'leaf-main': '#076a26',
         orange: {
