@@ -20,7 +20,11 @@ const Register = () => {
       const response = await api.post('/auth/register', { name, email, password });
       const token = response.data?.data?.token;
       if (!token) throw new Error('Token tidak ditemukan');
+      localStorage.removeItem('skip_silent_auth');
       localStorage.setItem('token', token);
+      if (response.data?.data?.user) {
+        localStorage.setItem('user', JSON.stringify(response.data.data.user));
+      }
       api.defaults.headers.common.Authorization = `Bearer ${token}`;
       navigate('/');
     } catch (error) {

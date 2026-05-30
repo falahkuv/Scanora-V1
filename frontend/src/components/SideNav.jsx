@@ -13,6 +13,7 @@ const SideNav = ({ onOpenScanner }) => {
   const displayName = user.name || user.email?.split('@')[0] || 'Sobat Scanora';
   const email = user.email || '';
   const initials = displayName.slice(0, 2).toUpperCase();
+  const profileImage = user.profile_image || user.profileImage;
 
   const mainNavItems = [
     { path: '/',          icon: Home,           label: 'Beranda' },
@@ -90,8 +91,17 @@ const SideNav = ({ onOpenScanner }) => {
         className={`flex items-center gap-4 px-3 py-3 rounded-2xl transition-all active:scale-95 w-full text-left hover:bg-gray-50 cursor-pointer
           ${isActive('/profile') ? 'bg-scanora-green/10' : ''}`}
       >
-        <div className="w-11 h-11 rounded-full bg-scanora-green/10 flex items-center justify-center text-scanora-green font-bold text-sm flex-shrink-0">
-          {initials}
+        <div className="w-11 h-11 rounded-full bg-scanora-green/10 flex items-center justify-center text-scanora-green font-bold text-sm flex-shrink-0 overflow-hidden">
+          {profileImage ? (
+            <div
+              className="w-full h-full rounded-full bg-center bg-no-repeat"
+              style={{ backgroundImage: `url(${profileImage})`, backgroundSize: '120%' }}
+              role="img"
+              aria-label="Profile"
+            />
+          ) : (
+            initials
+          )}
         </div>
         <div className="flex-1 min-w-0">
           <p className={`text-sm font-semibold truncate ${isActive('/profile') ? 'text-scanora-green' : 'text-gray-800'}`}>

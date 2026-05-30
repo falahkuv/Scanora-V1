@@ -13,6 +13,21 @@ Semua perubahan yang signifikan pada proyek Scanora akan didokumentasikan dalam 
 - **Ikonografi & Warna**: Menyeragamkan warna palet utama (`orange-main` dan `scanora-green`) pada antarmuka Profil dan badge inventori. 
 - **Tombol Konsumsi & Buang**: Logika UI diseragamkan sehingga buah berstatus busuk (*rotten*) di Inventori tetap dapat dieksekusi (Dikonsumsi/Dibuang).
 
+## [v1.9.3] - 2026-05-30
+### Added
+- **Notifikasi Interaktif**: Klik notifikasi kini membuka detail buah yang sama seperti di Inventori.
+
+### Changed
+- **Avatar Profil**: Foto profil ditampilkan penuh dan bulat di Profil, Beranda, dan Sidebar.
+- **Toggle Inventori/Riwayat**: Kontrol tab diubah menjadi slider toggle halus pada top bar dan floating bar.
+- **Filter Kategori Inventori**: Warna aktif "Semua" diseragamkan ke abu-abu dan stabil saat perpindahan tab.
+- **Tombol Sortir**: Tampilan "Tanggal Foto" dirapikan agar selaras dengan tombol Inventori/Riwayat (tanpa shadow).
+
+### Fixed
+- **Logout Google**: Logout kini juga sign out dari Supabase agar tidak auto-login kembali.
+- **Auth Silent Login**: Auto-login device diblokir setelah logout, lalu diaktifkan kembali setelah login sukses.
+- **Login Flash**: Halaman login tidak lagi muncul sesaat saat proses OAuth berlangsung.
+
 ## [v1.8.1] - 2026-05-29
 ### Fixed
 - **Freshness Score Decay**: Memperbaiki masalah *bug* di `freshnessService.js` di mana *freshness score* buah yang bertransisi dari *unripe* (mentah) ke *ripe* (matang) turun terlalu cepat hingga 0%. Kini perhitungan *decay* menggunakan *base date* yang dikalkulasi secara dinamis sejak buah benar-benar matang.

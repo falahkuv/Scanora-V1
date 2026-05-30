@@ -553,24 +553,29 @@ const Inventory = () => {
       {/* Sticky Header */}
       <div className="bg-white px-4 pt-6 pb-4 shadow-sm z-40 sticky top-0 border-b border-gray-100">
         <div className="flex relative gap-2">
-          <div className="bg-gray-100 p-1 rounded-xl flex flex-1">
+          <div className="bg-gray-100 p-1 rounded-xl flex flex-1 relative overflow-hidden">
+            <div
+              className={`absolute top-1 bottom-1 left-1 w-[calc(50%-0.25rem)] bg-white rounded-lg shadow-sm transition-transform duration-300 ease-out pointer-events-none ${
+                activeTab === 'inventory' ? 'translate-x-0' : 'translate-x-full'
+              }`}
+            />
             <button
               onClick={() => { setActiveTab('inventory'); setShowSortPopup(false); }}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all active:scale-95 min-h-[44px] ${activeTab === 'inventory' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all active:scale-95 min-h-[44px] relative z-10 ${activeTab === 'inventory' ? 'text-scanora-dark' : 'text-gray-500'}`}
             >
               <Salad size={16} /> Inventori
             </button>
             <button
               onClick={() => { setActiveTab('history'); setShowSortPopup(false); }}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all active:scale-95 min-h-[44px] ${activeTab === 'history' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:bg-gray-200'}`}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all active:scale-95 min-h-[44px] relative z-10 ${activeTab === 'history' ? 'text-scanora-dark' : 'text-gray-500'}`}
             >
               <History size={16} /> Riwayat
             </button>
           </div>
-          <div className="bg-gray-100 p-1 rounded-xl flex shadow-sm">
+          <div className="bg-gray-100 p-1 rounded-xl flex">
             <button
               onClick={() => setShowSortPopup(!showSortPopup)}
-              className="h-[44px] flex items-center justify-between gap-2 px-3 rounded-lg active:scale-95 transition-all bg-white text-scanora-green text-sm font-semibold shadow-[0_2px_8px_rgba(0,0,0,0.08)] whitespace-nowrap min-w-[44px]"
+              className="h-[44px] flex items-center justify-between gap-2 px-3 rounded-lg active:scale-95 transition-all bg-white text-scanora-green text-sm font-semibold whitespace-nowrap min-w-[44px]"
             >
               {effectiveWidth > 500 && (
                 <span className="text-left flex-1">
@@ -603,10 +608,10 @@ const Inventory = () => {
       {activeTab === 'inventory' && (
         <div className="px-4 pt-3 pb-1 flex gap-2 overflow-x-clip no-scrollbar">
           {[
-            { key: 'all', label: 'Semua', count: inventoryData.length, active: 'bg-gray-800 text-white', inactive: 'border border-gray-200 text-gray-600 bg-transparent' },
-            { key: 'ripe', label: 'Ripe', count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'ripe').length, active: 'bg-orange-main text-white', inactive: 'border border-orange-main/30 text-orange-main bg-transparent' },
-            { key: 'unripe', label: 'Unripe', count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'unripe').length, active: 'bg-scanora-green text-white', inactive: 'border border-green-200 text-green-600 bg-transparent' },
-            { key: 'rotten', label: 'Rotten', count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'rotten').length, active: 'bg-red-main text-white', inactive: 'border border-red-200 text-red-600 bg-transparent' },
+            { key: 'all', label: 'Semua', count: inventoryData.length, active: 'bg-gray-100 text-gray-600 border border-transparent', inactive: 'border border-gray-200 text-gray-600 bg-transparent' },
+            { key: 'ripe', label: 'Ripe', count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'ripe').length, active: 'bg-orange-main text-white border border-transparent', inactive: 'border border-orange-main/30 text-orange-main bg-transparent' },
+            { key: 'unripe', label: 'Unripe', count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'unripe').length, active: 'bg-scanora-green text-white border border-transparent', inactive: 'border border-green-200 text-green-600 bg-transparent' },
+            { key: 'rotten', label: 'Rotten', count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'rotten').length, active: 'bg-red-main text-white border border-transparent', inactive: 'border border-red-200 text-red-600 bg-transparent' },
           ].map(pill => (
             <button
               key={pill.key}
@@ -616,7 +621,9 @@ const Inventory = () => {
             >
               {pill.label}
               <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full
-                ${conditionFilter === pill.key ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'}`}>
+                ${conditionFilter === pill.key
+                  ? (pill.key === 'all' ? 'bg-gray-200 text-gray-600' : 'bg-white/20 text-white')
+                  : 'bg-gray-100 text-gray-500'}`}>
                 {pill.count}
               </span>
             </button>
@@ -629,18 +636,23 @@ const Inventory = () => {
       {/* Floating Tab Switcher */}
       <div className={`fixed left-0 right-0 z-30 flex justify-center transition-all duration-300 ease-out ${isDesktop ? 'pl-64' : ''} ${showFloating ? 'bottom-32 translate-y-0 opacity-100 pointer-events-auto' : 'bottom-28 translate-y-10 opacity-0 pointer-events-none'}`}>
         <div className="flex gap-4 relative">
-          <div className="bg-gray-100/90 backdrop-blur-md p-1.5 rounded-full flex gap-1 shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-gray-200">
-            <button onClick={() => { setActiveTab('inventory'); setShowSortPopup(false); }} className={`flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-full min-h-[44px] transition-all active:scale-95 ${activeTab === 'inventory' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>
+          <div className="bg-gray-100/90 backdrop-blur-md p-1.5 rounded-full flex shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-gray-200 relative overflow-hidden">
+            <div
+              className={`absolute top-1.5 bottom-1.5 left-1.5 w-[calc(50%-0.375rem)] bg-white rounded-full shadow-sm transition-transform duration-300 ease-out pointer-events-none ${
+                activeTab === 'inventory' ? 'translate-x-0' : 'translate-x-full'
+              }`}
+            />
+            <button onClick={() => { setActiveTab('inventory'); setShowSortPopup(false); }} className={`flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-full min-h-[44px] transition-all active:scale-95 relative z-10 ${activeTab === 'inventory' ? 'text-scanora-dark' : 'text-gray-500 hover:text-gray-900'}`}>
               <Salad size={16} /> <span className="hidden sm:inline">Inventori</span>
             </button>
-            <button onClick={() => { setActiveTab('history'); setShowSortPopup(false); }} className={`flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-full min-h-[44px] transition-all active:scale-95 ${activeTab === 'history' ? 'bg-white text-scanora-dark shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>
+            <button onClick={() => { setActiveTab('history'); setShowSortPopup(false); }} className={`flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-full min-h-[44px] transition-all active:scale-95 relative z-10 ${activeTab === 'history' ? 'text-scanora-dark' : 'text-gray-500 hover:text-gray-900'}`}>
               <History size={16} /> <span className="hidden sm:inline">Riwayat</span>
             </button>
           </div>
-          <div className="bg-gray-100/90 backdrop-blur-md p-1.5 rounded-full flex shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-gray-200">
+          <div className="bg-gray-100/90 backdrop-blur-md p-1.5 rounded-full flex border border-gray-200">
             <button
               onClick={() => setShowSortPopup(!showSortPopup)}
-              className="h-[44px] flex items-center justify-between gap-2 px-4 rounded-full shadow-sm active:scale-95 transition-all bg-white text-scanora-green text-sm font-semibold min-w-[44px] md:min-w-[170px]"
+              className="h-[44px] flex items-center justify-between gap-2 px-4 rounded-full active:scale-95 transition-all bg-white text-scanora-green text-sm font-semibold min-w-[44px] md:min-w-[170px]"
             >
               <span className="hidden md:inline text-left flex-1">
                 {sortConfig.key === 'priority' ? 'Freshness Score' : 'Tanggal Foto'}

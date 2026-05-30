@@ -4,7 +4,8 @@ const toUserResponse = (user) => ({
   id: user.id,
   name: user.name,
   email: user.email,
-  created_at: user.createdAt
+  created_at: user.createdAt,
+  profile_image: user.profileImage || null
 });
 
 const toScanResponse = (scan) => ({

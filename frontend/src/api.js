@@ -29,6 +29,9 @@ const getOrCreateDeviceId = () => {
  * 3. If login 401 → register (first time on this device).
  */
 export const initializeAuth = async () => {
+  if (localStorage.getItem('skip_silent_auth') === '1') {
+    return false;
+  }
   const deviceId = getOrCreateDeviceId();
   let token = localStorage.getItem('token');
 
@@ -67,6 +70,14 @@ export const initializeAuth = async () => {
   if (token) {
     localStorage.setItem('token', token);
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    try {
+      const meRes = await api.get('/auth/me');
+      if (meRes.data?.data) {
+        localStorage.setItem('user', JSON.stringify(meRes.data.data));
+      }
+    } catch (_) {
+      // Keep existing user cache if profile refresh fails
+    }
   }
   return true;
 };

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Moon, Sun, LogOut, ChevronLeft, User, Languages, Bell, ChartColumnBig, Download } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useViewport } from '../context/ViewportContext';
+import { supabase } from '../lib/supabaseClient';
+import api from '../api';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -19,6 +21,7 @@ const Profile = () => {
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const firstName = user.name || 'Sobat Scanora';
+  const profileImage = user.profile_image || user.profileImage;
   const joinDateStr = user.created_at || user.createdAt;
   const joinDate = joinDateStr ? new Date(joinDateStr).toLocaleDateString('en-GB') : 'sekarang';
 
@@ -32,8 +35,16 @@ const Profile = () => {
     }
   }, [isDark]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (_) {
+      // Ignore sign-out errors and still clear local session
+    }
+    localStorage.setItem('skip_silent_auth', '1');
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    delete api.defaults.headers.common.Authorization;
     navigate('/onboarding');
   };
 
@@ -85,8 +96,17 @@ const Profile = () => {
       <div className="p-6">
         <div className={`bg-white dark:bg-gray-800 rounded-2xl p-6 mb-6 shadow-sm border border-gray-100 dark:border-gray-700 transition-colors
           ${(isDesktop || isTablet) ? 'flex flex-row items-center gap-5' : 'flex flex-col items-center text-center gap-4'}`}>
-          <div className="w-20 h-20 bg-scanora-green/10 rounded-full flex-shrink-0 flex items-center justify-center text-scanora-green">
-            <User size={40} />
+          <div className="w-20 h-20 bg-scanora-green/10 rounded-full flex-shrink-0 flex items-center justify-center text-scanora-green overflow-hidden">
+            {profileImage ? (
+              <div
+                className="w-full h-full rounded-full bg-center bg-no-repeat"
+                style={{ backgroundImage: `url(${profileImage})`, backgroundSize: '120%' }}
+                role="img"
+                aria-label="Profile"
+              />
+            ) : (
+              <User size={40} />
+            )}
           </div>
           <div className={`flex flex-col overflow-hidden ${(isDesktop || isTablet) ? '' : 'items-center'}`}>
             <h2 className="text-xl font-bold text-gray-900 dark:text-white truncate">{firstName}</h2>

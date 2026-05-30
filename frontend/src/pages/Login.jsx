@@ -12,24 +12,28 @@ const Login = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isOAuthProcessing, setIsOAuthProcessing] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
     supabase.auth.getSession().then(async ({ data }) => {
       if (!isMounted) return;
       if (data?.session?.user && data?.session?.access_token) {
+        setIsOAuthProcessing(true);
         try {
           const response = await api.post('/auth/google', {
             accessToken: data.session.access_token
           });
           const token = response.data?.data?.token;
           if (!token) throw new Error('Token tidak ditemukan');
+          localStorage.removeItem('skip_silent_auth');
           localStorage.setItem('token', token);
           localStorage.setItem('user', JSON.stringify(response.data.data.user));
           api.defaults.headers.common.Authorization = `Bearer ${token}`;
-          navigate('/');
+          navigate('/', { replace: true });
         } catch (error) {
           setErrorMessage(error.response?.data?.message || 'Login Google gagal. Coba lagi.');
+          setIsOAuthProcessing(false);
         }
       }
     });
@@ -37,6 +41,19 @@ const Login = () => {
       isMounted = false;
     };
   }, [navigate]);
+
+  if (isOAuthProcessing) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-6 py-6 transition-colors">
+        <div className="text-center">
+          <div className="w-14 h-14 bg-scanora-green/10 rounded-2xl flex items-center justify-center text-scanora-green mx-auto mb-4">
+            <Leaf size={28} />
+          </div>
+          <p className="text-gray-600 dark:text-gray-300 font-semibold">Memproses login...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -46,6 +63,7 @@ const Login = () => {
       const response = await api.post('/auth/login', { email, password });
       const token = response.data?.data?.token;
       if (!token) throw new Error('Token tidak ditemukan');
+      localStorage.removeItem('skip_silent_auth');
       localStorage.setItem('token', token);
       if (response.data?.data?.user) {
         localStorage.setItem('user', JSON.stringify(response.data.data.user));

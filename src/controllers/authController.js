@@ -7,6 +7,25 @@ const { signToken } = require("../services/tokenService");
 const { toUserResponse } = require("../services/formatService");
 const { sendSuccess } = require("../services/responseService");
 
+const PROFILE_IMAGES = [
+  "/images/pp1.png",
+  "/images/pp2.png",
+  "/images/pp3.png"
+];
+
+const pickRandomProfileImage = () => {
+  const idx = Math.floor(Math.random() * PROFILE_IMAGES.length);
+  return PROFILE_IMAGES[idx];
+};
+
+const ensureProfileImage = async (user) => {
+  if (user.profileImage) return user;
+  return prisma.user.update({
+    where: { id: user.id },
+    data: { profileImage: pickRandomProfileImage() }
+  });
+};
+
 const register = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -24,11 +43,12 @@ const register = asyncHandler(async (req, res) => {
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  const user = await prisma.user.create({
+  let user = await prisma.user.create({
     data: {
       name,
       email,
-      password: hashedPassword
+      password: hashedPassword,
+      profileImage: pickRandomProfileImage()
     }
   });
 
@@ -48,7 +68,7 @@ const register = asyncHandler(async (req, res) => {
 const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  const user = await prisma.user.findUnique({
+  let user = await prisma.user.findUnique({
     where: { email }
   });
 
@@ -70,6 +90,7 @@ const login = asyncHandler(async (req, res) => {
     });
   }
 
+  user = await ensureProfileImage(user);
   const token = signToken({ userId: user.id, email: user.email });
 
   return sendSuccess(res, "Login successful", {
@@ -79,7 +100,7 @@ const login = asyncHandler(async (req, res) => {
 });
 
 const me = asyncHandler(async (req, res) => {
-  const user = await prisma.user.findUnique({
+  let user = await prisma.user.findUnique({
     where: { id: req.user.userId }
   });
 
@@ -91,6 +112,7 @@ const me = asyncHandler(async (req, res) => {
     });
   }
 
+  user = await ensureProfileImage(user);
   return sendSuccess(res, "User profile", toUserResponse(user));
 });
 
@@ -139,10 +161,13 @@ const googleLogin = asyncHandler(async (req, res) => {
       data: {
         name,
         email,
-        password: hashedPassword
+        password: hashedPassword,
+        profileImage: pickRandomProfileImage()
       }
     });
   }
+
+  user = await ensureProfileImage(user);
 
   const token = signToken({ userId: user.id, email: user.email });
 

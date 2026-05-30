@@ -129,7 +129,7 @@ const getCountdownConfig = (condition, daysLeft) => {
   return { bg: 'bg-red-main', text: 'text-white', btnText: 'Tidak Layak', isExpired: true };
 };
 
-const NotificationItem = ({ notif, onDelete }) => {
+const NotificationItem = ({ notif, onDelete, onClick }) => {
   const [translateX, setTranslateX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
   const startXRef = useRef(0);
@@ -160,6 +160,11 @@ const NotificationItem = ({ notif, onDelete }) => {
     }
   };
 
+  const handleClick = () => {
+    if (isSwiping) return;
+    onClick?.(notif);
+  };
+
   return (
     <div className="relative mb-3 overflow-hidden rounded-2xl bg-red-100 dark:bg-red-900/40">
       <div className="absolute right-0 top-0 bottom-0 w-20 flex items-center justify-center text-red-600 dark:text-red-400">
@@ -169,7 +174,8 @@ const NotificationItem = ({ notif, onDelete }) => {
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm relative z-10 flex gap-4"
+        onClick={handleClick}
+        className="bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm relative z-10 flex gap-4 cursor-pointer"
         style={{
           transform: `translateX(${translateX}px)`,
           transition: isSwiping ? 'none' : 'transform 0.3s ease-out'
@@ -189,6 +195,7 @@ const NotificationItem = ({ notif, onDelete }) => {
 const Home = ({ onOpenScanner }) => {
   const navigate = useNavigate();
   const [urgentItems, setUrgentItems] = useState([]);
+  const [inventoryItems, setInventoryItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [impact, setImpact] = useState({ saved: '-', consumed: '-', discarded: '-' });
   const [loading, setLoading] = useState(true);
@@ -282,8 +289,25 @@ const Home = ({ onOpenScanner }) => {
     saveReadIds(ids);
   };
 
+  const markNotifRead = (notifId) => {
+    const ids = getReadIds();
+    ids.add(notifId);
+    saveReadIds(ids);
+    setNotifications(prev => prev.map(n => (n.id === notifId ? { ...n, isRead: true } : n)));
+  };
+
+  const handleNotifClick = (notif) => {
+    if (!notif?.itemId) return;
+    const item = inventoryItems.find(i => i.id === notif.itemId);
+    if (!item) return;
+    markNotifRead(notif.id);
+    setShowNotifications(false);
+    setSelectedItem(item);
+  };
+
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const firstName = user.name ? user.name.split(' ')[0] : 'Sobat';
+  const profileImage = user.profile_image || user.profileImage;
 
   const ensureNotifPermission = async () => {
     if (!('Notification' in window)) return false;
@@ -324,6 +348,7 @@ const Home = ({ onOpenScanner }) => {
 
       if (invRes.data.success) {
         const allItems = invRes.data.data;
+        setInventoryItems(allItems);
 
         const urgent = allItems
           .map(item => ({ ...item, daysLeft: calculateDaysLeft(item.reminder_at) }))
@@ -364,7 +389,8 @@ const Home = ({ onOpenScanner }) => {
               message: body,
               isRead: readIds.has(notifId),
               date: `Difoto pada: ${dateStr}`,
-              daysLeft: dLeft
+              daysLeft: dLeft,
+              itemId: item.id
             });
           }
         });
@@ -450,9 +476,18 @@ const Home = ({ onOpenScanner }) => {
             <Tooltip content="Profil" placement="bottom">
               <button
                 onClick={() => navigate('/profile')}
-                className="w-12 h-12 bg-scanora-green/10 rounded-full flex items-center justify-center text-scanora-green hover:bg-scanora-green/20 active:scale-95 transition-all"
+                className="w-12 h-12 bg-scanora-green/10 rounded-full flex items-center justify-center text-scanora-green hover:bg-scanora-green/20 active:scale-95 transition-all overflow-hidden"
               >
-                <User size={24} />
+                {profileImage ? (
+                  <div
+                    className="w-full h-full rounded-full bg-center bg-no-repeat"
+                    style={{ backgroundImage: `url(${profileImage})`, backgroundSize: '120%' }}
+                    role="img"
+                    aria-label="Profile"
+                  />
+                ) : (
+                  <User size={24} />
+                )}
               </button>
             </Tooltip>
           )}
@@ -903,7 +938,12 @@ const Home = ({ onOpenScanner }) => {
                     <p className="text-sm">Belum ada notifikasi.</p>
                   </div>
                 ) : notifications.map(notif => (
-                  <NotificationItem key={notif.id} notif={notif} onDelete={(id) => setNotifications(prev => prev.filter(n => n.id !== id))} />
+                  <NotificationItem
+                    key={notif.id}
+                    notif={notif}
+                    onDelete={(id) => setNotifications(prev => prev.filter(n => n.id !== id))}
+                    onClick={handleNotifClick}
+                  />
                 ))}
               </div>
             </div>
@@ -933,7 +973,12 @@ const Home = ({ onOpenScanner }) => {
                     <p className="font-medium text-sm">Belum ada notifikasi.</p>
                   </div>
                 ) : notifications.map(notif => (
-                  <NotificationItem key={notif.id} notif={notif} onDelete={(id) => setNotifications(prev => prev.filter(n => n.id !== id))} />
+                  <NotificationItem
+                    key={notif.id}
+                    notif={notif}
+                    onDelete={(id) => setNotifications(prev => prev.filter(n => n.id !== id))}
+                    onClick={handleNotifClick}
+                  />
                 ))}
               </div>
             </div>
