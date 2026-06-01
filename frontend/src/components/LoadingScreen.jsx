@@ -8,6 +8,10 @@ const LoadingScreen = ({ isAuthReady, isExiting, onDone }) => {
   const [progress, setProgress] = useState(0);
   const [hasCompleted, setHasCompleted] = useState(false);
 
+  // Detect dark mode so the splash bg matches the app root
+  const isDark = document.documentElement.classList.contains('dark') ||
+    window.matchMedia('(prefers-color-scheme: dark)').matches;
+
   useEffect(() => {
     const timer = setTimeout(() => setShowLogo(true), 1200);
     return () => clearTimeout(timer);
@@ -30,7 +34,9 @@ const LoadingScreen = ({ isAuthReady, isExiting, onDone }) => {
   }, [showBar, isAuthReady, hasCompleted, onDone]);
 
   return (
-    <div className={`fixed inset-0 z-50 flex items-center justify-center bg-white splash-root ${isExiting ? 'splash-exit' : ''}`}>
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center splash-root ${isExiting ? 'splash-exit' : ''} ${isDark ? 'bg-gray-900' : 'bg-white'}`}
+    >
       <div className="flex flex-col items-center justify-center splash-content">
         <div className="w-[180px] h-[180px] relative flex items-center justify-center">
           <div className="absolute w-[18px] h-[18px] bg-[#FFA726] animate-shape-sequence" />

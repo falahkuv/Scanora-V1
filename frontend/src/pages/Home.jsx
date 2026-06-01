@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { User, AlertCircle, X, Utensils, Trash2, Salad, Sprout, ImageOff, ChevronRight, SquareCheck, SquareX, Bell, Camera, BarChart2, Sparkles, Bot, Package } from 'lucide-react';
+import { User, AlertCircle, X, Trash2, Salad, Sprout, ImageOff, Bell, Camera, BarChart2, Package, Utensils } from 'lucide-react';
+import FruitDetailModal from '../components/FruitDetailModal';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { useViewport } from '../context/ViewportContext';
@@ -39,7 +40,7 @@ const getConditionLabel = (condition) => {
 const getConditionBadgeStyle = (condition) => {
   const c = (condition || '').toLowerCase();
   if (c === 'unripe') return 'bg-green-100 text-green-700';
-  if (c === 'ripe') return 'bg-orange-100 text-orange-700';
+  if (c === 'ripe') return 'bg-orange-main text-white';
   if (c === 'rotten') return 'bg-red-100 text-red-700';
   return 'bg-gray-100 text-gray-600';
 };
@@ -60,8 +61,8 @@ const formatShortDate = (dateStr) => {
 
 const ScoreBadge = ({ score, className = "py-1 text-[11px]" }) => {
   const pct = Math.round(score ?? 0);
-  const bg = pct >= 70 ? 'bg-green-100' : pct > 0 ? 'bg-orange-main/15' : 'bg-red-100';
-  const text = pct >= 70 ? 'text-green-700' : pct > 0 ? 'text-orange-main' : 'text-red-700';
+  const bg = pct >= 70 ? 'bg-green-500/15 dark:bg-green-500/20' : pct > 0 ? 'bg-orange-main/15 dark:bg-orange-500/20' : 'bg-red-500/15 dark:bg-red-500/20';
+  const text = pct >= 70 ? 'text-green-700 dark:text-green-300' : pct > 0 ? 'text-orange-main dark:text-orange-300' : 'text-red-700 dark:text-red-300';
   return (
     <div className={`px-2 rounded w-full text-center font-bold flex items-center justify-center ${bg} ${text} ${className}`}>
       {pct}%
@@ -74,8 +75,8 @@ const renderMarkdown = (text) => {
   if (!text) return null;
   const lines = text.split('\n');
   return lines.map((line, i) => {
-    const isBullet = /^[-*•]\s+/.test(line);
-    const content = line.replace(/^[-*•]\s+/, '');
+    const isBullet = /^[-*â€¢]\s+/.test(line);
+    const content = line.replace(/^[-*â€¢]\s+/, '');
     const parseInline = (str) => {
       const parts = str.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
       return parts.map((part, j) => {
@@ -86,7 +87,7 @@ const renderMarkdown = (text) => {
     };
     if (isBullet) return (
       <div key={i} className="flex gap-2 mt-1">
-        <span className="text-green-600 font-bold mt-0.5">•</span>
+        <span className="text-green-600 font-bold mt-0.5">â€¢</span>
         <span>{parseInline(content)}</span>
       </div>
     );
@@ -183,9 +184,9 @@ const NotificationItem = ({ notif, onDelete, onClick }) => {
       >
         <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${notif.isRead ? 'bg-transparent' : 'bg-scanora-green'}`} />
         <div className="flex-1">
-          <h4 className="font-bold text-gray-900 dark:text-white text-sm">{notif.title}</h4>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">{notif.message}</p>
-          <span className="text-[10px] font-bold text-gray-400 mt-2 block">{notif.date}</span>
+          <h4 className="font-bold text-gray-900 dark:text-white dark:text-white text-sm">{notif.title}</h4>
+          <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 leading-relaxed">{notif.message}</p>
+          <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 mt-2 block">{notif.date}</span>
         </div>
       </div>
     </div>
@@ -207,9 +208,7 @@ const Home = ({ onOpenScanner }) => {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState(null);
 
-  // Sticky header state for detail modal
-  const [showStickyHeader, setShowStickyHeader] = useState(false);
-  const scrollContainerRef = useRef(null);
+
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -250,7 +249,6 @@ const Home = ({ onOpenScanner }) => {
       setAiError(null);
       setAiLoading(false);
     }
-    setShowStickyHeader(false);
   }, [selectedItem?.id]);
 
   const handleGetAiSuggestion = async (isBackground = false) => {
@@ -275,7 +273,7 @@ const Home = ({ onOpenScanner }) => {
     }
   };
 
-  // ── Notification read-state helpers ──────────────────────────────────────
+  // â”€â”€ Notification read-state helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const getReadIds = () => {
     try { return new Set(JSON.parse(localStorage.getItem('scanora_read_notifs') || '[]')); }
     catch { return new Set(); }
@@ -368,13 +366,13 @@ const Home = ({ onOpenScanner }) => {
           let body = '';
 
           if (dLeft === 3 || dLeft === 2) {
-            title = `🥗 Jangan Lupa ${fruitName} Kamu!`;
+            title = `\uD83E\uDD57 Jangan Lupa ${fruitName} Kamu!`;
             body = `Mengingatkan: ${fruitName} kamu tinggal ${dLeft} hari lagi sebelum mulai membusuk.`;
           } else if (dLeft === 1) {
-            title = `⚠️ ${fruitName} Hampir Busuk!`;
+            title = `\u26A0\uFE0F ${fruitName} Hampir Busuk!`;
             body = `Perhatian! ${fruitName} yang kamu simpan sisa 1 hari lagi.`;
           } else if (dLeft === 0) {
-            title = `🚨 Hari Terakhir untuk ${fruitName}!`;
+            title = `\uD83D\uDEA8 Hari Terakhir untuk ${fruitName}!`;
             body = `${fruitName} kamu diperkirakan sudah mencapai batas maksimal kesegarannya hari ini.`;
           }
 
@@ -437,9 +435,9 @@ const Home = ({ onOpenScanner }) => {
   const total = impact.consumed !== '-' ? impact.consumed + impact.discarded : 0;
   const saveRate = total > 0 ? Math.round((impact.consumed / total) * 100) : null;
   const prideMsg = saveRate === null ? null
-    : saveRate >= 80 ? 'Luar biasa! Hampir semua buahmu terselamatkan. 🌟'
-      : saveRate >= 50 ? 'Lumayan! Terus kurangi pemborosan ya. 👍'
-        : 'Masih banyak yang dibuang. Yuk lebih bijak! 😬';
+    : saveRate >= 80 ? 'Luar biasa! Hampir semua buahmu terselamatkan. \uD83C\uDF1F'
+      : saveRate >= 50 ? 'Lumayan! Terus kurangi pemborosan ya. \uD83D\uDC4D'
+        : 'Masih banyak yang dibuang. Yuk lebih bijak! \uD83D\uDE2C';
 
   const { viewport } = useViewport();
   const isDesktop = viewport === 'desktop';
@@ -454,8 +452,8 @@ const Home = ({ onOpenScanner }) => {
       {/* Header */}
       <header className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Halo, {firstName}!</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Ayo selamatkan makanan hari ini.</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white dark:text-white">Halo, {firstName}!</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">Ayo selamatkan makanan hari ini.</p>
         </div>
         <div className="flex gap-4">
           <Tooltip content="Notifikasi" placement="bottom">
@@ -467,7 +465,7 @@ const Home = ({ onOpenScanner }) => {
               <Bell size={isDesktop ? 18 : 24} />
               {isDesktop && <span>Notifikasi</span>}
               {notifications.some(n => !n.isRead) && (
-                <div className={`absolute bg-red-500 rounded-full border-2 border-white dark:border-gray-800
+                <div className={`absolute bg-red-500 rounded-full border-2 border-white dark:border-gray-800 dark:border-gray-800 dark:border-gray-800
                   ${isDesktop ? 'top-2 right-2 w-2 h-2' : 'top-3 right-3 w-2.5 h-2.5'}`} />
               )}
             </button>
@@ -499,11 +497,11 @@ const Home = ({ onOpenScanner }) => {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Sprout className="text-scanora-green" size={20} />
-            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Performa Bulan Ini</h2>
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 dark:text-gray-200">Performa Bulan Ini</h2>
           </div>
           <button
             onClick={() => navigate('/stats')}
-            className="px-3 py-1.5 bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 rounded-full text-sm font-bold transition-all active:scale-95"
+            className="px-3 py-1.5 bg-gray-100 text-gray-500 dark:text-gray-500 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-500 dark:hover:bg-gray-700 rounded-full text-sm font-bold transition-all active:scale-95"
           >
             Lihat Statistik
           </button>
@@ -539,19 +537,19 @@ const Home = ({ onOpenScanner }) => {
                 </div>
               </div>
               {saveRate !== null ? (
-                <div className="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col justify-center shadow-sm">
+                <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4 flex flex-col justify-center shadow-sm">
                   <div className="flex justify-between items-center mb-2">
-                    <p className="text-gray-500 text-xs font-semibold">Skor Keberhasilan</p>
+                    <p className="text-gray-500 dark:text-gray-500 text-xs font-semibold">Skor Keberhasilan</p>
                     <p className="text-scanora-green font-bold text-sm">{saveRate}%</p>
                   </div>
-                  <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="w-full h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div className="h-full bg-scanora-green rounded-full transition-all duration-700" style={{ width: `${saveRate}%` }} />
                   </div>
-                  <p className="text-gray-400 text-xs mt-2">{prideMsg}</p>
+                  <p className="text-gray-400 dark:text-gray-500 text-xs mt-2">{prideMsg}</p>
                 </div>
               ) : (
                 <div className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center justify-center shadow-sm">
-                  <p className="text-gray-500 text-sm">Mulai konsumsi atau buang buah untuk melihat statistikmu!</p>
+                  <p className="text-gray-500 dark:text-gray-500 text-sm">Mulai konsumsi atau buang buah untuk melihat statistikmu!</p>
                 </div>
               )}
             </div>
@@ -587,19 +585,19 @@ const Home = ({ onOpenScanner }) => {
                 </div>
               </div>
               {saveRate !== null ? (
-                <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm">
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-100 dark:border-gray-700 shadow-sm">
                   <div className="flex justify-between items-center mb-1.5">
-                    <p className="text-gray-500 text-xs font-semibold">Skor Keberhasilan</p>
+                    <p className="text-gray-500 dark:text-gray-500 text-xs font-semibold">Skor Keberhasilan</p>
                     <p className="text-scanora-green font-bold text-sm">{saveRate}%</p>
                   </div>
-                  <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="w-full h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                     <div className="h-full bg-scanora-green rounded-full transition-all duration-700 ease-out" style={{ width: `${saveRate}%` }} />
                   </div>
-                  <p className="text-gray-400 text-sm mt-2 text-center">{prideMsg}</p>
+                  <p className="text-gray-400 dark:text-gray-500 text-sm mt-2 text-center">{prideMsg}</p>
                 </div>
               ) : (
-                <div className="bg-white rounded-xl p-3 text-center border border-gray-100 shadow-sm">
-                  <p className="text-gray-500 text-xs">Mulai konsumsi atau buang buah dari inventori untuk melihat statistikmu!</p>
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-3 text-center border border-gray-100 dark:border-gray-700 shadow-sm">
+                  <p className="text-gray-500 dark:text-gray-500 text-xs">Mulai konsumsi atau buang buah dari inventori untuk melihat statistikmu!</p>
                 </div>
               )}
             </>
@@ -612,19 +610,19 @@ const Home = ({ onOpenScanner }) => {
         <div className="flex items-center gap-2 mb-4">
           {/* AlertCircle with orange-main */}
           <AlertCircle className="text-orange-main" size={20} />
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Segera Konsumsi {!loading && `(${urgentItems.length})`}</h2>
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 dark:text-gray-200">Segera Konsumsi {!loading && `(${urgentItems.length})`}</h2>
         </div>
 
         {loading ? (
-          <div className="space-y-3">
+        <div className="space-y-3">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="bg-white p-4 rounded-2xl flex items-center gap-4 shadow-sm border border-gray-100">
-                <div className="w-12 h-12 bg-gray-100 rounded-xl flex-shrink-0 animate-pulse" />
+              <div key={i} className="bg-white dark:bg-gray-800 p-4 rounded-2xl flex items-center gap-4 shadow-sm border border-gray-100 dark:border-gray-700">
+                <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-xl flex-shrink-0 animate-pulse" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 w-2/3 bg-gray-100 rounded animate-pulse" />
-                  <div className="h-3 w-1/3 bg-gray-100 rounded animate-pulse" />
+                  <div className="h-4 w-2/3 bg-gray-100 dark:bg-gray-700 rounded animate-pulse" />
+                  <div className="h-3 w-1/3 bg-gray-100 dark:bg-gray-700 rounded animate-pulse" />
                 </div>
-                <div className="w-12 h-6 bg-gray-100 rounded animate-pulse" />
+                <div className="w-12 h-6 bg-gray-100 dark:bg-gray-700 rounded animate-pulse" />
               </div>
             ))}
           </div>
@@ -650,19 +648,19 @@ const Home = ({ onOpenScanner }) => {
                       />
                     ) : null}
                     <div className="w-full h-full items-center justify-center bg-gray-100 flex-col gap-1" style={{ display: item.image_url ? 'none' : 'flex' }}>
-                      <ImageOff size={20} className="text-gray-400" strokeWidth={1.5} />
+                      <ImageOff size={20} className="text-gray-400 dark:text-gray-400 dark:text-gray-500" strokeWidth={1.5} />
                     </div>
                   </div>
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     {/* Fruit name: 18px */}
-                    <h3 className="font-bold text-gray-900 capitalize leading-tight" style={{ fontSize: '18px' }}>{getFruitLabel(item.fruit_type)}</h3>
+                    <h3 className="font-bold text-gray-900 dark:text-white capitalize leading-tight" style={{ fontSize: '18px' }}>{getFruitLabel(item.fruit_type)}</h3>
                     <div className="flex items-center gap-2 mt-1 overflow-hidden whitespace-nowrap">
-                      <span className="text-sm text-gray-400 flex items-center gap-1.5 flex-shrink-0">
+                      <span className="text-sm text-gray-400 dark:text-gray-500 flex items-center gap-1.5 flex-shrink-0">
                         <Camera size={14} />
                         {item.added_at ? new Date(item.added_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : '-'}
                       </span>
-                      <span className="text-gray-300 text-sm flex-shrink-0">·</span>
+                      <span className="text-gray-300 text-sm flex-shrink-0">\u00B7</span>
                       <span className={`text-sm font-bold truncate ${dotColor === 'bg-red-main' ? 'text-red-main' : dotColor === 'bg-orange-main' ? 'text-orange-main' : 'text-scanora-green'}`}>
                         {item.daysLeft === 0 ? 'Hari ini!' : `Sisa ${item.daysLeft} hari`}
                       </span>
@@ -678,7 +676,7 @@ const Home = ({ onOpenScanner }) => {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-8 px-4 text-center border border-dashed border-gray-200 dark:border-gray-700 rounded-2xl bg-gray-50 dark:bg-gray-800/50">
-            <p className="text-gray-500 text-sm mb-3">Semua buah masih aman! 🌿</p>
+            <p className="text-gray-500 dark:text-gray-500 text-sm mb-3">Semua buah masih aman! \uD83C\uDF3F</p>
             {urgentItems.length === 0 && (
               <button onClick={() => onOpenScanner?.() || document.getElementById('viewport-toggle-btn')?.click()} className="bg-scanora-green text-white font-bold py-2 px-4 rounded-xl text-xs shadow-md active:scale-95 transition-all cursor-pointer">Scan Buah Sekarang</button>
             )}
@@ -686,225 +684,33 @@ const Home = ({ onOpenScanner }) => {
         )}
       </section>
 
-      {/* ── Detail Modal ── */}
+      {/* â”€â”€ Detail Modal â”€â”€ */}
       {selectedItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in" onClick={() => setSelectedItem(null)}>
-          <div
-            className="bg-white rounded-3xl w-full max-w-md shadow-2xl transform transition-all animate-slide-up flex flex-col overflow-hidden relative"
-            style={{ maxHeight: '90dvh' }}
-            onClick={e => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setSelectedItem(null)}
-              className="absolute top-4 right-4 w-11 h-11 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 active:scale-95 transition-all cursor-pointer z-40"
-            >
-              <X size={18} />
-            </button>
-
-            {/* ── Sticky fruit header ── */}
-            <div
-              className={`absolute top-0 left-0 right-0 z-30 flex items-center gap-2 px-5 py-5 bg-white border-b border-gray-100 transition-all duration-300 ${showStickyHeader ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'}`}
-            >
-              <span className="text-[18px] font-bold text-gray-900 capitalize leading-none">
-                {getFruitLabel(selectedItem.fruit_type)}
-              </span>
-              <span className={`text-xs font-bold px-2 py-0.5 rounded-md capitalize ${getConditionBadgeStyle(selectedItem.condition)}`}>
-                {getConditionLabel(selectedItem.condition)}
-              </span>
-            </div>
-
-            {/* Scrollable content */}
-            <div
-              className="overflow-y-auto flex-1 no-scrollbar"
-              ref={scrollContainerRef}
-              onScroll={handleDetailScroll}
-            >
-              {/* Image banner — scrolls away */}
-              <div className="relative aspect-video bg-gradient-to-b from-sky-200 to-green-200 flex items-center justify-center overflow-hidden flex-shrink-0 z-20">
-                {selectedItem.image_url ? (
-                  <img
-                    src={selectedItem.image_url}
-                    alt={selectedItem.fruit_type}
-                    className="w-full h-full object-cover"
-                    onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
-                  />
-                ) : null}
-                <div
-                  className="w-full h-full items-center justify-center flex-col gap-2 bg-gradient-to-b from-sky-200 to-green-200"
-                  style={{ display: selectedItem.image_url ? 'none' : 'flex' }}
-                >
-                  <img
-                    src={getMascotSrc(selectedItem.fruit_type, selectedItem.condition)}
-                    alt=""
-                    className="h-24 object-contain drop-shadow-lg"
-                    onError={(e) => { e.target.style.display = 'none'; }}
-                  />
-                </div>
-              </div>
-
-              <div className="p-5 pb-2">
-                {/* Name + badge + Mascot — 1 row */}
-                <div className="flex items-center justify-between mb-4 mt-2">
-                  <div className="flex flex-row items-center gap-2">
-                    <h2 className="text-3xl font-bold text-gray-900 capitalize leading-none">
-                      {getFruitLabel(selectedItem.fruit_type)}
-                    </h2>
-                    <span className={`text-sm font-bold px-2 py-1 rounded-md capitalize leading-none ${getConditionBadgeStyle(selectedItem.condition)}`}>
-                      {getConditionLabel(selectedItem.condition)}
-                    </span>
-                  </div>
-                  <div className="relative w-20">
-                    <img
-                      src={getMascotSrc(selectedItem.fruit_type, selectedItem.condition)}
-                      alt=""
-                      className="absolute bottom-0 right-0 h-32 object-contain drop-shadow-md pointer-events-none"
-                      style={{ transform: 'translateY(64px)' }}
-                      onError={(e) => { e.target.style.display = 'none'; }}
-                    />
-                  </div>
-                </div>
-
-                {/* Detail Scan label — not bold */}
-                <p className="text-xs font-normal text-gray-400 text-center mb-2">Detail Scan:</p>
-
-                {/* Date + score card */}
-                <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-3">
-                  <div className="flex flex-col gap-3 mb-4">
-                    <p className="text-gray-500 font-medium text-sm flex items-center gap-2">
-                      <Camera size={16} />
-                      <span>Tgl. Foto: {formatShortDate(selectedItem.added_at)}</span>
-                    </p>
-                    <p className="text-gray-500 font-medium text-sm flex items-center gap-2">
-                      {selectedItem.condition === 'unripe' ? (
-                        <SquareCheck size={16} />
-                      ) : (
-                        <SquareX size={16} />
-                      )}
-                      <span>
-                        {selectedItem.condition === 'unripe' ? 'Tgl. Matang:' : 'Tgl. Batas Layak:'}{' '}
-                        {formatShortDate(selectedItem.reminder_at)}
-                      </span>
-                    </p>
-                  </div>
-                  <hr className="border-gray-200 mb-4" />
-                  {/* Freshness score row — animated chevrons */}
-                  <div className="flex items-center gap-3 mb-4">
-                    <p className="text-sm text-gray-500 font-medium whitespace-nowrap">Update Freshness Score:</p>
-                    <div className="flex items-center gap-1 flex-1 min-w-0">
-                      <div className="flex-1">
-                        <ScoreBadge score={selectedItem.freshness_score_initial} className="py-2 text-sm" />
-                      </div>
-                      <div className="flex -space-x-2 flex-shrink-0 animate-pulse">
-                        <ChevronRight size={18} className="text-gray-400" />
-                        <ChevronRight size={18} className="text-gray-400" />
-                      </div>
-                      <div className="flex-1">
-                        <ScoreBadge score={selectedItem.freshness_score_latest ?? selectedItem.freshness_score_initial} className="py-2 text-sm" />
-                      </div>
-                    </div>
-                  </div>
-                  {(() => {
-                    const daysLeft = calculateDaysLeft(selectedItem.reminder_at);
-                    const countdown = getCountdownConfig(selectedItem.condition, daysLeft);
-                    return (
-                      <div className={`px-4 py-3 rounded-xl text-center text-base font-bold w-full ${countdown.bg} ${countdown.text}`}>
-                        {countdown.btnText}
-                      </div>
-                    );
-                  })()}
-                </div>
-
-                {/* AI Suggestion Box */}
-                {selectedItem.scan_id && (
-                  <div className="mb-4 mt-2">
-                    {!aiSuggestion && !aiLoading && (
-                      <button
-                        onClick={() => handleGetAiSuggestion()}
-                        className="w-full min-h-[44px] bg-green-50 hover:bg-green-100 border border-green-200 text-green-800 font-semibold rounded-2xl flex items-center justify-center gap-2 text-sm active:scale-95 transition-all cursor-pointer"
-                      >
-                        <Sparkles size={16} className="text-green-600" />
-                        Minta Saran AI
-                      </button>
-                    )}
-
-                    {aiLoading && (
-                      <div className="w-full min-h-[44px] bg-green-50 border border-green-200 rounded-2xl flex flex-col items-center justify-center gap-2 px-4 py-3 overflow-hidden">
-                        <div className="flex items-center gap-3 w-full">
-                          <div className="w-5 h-5 border-2 border-green-400 border-t-transparent rounded-full animate-spin flex-shrink-0" />
-                          <p className="text-sm text-green-700 font-medium animate-pulse">Scanora sedang berpikir...</p>
-                        </div>
-                        <div className="w-full h-1 bg-green-100 rounded-full overflow-hidden">
-                          <div className="h-full bg-green-400 rounded-full" style={{ width: '40%', animation: 'indeterminate 1.5s ease-in-out infinite' }} />
-                        </div>
-                        <div className="animate-pulse flex flex-col gap-2 mt-2 w-full">
-                          <div className="h-3 bg-green-200/60 rounded-full w-full" />
-                        </div>
-                      </div>
-                    )}
-
-                    {aiSuggestion && !aiLoading && (
-                      <div className="bg-green-50 rounded-2xl p-4 border border-green-100">
-                        <h4 className="font-semibold text-green-800 text-sm flex items-center gap-1.5 mb-3">
-                          <Sparkles size={14} className="text-green-600" /> Saran Chef Scanora
-                        </h4>
-                        <div className="text-sm text-gray-700 leading-relaxed">
-                          {renderMarkdown(aiSuggestion)}
-                        </div>
-                      </div>
-                    )}
-
-                    {aiError && !aiLoading && (
-                      <div className="bg-red-50 rounded-2xl p-4 border border-red-100 flex items-center justify-between gap-2">
-                        <p className="text-sm text-red-600">{aiError}</p>
-                        <button onClick={() => handleGetAiSuggestion()} className="text-xs text-red-600 font-bold underline">Coba Lagi</button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* ── Always-visible Disclaimer ── */}
-                <div className="flex items-start gap-3 bg-gray-100/80 border border-gray-200/70 rounded-2xl px-4 py-3 mb-5 mt-2">
-                  <Bot size={16} className="text-gray-400 flex-shrink-0 mt-0.5" />
-                  <p className="text-[12px] text-gray-500 leading-relaxed">
-                    Estimasi berdasarkan skenario terbaik. Kondisi asli bisa berbeda. Foto ulang untuk update.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Sticky CTAs — always at bottom */}
-            <div className="p-5 pt-3 flex-shrink-0 border-t border-gray-100">
-              <div className="flex gap-4">
-                <button
-                  onClick={async () => {
-                    try {
-                      await api.delete(`/inventory/${selectedItem.id}`, { data: { outcome: 'discarded' } });
-                      setUrgentItems(prev => prev.filter(i => i.id !== selectedItem.id));
-                      setSelectedItem(null);
-                      fetchHomeData();
-                    } catch (err) { console.error(err); }
-                  }}
-                  className="flex-1 min-h-[44px] bg-red-100 text-red-600 font-semibold rounded-xl hover:bg-red-200 active:scale-95 transition-all text-sm flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Trash2 size={16} /> Dibuang
-                </button>
-                <button
-                  onClick={async () => {
-                    try {
-                      await api.delete(`/inventory/${selectedItem.id}`, { data: { outcome: 'consumed' } });
-                      setUrgentItems(prev => prev.filter(i => i.id !== selectedItem.id));
-                      setSelectedItem(null);
-                      fetchHomeData();
-                    } catch (err) { console.error(err); }
-                  }}
-                  className="flex-1 min-h-[44px] bg-scanora-green text-white font-semibold rounded-xl hover:bg-scanora-dark active:scale-95 transition-all text-sm flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Utensils size={16} /> Dikonsumsi
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <FruitDetailModal
+          item={selectedItem}
+          activeTab="inventory"
+          onClose={() => setSelectedItem(null)}
+          onConsumed={async () => {
+            try {
+              await api.delete(`/inventory/${selectedItem.id}`, { data: { outcome: 'consumed' } });
+              setUrgentItems(prev => prev.filter(i => i.id !== selectedItem.id));
+              setSelectedItem(null);
+              fetchHomeData();
+            } catch (err) { console.error(err); }
+          }}
+          onDiscarded={async () => {
+            try {
+              await api.delete(`/inventory/${selectedItem.id}`, { data: { outcome: 'discarded' } });
+              setUrgentItems(prev => prev.filter(i => i.id !== selectedItem.id));
+              setSelectedItem(null);
+              fetchHomeData();
+            } catch (err) { console.error(err); }
+          }}
+          aiSuggestion={aiSuggestion}
+          aiLoading={aiLoading}
+          aiError={aiError}
+          onRequestAI={handleGetAiSuggestion}
+        />
       )}
 
       {/* Notifications */}
@@ -917,7 +723,7 @@ const Home = ({ onOpenScanner }) => {
               onClick={e => e.stopPropagation()}
             >
               <div className="p-4 border-b border-gray-100 flex justify-between items-center">
-                <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                <h2 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
                   <Bell size={16} /> Notifikasi
                 </h2>
                 <div className="flex items-center gap-4">
@@ -926,14 +732,14 @@ const Home = ({ onOpenScanner }) => {
                       Hapus Semua
                     </button>
                   )}
-                  <button onClick={() => setShowNotifications(false)} className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 active:scale-95 transition-all">
+                  <button onClick={() => setShowNotifications(false)} className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-500 active:scale-95 transition-all">
                     <X size={16} />
                   </button>
                 </div>
               </div>
               <div className="overflow-y-auto flex-1 p-3 space-y-1">
                 {notifications.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-10 text-gray-400">
+                  <div className="flex flex-col items-center justify-center py-10 text-gray-400 dark:text-gray-400 dark:text-gray-500">
                     <Bell size={36} className="mb-3 opacity-20" />
                     <p className="text-sm">Belum ada notifikasi.</p>
                   </div>
@@ -952,7 +758,7 @@ const Home = ({ onOpenScanner }) => {
           <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm animate-fade-in" onClick={() => setShowNotifications(false)}>
             <div className="bg-gray-50 dark:bg-gray-900 w-full h-[85vh] rounded-t-3xl shadow-2xl flex flex-col animate-slide-up" onClick={e => e.stopPropagation()}>
               <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-white dark:bg-gray-800 rounded-t-3xl shadow-sm">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white dark:text-white flex items-center gap-2">
                   <Bell size={20} /> Inbox Notifikasi
                 </h2>
                 <div className="flex items-center gap-4">
@@ -968,7 +774,7 @@ const Home = ({ onOpenScanner }) => {
               </div>
               <div className="flex-1 overflow-x-hidden overflow-y-auto p-4 pb-12">
                 {notifications.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                  <div className="flex flex-col items-center justify-center h-full text-gray-400 dark:text-gray-400 dark:text-gray-500">
                     <Bell size={48} className="mb-4 opacity-20" />
                     <p className="font-medium text-sm">Belum ada notifikasi.</p>
                   </div>
@@ -986,13 +792,7 @@ const Home = ({ onOpenScanner }) => {
         )
       )}
 
-      <style>{`
-        @keyframes indeterminate {
-          0%   { transform: translateX(-100%); width: 40%; }
-          50%  { width: 60%; }
-          100% { transform: translateX(250%); width: 40%; }
-        }
-      `}</style>
+
     </div>
   );
 };

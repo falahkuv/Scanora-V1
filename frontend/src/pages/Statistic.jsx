@@ -21,8 +21,8 @@ const mockMonthlyData = [
     topFruit: { name: 'Pisang', count: 7, img: '/mascots/banana_ripe.png' },
     distribution: [
       { name: 'Pisang', consumed: 7, discarded: 2, color: '#fdc107' },
-      { name: 'Apel',   consumed: 3, discarded: 1, color: '#bb0006' },
-      { name: 'Jeruk',  consumed: 2, discarded: 1, color: '#f87305' },
+      { name: 'Apel', consumed: 3, discarded: 1, color: '#bb0006' },
+      { name: 'Jeruk', consumed: 2, discarded: 1, color: '#f87305' },
     ]
   },
   {
@@ -30,8 +30,8 @@ const mockMonthlyData = [
     topFruit: { name: 'Apel', count: 11, img: '/mascots/apple_ripe.png' },
     distribution: [
       { name: 'Pisang', consumed: 8, discarded: 3, color: '#fdc107' },
-      { name: 'Apel',   consumed: 11, discarded: 5, color: '#bb0006' },
-      { name: 'Jeruk',  consumed: 0,  discarded: 0, color: '#f87305' },
+      { name: 'Apel', consumed: 11, discarded: 5, color: '#bb0006' },
+      { name: 'Jeruk', consumed: 0, discarded: 0, color: '#f87305' },
     ]
   },
   {
@@ -39,8 +39,8 @@ const mockMonthlyData = [
     topFruit: { name: 'Jeruk', count: 9, img: '/mascots/orange_ripe.png' },
     distribution: [
       { name: 'Pisang', consumed: 4, discarded: 1, color: '#fdc107' },
-      { name: 'Apel',   consumed: 2, discarded: 1, color: '#bb0006' },
-      { name: 'Jeruk',  consumed: 9, discarded: 0, color: '#f87305' },
+      { name: 'Apel', consumed: 2, discarded: 1, color: '#bb0006' },
+      { name: 'Jeruk', consumed: 9, discarded: 0, color: '#f87305' },
     ]
   },
   {
@@ -48,8 +48,8 @@ const mockMonthlyData = [
     topFruit: { name: 'Pisang', count: 13, img: '/mascots/banana_ripe.png' },
     distribution: [
       { name: 'Pisang', consumed: 13, discarded: 2, color: '#fdc107' },
-      { name: 'Apel',   consumed: 6, discarded: 2, color: '#bb0006' },
-      { name: 'Jeruk',  consumed: 3, discarded: 1, color: '#f87305' },
+      { name: 'Apel', consumed: 6, discarded: 2, color: '#bb0006' },
+      { name: 'Jeruk', consumed: 3, discarded: 1, color: '#f87305' },
     ]
   },
   {
@@ -57,14 +57,14 @@ const mockMonthlyData = [
     topFruit: { name: 'Pisang', count: 16, img: '/mascots/banana_ripe.png' },
     distribution: [
       { name: 'Pisang', consumed: 16, discarded: 1, color: '#fdc107' },
-      { name: 'Apel',   consumed: 8,  discarded: 1, color: '#bb0006' },
-      { name: 'Jeruk',  consumed: 4,  discarded: 1, color: '#f87305' },
+      { name: 'Apel', consumed: 8, discarded: 1, color: '#bb0006' },
+      { name: 'Jeruk', consumed: 4, discarded: 1, color: '#f87305' },
     ]
   },
 ];
 
 // ── Component ───────────────────────────────────────────────────────────────────
-export default function ImpactStats() {
+export default function Statistic() {
   const navigate = useNavigate();
   const { viewport } = useViewport();
   const isDesktop = viewport === 'desktop';
@@ -92,7 +92,7 @@ export default function ImpactStats() {
       setIsLoading(false);
       return;
     }
-    
+
     setIsLoading(true);
     api.get('/inventory/monthly-stats')
       .then(res => {
@@ -112,7 +112,7 @@ export default function ImpactStats() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center text-gray-500 font-bold p-6 text-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 dark:text-gray-300 font-bold p-6 text-center">
         <div className="w-10 h-10 border-4 border-scanora-green border-t-transparent rounded-full animate-spin mb-4" />
         <p>Mengumpulkan data statistikmu...</p>
       </div>
@@ -121,29 +121,29 @@ export default function ImpactStats() {
 
   if (monthlyData.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 pb-20 relative flex flex-col">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 relative flex flex-col">
         {/* Header */}
-        <div className="bg-white px-6 pt-6 pb-4 shadow-sm z-10 sticky top-0 border-b border-gray-100 flex items-center gap-4">
+        <div className="bg-white dark:bg-gray-800 px-6 pt-6 pb-4 shadow-sm z-10 sticky top-0 border-b border-gray-100 dark:border-gray-700 flex items-center gap-4">
           {!isDesktop && (
-            <button onClick={() => navigate(-1)} className="text-gray-500 hover:text-gray-900 transition-colors active:scale-95">
+            <button onClick={() => navigate(-1)} className="text-gray-500 dark:text-gray-400 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white dark:text-white transition-colors active:scale-95">
               <ChevronLeft size={24} />
             </button>
           )}
-          <h1 className="text-xl font-bold text-gray-900">Statistik Performa</h1>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Statistik Performa</h1>
           {isDesktop && (
-            <button onClick={() => navigate(-1)} className="ml-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-bold text-gray-700 transition-colors active:scale-95">
+            <button onClick={() => navigate(-1)} className="ml-auto px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-300 transition-colors active:scale-95">
               Tutup
             </button>
           )}
         </div>
-        
+
         {/* Empty State */}
         <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
           <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mb-6">
             <BarChart2 size={40} className="text-gray-400" />
           </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Belum Ada Data Statistik</h2>
-          <p className="text-sm text-gray-500 mb-8 max-w-[250px]">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Belum Ada Data Statistik</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-8 max-w-[250px]">
             Statistik akan muncul setelah kamu membuang atau mengonsumsi buah dari inventori.
           </p>
           <button onClick={() => navigate('/inventory')} className="px-6 py-3 bg-scanora-green text-white font-bold rounded-xl active:scale-95 transition-all shadow-md">
@@ -235,40 +235,40 @@ export default function ImpactStats() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20 transition-colors relative">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 transition-colors relative">
 
       {/* ── Header ── */}
-      <div className="bg-white px-6 pt-6 pb-4 shadow-sm z-10 sticky top-0 border-b border-gray-100 flex items-center gap-4">
+      <div className="bg-white dark:bg-gray-800 px-6 pt-6 pb-4 shadow-sm z-10 sticky top-0 border-b border-gray-100 dark:border-gray-700 flex items-center gap-4">
         {!isDesktop && (
-          <button onClick={() => navigate(-1)} className="text-gray-500 hover:text-gray-900 transition-colors active:scale-95">
+          <button onClick={() => navigate(-1)} className="text-gray-500 dark:text-gray-400 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white dark:text-white transition-colors active:scale-95">
             <ChevronLeft size={24} />
           </button>
         )}
-        <h1 className="text-xl font-bold text-gray-900">Statistik Performa</h1>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white">Statistik Performa</h1>
         {isDesktop && (
-          <button onClick={() => navigate(-1)} className="ml-auto px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-bold text-gray-700 transition-colors active:scale-95">
+          <button onClick={() => navigate(-1)} className="ml-auto px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-300 transition-colors active:scale-95">
             Tutup
           </button>
         )}
       </div>
 
       {/* ── Floating Month Nav Pill ── */}
-      <div className={`fixed left-0 right-0 z-30 flex justify-center transition-all duration-300 ease-out ${isDesktop ? 'bottom-12 pl-[256px]' : 'bottom-24'} pointer-events-none`}>
-        <div className="bg-gray-100/90 backdrop-blur-md p-1.5 rounded-full flex gap-2 shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-gray-200 pointer-events-auto">
+      <div className={`fixed left-0 right-0 z-30 flex justify-center transition-all duration-300 ease-out ${isDesktop ? 'bottom-12 pl-[256px]' : 'bottom-32'} pointer-events-none`}>
+        <div className="bg-gray-100/90 dark:bg-gray-800/90 backdrop-blur-md p-1.5 rounded-full flex gap-2 shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-gray-200 dark:border-gray-700 pointer-events-auto">
           <button
             onClick={() => setMonthIdx(i => Math.max(0, i - 1))}
             disabled={monthIdx === 0}
-            className={`flex items-center justify-center w-10 h-10 rounded-full transition-all active:scale-95 ${monthIdx === 0 ? 'text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:text-gray-900 shadow-sm'}`}
+            className={`flex items-center justify-center w-10 h-10 rounded-full transition-all active:scale-95 ${monthIdx === 0 ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-white hover:text-gray-900 shadow-sm'}`}
           >
             <ChevronLeft size={20} />
           </button>
-          <div className="flex items-center px-2 font-bold text-gray-700 text-sm">
+          <div className="flex items-center px-2 font-bold text-gray-700 dark:text-gray-200 text-sm">
             {current.name} {current.year}
           </div>
           <button
             onClick={() => setMonthIdx(i => Math.min(monthlyData.length - 1, i + 1))}
             disabled={monthIdx === monthlyData.length - 1}
-            className={`flex items-center justify-center w-10 h-10 rounded-full transition-all active:scale-95 ${monthIdx === monthlyData.length - 1 ? 'text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:text-gray-900 shadow-sm'}`}
+            className={`flex items-center justify-center w-10 h-10 rounded-full transition-all active:scale-95 ${monthIdx === monthlyData.length - 1 ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-white hover:text-gray-900 shadow-sm'}`}
           >
             <ChevronRight size={20} />
           </button>
@@ -281,7 +281,7 @@ export default function ImpactStats() {
         {/* ── Month Title — centered ── */}
         <div className="text-center pt-2">
           <p className="text-xs font-semibold text-gray-400 mb-1">Performa bulan ini:</p>
-          <h2 className="text-2xl font-extrabold text-gray-900">{current.name} {current.year}</h2>
+          <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white">{current.name} {current.year}</h2>
         </div>
 
         {/* ── Main Grid: Dikonsumsi | Dibuang | Tingkat Keberhasilan ── */}
@@ -315,14 +315,14 @@ export default function ImpactStats() {
         {/* ── Row: Legend + Pie Chart + Top Fruit ── */}
         <div className="grid grid-cols-3 gap-3">
           {/* Legend */}
-          <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col justify-center">
+          <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4 shadow-sm flex flex-col justify-center">
             <p className="text-xs font-semibold text-gray-400 mb-3">Distribusi Buah</p>
             <div className="space-y-2">
               {current.distribution.filter(d => d.consumed + d.discarded > 0).map(d => (
                 <div key={d.name} className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
                     <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
-                    <span className="text-gray-600 font-medium">{d.name}</span>
+                    <span className="text-gray-600 dark:text-gray-300 font-medium">{d.name}</span>
                   </div>
                   <span className="text-gray-400 font-semibold">{d.consumed + d.discarded} buah</span>
                 </div>
@@ -331,7 +331,7 @@ export default function ImpactStats() {
           </div>
 
           {/* Pie Chart: distribution */}
-          <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col items-center justify-center">
+          <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4 shadow-sm flex flex-col items-center justify-center">
             <div className="w-full" style={{ height: '130px' }}>
               {pieTotal > 0 ? (
                 <Pie data={pieData} options={pieOptions} />
@@ -342,12 +342,12 @@ export default function ImpactStats() {
           </div>
 
           {/* Top Fruit this month */}
-          <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm relative overflow-hidden flex flex-col justify-between" style={{ minHeight: '160px' }}>
+          <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4 shadow-sm relative overflow-hidden flex flex-col justify-between" style={{ minHeight: '160px' }}>
             <div className="z-10">
               <p className="text-[11px] text-gray-400 font-semibold">Buah Favorit</p>
-              <p className="text-xl font-bold text-gray-800 mt-1">{current.topFruit.name}</p>
+              <p className="text-xl font-bold text-gray-800 dark:text-white mt-1">{current.topFruit.name}</p>
             </div>
-            <p className="text-xl text-gray-500 mt-4 z-10 font-bold">{current.topFruit.count} Kali</p>
+            <p className="text-xl text-gray-500 dark:text-gray-400 mt-4 z-10 font-bold">{current.topFruit.count} Kali</p>
             <img
               src={current.topFruit.img}
               alt={current.topFruit.name}
@@ -359,18 +359,18 @@ export default function ImpactStats() {
 
         {/* ── Rekap Perjalanan Header ── */}
         <div className="text-center mt-8 mb-4">
-          <h3 className="text-lg font-bold text-gray-900">Rekap Perjalanan:</h3>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">Rekap Perjalanan:</h3>
         </div>
 
         {/* ── All-time insight cards ── */}
         <div className="grid grid-cols-2 gap-3 mb-4">
           {/* Buah Favorit Sepanjang Masa */}
-          <div className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm relative overflow-hidden flex flex-col justify-between" style={{ minHeight: '160px' }}>
+          <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4 shadow-sm relative overflow-hidden flex flex-col justify-between" style={{ minHeight: '160px' }}>
             <div className="z-10">
-              <p className="text-[11px] text-gray-400 font-semibold truncate">Buah Favorit Sepanjang Masa</p>
-              <p className="text-xl font-bold text-gray-800 mt-1">{allTimeFavFruit.name}</p>
+              <p className="text-[11px] text-gray-400 font-semibold truncate">Buah Terfavorit</p>
+              <p className="text-xl font-bold text-gray-800 dark:text-white mt-1">{allTimeFavFruit.name}</p>
             </div>
-            <p className="text-xl text-gray-500 mt-4 z-10 font-bold">{allTimeFavFruit.count} Kali</p>
+            <p className="text-xl text-gray-500 dark:text-gray-400 mt-4 z-10 font-bold">{allTimeFavFruit.count} Kali</p>
             <img
               src={allTimeFavFruit.img}
               alt={allTimeFavFruit.name}
@@ -380,32 +380,39 @@ export default function ImpactStats() {
           </div>
 
           {/* Skor Keberhasilan Terbaik */}
-          <button
-            onClick={() => setMonthIdx(bestMonthIdx)}
-            className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm relative overflow-hidden flex flex-col hover:bg-gray-50 active:scale-95 transition-all text-left"
-            style={{ minHeight: '160px' }}
-          >
-            <div className="z-10 mb-4">
-              <p className="text-[11px] text-gray-500 font-semibold truncate">Skor Keberhasilan Terbaik</p>
-            </div>
-            <div className="absolute right-4 top-1/2 -translate-y-1/2">
-              <p className="text-5xl font-extrabold text-gray-900 leading-none">
-                {getSaveRate(monthlyData[bestMonthIdx])}%
-              </p>
-            </div>
-            <div className="z-10 mt-auto">
-              <p className="text-sm text-gray-600 font-medium">
-                {monthlyData[bestMonthIdx].name} {monthlyData[bestMonthIdx].year}
-              </p>
-            </div>
-          </button>
+          {(() => {
+            const bestScore = getSaveRate(monthlyData[bestMonthIdx]);
+            // Color logic: ≥80% green (sangat baik), ≥60% orange (cukup baik), <60% red (perlu perhatian)
+            const scoreColor = bestScore >= 80
+              ? 'text-green-600 dark:text-green-400'
+              : bestScore >= 60
+                ? 'text-orange-main'
+                : 'text-red-main';
+            return (
+              <button
+                onClick={() => setMonthIdx(bestMonthIdx)}
+                className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4 shadow-sm relative overflow-hidden flex flex-col hover:bg-gray-50 dark:hover:bg-gray-700 active:scale-95 transition-all text-left"
+                style={{ minHeight: '160px' }}
+              >
+                <div className="z-10">
+                  <p className="text-[11px] text-gray-400 font-semibold truncate">Skor Penyelamatan Terbaik</p>
+                </div>
+                <p className="absolute bottom-4 left-4 text-sm font-bold text-gray-400 dark:text-gray-500 z-10 leading-tight text-left">
+                  {monthlyData[bestMonthIdx].name}<br />{monthlyData[bestMonthIdx].year}
+                </p>
+                <p className={`absolute bottom-4 right-4 text-5xl font-extrabold leading-none z-10 ${scoreColor} text-right`}>
+                  {bestScore}%
+                </p>
+              </button>
+            );
+          })()}
         </div>
 
         {/* ── Lihat Bulan Lainnya Toggle ── */}
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden mb-4">
+        <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl shadow-sm overflow-hidden mb-4">
           <button
             onClick={() => setRekapExpanded(prev => !prev)}
-            className="w-full flex items-center justify-between px-5 py-4 text-sm font-bold text-gray-800 hover:bg-gray-50 active:scale-95 transition-all"
+            className="w-full flex items-center justify-between px-5 py-4 text-sm font-bold text-gray-800 dark:text-white dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 active:scale-95 transition-all"
           >
             <div className="flex items-center gap-2">
               Lihat Bulan Lainnya
@@ -436,7 +443,7 @@ export default function ImpactStats() {
                       className={`flex-1 flex flex-col items-center gap-1 transition-all active:scale-95 rounded-t-lg cursor-pointer ${isFocused ? 'opacity-100' : 'opacity-40 hover:opacity-70'}`}
                     >
                       {/* Value above bar */}
-                      <span className={`text-[10px] font-bold mb-0.5 ${isFocused ? 'text-gray-800' : 'text-gray-400'}`}>
+                      <span className={`text-[10px] font-bold mb-0.5 ${isFocused ? 'text-gray-800 dark:text-white' : 'text-gray-400'}`}>
                         {total}
                       </span>
                       {/* Bar */}
@@ -462,10 +469,10 @@ export default function ImpactStats() {
               </div>
               {/* Legend */}
               <div className="flex gap-4 mt-3 justify-center">
-                <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
                   <div className="w-2.5 h-2.5 rounded-sm bg-scanora-green" /> Dikonsumsi
                 </div>
-                <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
                   <div className="w-2.5 h-2.5 rounded-sm bg-red-main/70" /> Dibuang
                 </div>
               </div>

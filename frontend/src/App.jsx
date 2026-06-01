@@ -27,6 +27,7 @@ function AppShell({ isScannerOpen, setIsScannerOpen, isAppEntering, isSplashVisi
   const location = useLocation();
 
   const isNoNav   = NO_NAV_PATHS.includes(location.pathname);
+  const isNoNav = NO_NAV_PATHS.includes(location.pathname);
   const isDesktop = layout === 'desktop';
 
   // Shell width: null = fill entire window, number = pixel width (compact mode)
@@ -82,27 +83,27 @@ function AppShell({ isScannerOpen, setIsScannerOpen, isAppEntering, isSplashVisi
 
             <main className="flex-1 overflow-y-auto no-scrollbar w-full">
               <Routes>
-                <Route path="/"           element={<Home onOpenScanner={() => setIsScannerOpen(true)} />} />
-                <Route path="/inventory"  element={<Inventory />} />
-                <Route path="/profile"    element={<Profile />} />
+                <Route path="/" element={<Home onOpenScanner={() => setIsScannerOpen(true)} />} />
+                <Route path="/inventory" element={<Inventory />} />
+                <Route path="/profile" element={<Profile />} />
                 <Route path="/onboarding" element={<Onboarding />} />
-                <Route path="/login"      element={<Login />} />
-                <Route path="/register"   element={<Register />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password"  element={<ResetPassword />} />
-                <Route path="/stats"      element={<ImpactStats />} />
-                <Route path="*"           element={<Navigate to="/" replace />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/stats" element={<Statistic />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </main>
 
             {/* BottomNav: show for non-desktop or compact mode */}
             {(!isDesktop || isCompact) && !isNoNav && (
               <Routes>
-                <Route path="/login"      element={null} />
-                <Route path="/register"   element={null} />
+                <Route path="/login" element={null} />
+                <Route path="/register" element={null} />
                 <Route path="/forgot-password" element={null} />
-                <Route path="/reset-password"  element={null} />
-                <Route path="/profile"    element={null} />
+                <Route path="/reset-password" element={null} />
+                <Route path="/profile" element={null} />
                 <Route path="/onboarding" element={null} />
                 <Route path="*" element={<BottomNav onOpenScanner={() => setIsScannerOpen(true)} />} />
               </Routes>
@@ -122,17 +123,31 @@ function AppShell({ isScannerOpen, setIsScannerOpen, isAppEntering, isSplashVisi
 
 // ─── Root App ─────────────────────────────────────────────────────────────────
 function App() {
-  const [isScannerOpen,   setIsScannerOpen]   = useState(false);
-  const [isAuthReady,     setIsAuthReady]     = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isAuthReady, setIsAuthReady] = useState(false);
   const [isSplashVisible, setIsSplashVisible] = useState(() => !sessionStorage.getItem('scanora_first_load'));
   const [isSplashExiting, setIsSplashExiting] = useState(false);
-  const [isAppEntering,   setIsAppEntering]   = useState(() => !!sessionStorage.getItem('scanora_first_load'));
+  const [isAppEntering, setIsAppEntering] = useState(() => !!sessionStorage.getItem('scanora_first_load'));
 
   useEffect(() => {
+    // ── Restore Theme ──
+    if (localStorage.getItem('theme') === 'dark') {
+      document.documentElement.classList.add('dark');
+    }
+
     initializeAuth().then(() => setIsAuthReady(true));
 
-    // ── Dev: keyboard notification triggers ──
+    // ── Dev: keyboard notification triggers & Hotkeys ──
     const handleKeyDown = (e) => {
+      // Dark Mode Hotkeys
+      if (e.altKey && e.key === '9') {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+      } else if (e.altKey && e.key === '0') {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+      }
+
       if (e.key.toLowerCase() === 'p') {
         if ('Notification' in window) {
           Notification.requestPermission().then(perm => alert(`Status Izin Notifikasi: ${perm}`));
@@ -143,11 +158,11 @@ function App() {
       mockDate.setDate(mockDate.getDate() - 5);
       const savedDateStr = mockDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long' });
       const caseMap = {
-        '1': { title: "🥗 Jangan Lupa Apel🍎 Kamu!",  body: `Apel🍎 yang kamu simpan sejak ${savedDateStr} tinggal 3 hari lagi.` },
-        '2': { title: "⚠️ Pisang🍌 Hampir Busuk!",    body: `Pisang🍌 yang kamu simpan sejak ${savedDateStr} sisa 1 hari lagi.` },
-        '3': { title: "🚨 HARI TERAKHIR Jeruk🍊!",    body: `Jeruk🍊 yang kamu simpan sejak ${savedDateStr} mencapai batas HARI INI.` },
-        '4': { title: "✨ Apel🍎 Matang Besok!",       body: `Apel🍎 yang kamu simpan sejak ${savedDateStr} matang dalam 1 hari lagi.` },
-        '5': { title: "😋 Pisang🍌 Sudah Matang!",    body: `Pisang🍌 yang kamu simpan sejak ${savedDateStr} HARI INI sudah matang.` },
+        '1': { title: "🥗 Jangan Lupa Apel🍎 Kamu!", body: `Apel🍎 yang kamu simpan sejak ${savedDateStr} tinggal 3 hari lagi.` },
+        '2': { title: "⚠️ Pisang🍌 Hampir Busuk!", body: `Pisang🍌 yang kamu simpan sejak ${savedDateStr} sisa 1 hari lagi.` },
+        '3': { title: "🚨 HARI TERAKHIR Jeruk🍊!", body: `Jeruk🍊 yang kamu simpan sejak ${savedDateStr} mencapai batas HARI INI.` },
+        '4': { title: "✨ Apel🍎 Matang Besok!", body: `Apel🍎 yang kamu simpan sejak ${savedDateStr} matang dalam 1 hari lagi.` },
+        '5': { title: "😋 Pisang🍌 Sudah Matang!", body: `Pisang🍌 yang kamu simpan sejak ${savedDateStr} HARI INI sudah matang.` },
       };
       if (caseMap[e.key]) {
         window.dispatchEvent(new CustomEvent('scanora:testNotif', { detail: `Memproses Notifikasi Case ${e.key}...` }));

@@ -2,6 +2,29 @@
 
 Semua perubahan yang signifikan pada proyek Scanora akan didokumentasikan dalam file ini.
 
+## [v1.9.4] - 2026-06-02
+### Added
+- **AI Chef Scanora Suggestion Box**: UI baru yang mendetail di `FruitDetailModal` dengan state *loading* khusus, animasi, dan format *markdown*.
+- **Dynamic Mascot Images**: Maskot kini berubah dinamis berdasarkan jenis buah (Pisang, Apel, Jeruk) dan kondisinya (mentah, matang, busuk).
+- **SideNav Profile Image**: `SideNav` versi Desktop kini menggunakan ikon `User` sebagai fallback (bukan inisial teks) jika belum ada foto profil.
+- **Dark Mode Support**: Mode gelap (*dark mode*) yang mendukung seluruh sistem dengan penerapan `dark:bg-gray-900` di root body.
+- **Dark Mode Splash Screen**: *Splash screen* (`LoadingScreen.jsx`) kini mendeteksi mode gelap sistem dan otomatis menyesuaikan warna latar untuk mencegah kilatan layar putih.
+
+### Changed
+- **Modal Consolidation**: Mengganti *modal* detail terpisah di `Home.jsx` dan `Inventory.jsx` menjadi satu komponen terpadu, yaitu `FruitDetailModal.jsx`.
+- **Tab Navigation**: Membersihkan *state* pada *sticky header*. Berpindah tab kini memperbarui *state* React Router dan disorot dengan benar di SideNav.
+- **Statistic Layout**: Menyelaraskan tata letak kartu "Skor Keberhasilan Terbaik" agar konsisten dengan kartu lainnya (skor di kiri bawah, bulan di kanan bawah).
+- **Score Formatting**: Menyatukan lencana UI untuk label kondisi di semua halaman (`bg-orange-main text-white` untuk status Matang).
+- **i18n Structure**: Merestrukturisasi `i18n.js` menjadi fungsi *builder kamus* yang berdampingan agar lebih terukur.
+- **Terminology**: Mengubah "Skor Keberhasilan" / "Success Rate" menjadi "Skor Penyelamatan" dan "Rescue Score" di seluruh sistem.
+
+### Fixed
+- **Utensils Icon Crash**: Menambahkan kembali impor ikon `Utensils` yang hilang di `Home.jsx` (menyebabkan `Uncaught ReferenceError`).
+- **Skeleton Dark Mode**: Rangka (*skeleton*) *loading* kini menggunakan `dark:bg-gray-700` di Beranda dan Inventori.
+- **Error Handling UX**: Memperbaiki `errorHandler.js` backend agar menutupi pesan *error* Prisma/Database mentah dengan pesan yang lebih bersahabat untuk UX.
+- **Prisma Schema Sync**: Generate ulang *Prisma Client* untuk menyinkronkan properti `profileImage` dan memulihkan fungsi Login.
+
+
 ## [v1.9.2] - 2026-05-30
 ### Added
 - **PWA (Progressive Web App)**: Scanora kini mendukung instalasi PWA. Pengguna dapat menambahkan aplikasi langsung ke Home Screen smartphone tanpa perlu melalui App Store atau Play Store.

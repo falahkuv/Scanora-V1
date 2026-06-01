@@ -110,7 +110,7 @@ const ViewportResizeHandle = ({ isHidden = false }) => {
         className={`
           flex items-center justify-center
           w-5 h-14 rounded-l-xl
-          bg-white border border-gray-200 border-r-0
+          bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 border-r-0
           shadow-[−2px_0_12px_rgba(0,0,0,0.1)]
           transition-all duration-200
           hover:bg-scanora-green/5 hover:border-scanora-green/30 hover:w-6

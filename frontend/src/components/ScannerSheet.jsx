@@ -530,7 +530,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
-        className={`bg-white rounded-t-3xl transition-all duration-300 ease-in-out absolute bottom-0 left-0 right-0 max-w-md mx-auto flex flex-col z-40 shadow-[0_-10px_40px_rgba(0,0,0,0.3)] ${
+        className={`bg-white dark:bg-gray-800 rounded-t-3xl transition-all duration-300 ease-in-out absolute bottom-0 left-0 right-0 max-w-md mx-auto flex flex-col z-40 shadow-[0_-10px_40px_rgba(0,0,0,0.3)] ${
         scanState === 'full-result' ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'
         }`}>
 
@@ -574,7 +574,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
               <div className="flex items-center justify-between mt-2">
                 {/* Left Col: Fruit Name & Ripeness — 1 row */}
                 <div className="flex flex-row items-center gap-3 text-left">
-                  <h2 className="text-3xl font-bold text-gray-900 capitalize">{result.fruit_type}</h2>
+                  <h2 className="text-3xl font-bold text-gray-900 dark:text-white capitalize">{result.fruit_type}</h2>
                   <div className={`inline-flex items-center px-3 py-1.5 rounded-full font-semibold w-fit text-sm capitalize ${condColor.bg} ${condColor.text}`}>
                     {result.condition?.toLowerCase() !== 'rotten' && <span className={`w-2 h-2 rounded-full mr-2 ${condColor.dot}`}></span>}
                     {result.condition}
@@ -611,8 +611,8 @@ const ScannerSheet = ({ isOpen, onClose }) => {
 
               {/* Full View */}
               <div className="mt-6">
-                <div className="bg-green-50 rounded-2xl p-5 mb-6 border border-green-100">
-                  <h3 className="font-semibold text-scanora-dark mb-3 flex items-center gap-2">
+                <div className="bg-green-50 dark:bg-scanora-green/10 rounded-2xl p-5 mb-6 border border-green-100 dark:border-scanora-green/20">
+                  <h3 className="font-semibold text-scanora-dark dark:text-scanora-green mb-3 flex items-center gap-2">
                     <Sparkles size={18} className="text-scanora-green" /> AI Chef Scanora
                   </h3>
 
@@ -620,10 +620,10 @@ const ScannerSheet = ({ isOpen, onClose }) => {
                   {!aiSuggestion && !isLoadingTips && (
                     <button
                       onClick={() => fetchAiSuggestion(result.scan_id, result.freshness_score)}
-                      className="w-full py-2.5 bg-white border border-green-200 text-green-700 font-semibold rounded-xl text-sm hover:bg-green-100 active:scale-95 transition-all cursor-pointer relative overflow-hidden"
+                      className="w-full py-2.5 bg-scanora-green border border-transparent text-white font-semibold rounded-xl text-sm hover:bg-scanora-dark active:scale-95 transition-all cursor-pointer relative overflow-hidden"
                     >
                       <span className="relative z-10 flex items-center justify-center gap-2">
-                        <Sparkles size={18} /> Minta Saran AI
+                        <Sparkles size={18} className="text-white" /> Minta Saran AI
                       </span>
                     </button>
                   )}
@@ -632,10 +632,10 @@ const ScannerSheet = ({ isOpen, onClose }) => {
                   {isLoadingTips && (
                     <div className="space-y-3">
                       <div className="flex items-center gap-3 mb-2">
-                        <div className="w-5 h-5 border-2 border-green-400 border-t-transparent rounded-full animate-spin flex-shrink-0" />
-                        <p className="text-sm text-green-700 font-medium animate-pulse">Scanora sedang berpikir...</p>
+                        <div className="w-5 h-5 border-2 border-green-400 dark:border-scanora-green border-t-transparent rounded-full animate-spin flex-shrink-0" />
+                        <p className="text-sm text-green-700 dark:text-scanora-green font-medium animate-pulse">Scanora sedang berpikir...</p>
                       </div>
-                      <div className="w-full h-1 bg-green-100 rounded-full overflow-hidden">
+                      <div className="w-full h-1 bg-green-100 dark:bg-gray-700 rounded-full overflow-hidden">
                         <div className="h-full bg-green-400 rounded-full" style={{ width: '40%', animation: 'indeterminate 1.5s ease-in-out infinite' }} />
                       </div>
                       <div className="animate-pulse flex flex-col gap-2 mt-2">
@@ -647,7 +647,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
                   {/* AI result */}
                   {aiSuggestion && !isLoadingTips && (
                     <div>
-                      <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">{aiSuggestion}</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line">{aiSuggestion}</p>
                     </div>
                   )}
 
@@ -663,9 +663,9 @@ const ScannerSheet = ({ isOpen, onClose }) => {
                 </div>
 
                 {/* ── AI Disclaimer ── */}
-                <div className="flex items-center gap-4 bg-gray-100/80 border border-gray-200/70 rounded-2xl px-4 py-3 mb-5">
-                  <Bot size={16} className="text-gray-400 flex-shrink-0" />
-                  <p className="text-[12px] text-gray-500 leading-relaxed">
+                <div className="flex items-center gap-4 bg-gray-100/80 dark:bg-gray-700/50 border border-gray-200/70 dark:border-gray-600 rounded-2xl px-4 py-3 mb-5">
+                  <Bot size={16} className="text-gray-400 dark:text-gray-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-[12px] text-gray-500 dark:text-gray-400 leading-relaxed">
                     AI hanya menilai visual dan tidak bisa 100% akurat
                   </p>
                 </div>
@@ -673,7 +673,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
                 <div className="flex gap-4">
                   <button
                     onClick={closeCard}
-                    className="flex-1 min-h-[44px] py-3.5 bg-gray-100 text-gray-700 font-semibold rounded-xl flex items-center justify-center hover:bg-gray-200 active:scale-95 transition-all cursor-pointer"
+                    className="flex-1 min-h-[44px] py-3.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white font-semibold rounded-xl flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95 transition-all cursor-pointer"
                   >
                     Tutup
                   </button>

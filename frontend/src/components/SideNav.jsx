@@ -1,9 +1,11 @@
 import { Home, Salad, Camera, User, History, ChartColumnBig } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 const SideNav = ({ onOpenScanner }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const isActive = (path) => location.pathname === path;
 
   // Load user info
@@ -16,10 +18,10 @@ const SideNav = ({ onOpenScanner }) => {
   const profileImage = user.profile_image || user.profileImage;
 
   const mainNavItems = [
-    { path: '/',          icon: Home,           label: 'Beranda' },
-    { path: '/inventory', icon: Salad,          label: 'Inventori', action: () => navigate('/inventory', { state: { tab: 'inventory' } }) },
-    { path: '/history',   icon: History,        label: 'Riwayat',   action: () => navigate('/inventory', { state: { tab: 'history' } }) },
-    { path: '/stats',     icon: ChartColumnBig, label: 'Statistik' },
+    { path: '/',          icon: Home,           label: t('nav.home') },
+    { path: '/inventory', icon: Salad,          label: t('nav.inventory'), action: () => navigate('/inventory', { state: { tab: 'inventory' } }) },
+    { path: '/history',   icon: History,        label: t('nav.history'),   action: () => navigate('/inventory', { state: { tab: 'history' } }) },
+    { path: '/stats',     icon: ChartColumnBig, label: t('nav.stats') },
   ];
 
   const handleNavClick = (item) => {
@@ -43,12 +45,12 @@ const SideNav = ({ onOpenScanner }) => {
   };
 
   return (
-    <aside className="w-64 h-full bg-white border-r border-gray-100 flex flex-col py-5 px-3 flex-shrink-0 shadow-sm">
+    <aside className="w-64 h-full bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 flex flex-col py-5 px-3 flex-shrink-0 shadow-sm transition-colors">
 
       {/* ── Logo ── */}
       <div className="flex items-center gap-2 px-4 mb-6">
         <img src="/mascots/orange_ripe.png" alt="Logo" className="w-10 h-auto drop-shadow-sm" />
-        <h1 className="text-2xl font-bold text-gray-900 drop-shadow-sm ml-2">Scanora</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white drop-shadow-sm ml-2">Scanora</h1>
       </div>
 
       {/* ── Scan Buah CTA (prominent, at the top) ── */}
@@ -72,7 +74,7 @@ const SideNav = ({ onOpenScanner }) => {
               className={`flex items-center gap-4 px-4 min-h-[56px] rounded-2xl text-sm font-semibold transition-all active:scale-95 text-left w-full cursor-pointer
                 ${active
                   ? 'bg-scanora-green/10 text-scanora-green'
-                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'}`}
+                  : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white'}`}
             >
               <Icon size={22} strokeWidth={active ? 2.5 : 2} />
               {label}
@@ -85,13 +87,13 @@ const SideNav = ({ onOpenScanner }) => {
       <div className="flex-1" />
 
       {/* ── Profile (pinned to bottom) ── */}
-      <div className="border-t border-gray-100 my-2 mx-2"></div>
+      <div className="border-t border-gray-100 dark:border-gray-800 my-2 mx-2"></div>
       <button
         onClick={() => navigate('/profile')}
-        className={`flex items-center gap-4 px-3 py-3 rounded-2xl transition-all active:scale-95 w-full text-left hover:bg-gray-50 cursor-pointer
+        className={`flex items-center gap-4 px-3 py-3 rounded-2xl transition-all active:scale-95 w-full text-left hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer
           ${isActive('/profile') ? 'bg-scanora-green/10' : ''}`}
       >
-        <div className="w-11 h-11 rounded-full bg-scanora-green/10 flex items-center justify-center text-scanora-green font-bold text-sm flex-shrink-0 overflow-hidden">
+        <div className="bg-gray-100 dark:bg-gray-800 rounded-full w-11 h-11 flex-shrink-0 flex items-center justify-center text-scanora-green font-bold text-sm overflow-hidden">
           {profileImage ? (
             <div
               className="w-full h-full rounded-full bg-center bg-no-repeat"
@@ -100,15 +102,15 @@ const SideNav = ({ onOpenScanner }) => {
               aria-label="Profile"
             />
           ) : (
-            initials
+            <User size={20} className="text-scanora-green" />
           )}
         </div>
-        <div className="flex-1 min-w-0">
-          <p className={`text-sm font-semibold truncate ${isActive('/profile') ? 'text-scanora-green' : 'text-gray-800'}`}>
+        <div className="flex flex-col flex-1 overflow-hidden min-w-0">
+          <p className={`text-sm font-bold truncate leading-tight ${isActive('/profile') ? 'text-scanora-green' : 'text-gray-900 dark:text-white'}`}>
             {displayName}
           </p>
           {email && (
-            <p className="text-xs text-gray-400 truncate">{email}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate leading-tight mt-0.5">{email}</p>
           )}
         </div>
       </button>
