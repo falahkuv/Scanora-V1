@@ -40,10 +40,10 @@ const getConditionLabel = (condition) => {
 
 const getConditionBadgeStyle = (condition) => {
   const c = (condition || '').toLowerCase();
-  if (c === 'unripe') return 'bg-green-100 text-green-700';
-  if (c === 'ripe') return 'bg-orange-main text-white';
-  if (c === 'rotten') return 'bg-red-100 text-red-700';
-  return 'bg-gray-100 text-gray-600';
+  if (c === 'unripe') return 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300';
+  if (c === 'ripe') return 'bg-orange-100 dark:bg-orange-900/40 text-orange-main dark:text-orange-400';
+  if (c === 'rotten') return 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300';
+  return 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300';
 };
 
 const calculateDaysLeft = (reminderAt) => {
@@ -543,9 +543,8 @@ const Inventory = () => {
         <div className="flex relative gap-2">
           <div className="bg-gray-100 dark:bg-gray-900 p-1 rounded-xl flex flex-1 relative overflow-hidden transition-colors">
             <div
-              className={`absolute top-1 bottom-1 left-1 w-[calc(50%-0.25rem)] bg-white dark:bg-gray-700 rounded-lg shadow-sm transition-transform duration-300 ease-out pointer-events-none ${
-                activeTab === 'inventory' ? 'translate-x-0' : 'translate-x-full'
-              }`}
+              className={`absolute top-1 bottom-1 left-1 w-[calc(50%-0.25rem)] bg-white dark:bg-gray-700 rounded-lg shadow-sm transition-transform duration-300 ease-out pointer-events-none ${activeTab === 'inventory' ? 'translate-x-0' : 'translate-x-full'
+                }`}
             />
             <button
               onClick={() => { setActiveTab('inventory'); navigate('/inventory', { state: { tab: 'inventory' }, replace: true }); setShowSortPopup(false); }}
@@ -597,9 +596,9 @@ const Inventory = () => {
         <div className="px-4 pt-3 pb-1 flex gap-2 overflow-x-clip no-scrollbar">
           {[
             { key: 'all', label: 'Semua', count: inventoryData.length, active: 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white', inactive: 'border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 bg-transparent' },
-            { key: 'ripe', label: 'Ripe', count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'ripe').length, active: 'bg-orange-main text-white border border-transparent', inactive: 'border border-orange-main/30 text-orange-main bg-transparent' },
-            { key: 'unripe', label: 'Unripe', count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'unripe').length, active: 'bg-scanora-green text-white border border-transparent', inactive: 'border border-green-200 text-green-600 bg-transparent' },
-            { key: 'rotten', label: 'Rotten', count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'rotten').length, active: 'bg-red-main text-white border border-transparent', inactive: 'border border-red-200 text-red-600 bg-transparent' },
+            { key: 'ripe', label: 'Ripe', count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'ripe').length, active: 'bg-orange-main text-white border border-transparent', inactive: 'border border-current text-orange-main bg-transparent' },
+            { key: 'unripe', label: 'Unripe', count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'unripe').length, active: 'bg-scanora-green text-white border border-transparent', inactive: 'border border-current text-scanora-green bg-transparent' },
+            { key: 'rotten', label: 'Rotten', count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'rotten').length, active: 'bg-red-main text-white border border-transparent', inactive: 'border border-current text-red-main bg-transparent' },
           ].map(pill => (
             <button
               key={pill.key}
@@ -610,8 +609,8 @@ const Inventory = () => {
               {pill.label}
               <span className={`text-xs font-bold px-2 py-0.5 rounded-full flex items-center justify-center leading-none min-w-[1.5rem]
                 ${conditionFilter === pill.key
-                  ? (pill.key === 'all' ? 'bg-white/20 dark:bg-black/20 text-white dark:text-gray-900' : 'bg-white/20 text-white')
-                  : 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400'}`}>
+                  ? (pill.key === 'all' ? 'bg-white/20 dark:bg-black/20 text-gray-900 dark:text-white' : 'bg-white/20 text-white')
+                  : 'bg-gray-800/10 dark:bg-gray-800/4t'}`}>
                 {pill.count}
               </span>
             </button>
@@ -626,9 +625,8 @@ const Inventory = () => {
         <div className="flex gap-4 relative">
           <div className="bg-gray-100/90 dark:bg-gray-800/90 backdrop-blur-md p-1.5 rounded-full flex shadow-[0_10px_30px_rgba(0,0,0,0.1)] border border-gray-200 dark:border-gray-700 relative overflow-hidden transition-colors">
             <div
-              className={`absolute top-1.5 bottom-1.5 left-1.5 w-[calc(50%-0.375rem)] bg-white dark:bg-gray-600 rounded-full shadow-sm transition-transform duration-300 ease-out pointer-events-none ${
-                activeTab === 'inventory' ? 'translate-x-0' : 'translate-x-full'
-              }`}
+              className={`absolute top-1.5 bottom-1.5 left-1.5 w-[calc(50%-0.375rem)] bg-white dark:bg-gray-600 rounded-full shadow-sm transition-transform duration-300 ease-out pointer-events-none ${activeTab === 'inventory' ? 'translate-x-0' : 'translate-x-full'
+                }`}
             />
             <button onClick={() => { setActiveTab('inventory'); navigate('/inventory', { state: { tab: 'inventory' }, replace: true }); setShowSortPopup(false); }} className={`flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-full min-h-[44px] transition-all active:scale-95 relative z-10 ${activeTab === 'inventory' ? 'text-scanora-dark dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}`}>
               <Salad size={16} /> <span className="hidden sm:inline">Inventori</span>
@@ -706,9 +704,9 @@ const Inventory = () => {
 
           return filteredInventory.length > 0 ? (
             <div className={`grid gap-4 ${effectiveWidth >= 1100 ? 'grid-cols-4'
-                : effectiveWidth >= 780 ? 'grid-cols-3'
-                  : effectiveWidth >= 500 ? 'grid-cols-2'
-                    : 'grid-cols-1'
+              : effectiveWidth >= 780 ? 'grid-cols-3'
+                : effectiveWidth >= 500 ? 'grid-cols-2'
+                  : 'grid-cols-1'
               }`}>
               {filteredInventory.map(item => (
                 <InventoryCard key={item.id} item={item} onClick={() => setSelectedItem(item)} />

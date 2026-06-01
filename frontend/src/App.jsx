@@ -12,7 +12,7 @@ import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Onboarding from './pages/Onboarding';
-import ImpactStats from './pages/ImpactStats';
+import Statistic from './pages/Statistic';
 import ScannerSheet from './components/ScannerSheet';
 import LoadingScreen from './components/LoadingScreen';
 import { initializeAuth } from './api';
@@ -26,7 +26,6 @@ function AppShell({ isScannerOpen, setIsScannerOpen, isAppEntering, isSplashVisi
   const { layout, compactWidth, windowWidth, isFullscreen } = useViewport();
   const location = useLocation();
 
-  const isNoNav   = NO_NAV_PATHS.includes(location.pathname);
   const isNoNav = NO_NAV_PATHS.includes(location.pathname);
   const isDesktop = layout === 'desktop';
 

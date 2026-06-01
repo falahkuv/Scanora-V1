@@ -39,10 +39,10 @@ const getConditionLabel = (condition) => {
 
 const getConditionBadgeStyle = (condition) => {
   const c = (condition || '').toLowerCase();
-  if (c === 'unripe') return 'bg-green-100 text-green-700';
-  if (c === 'ripe') return 'bg-orange-main text-white';
-  if (c === 'rotten') return 'bg-red-100 text-red-700';
-  return 'bg-gray-100 text-gray-600';
+  if (c === 'unripe') return 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300';
+  if (c === 'ripe') return 'bg-orange-100 dark:bg-orange-900/40 text-orange-main dark:text-orange-400';
+  if (c === 'rotten') return 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300';
+  return 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300';
 };
 
 const calculateDaysLeft = (reminderAt) => {
@@ -75,8 +75,8 @@ const renderMarkdown = (text) => {
   if (!text) return null;
   const lines = text.split('\n');
   return lines.map((line, i) => {
-    const isBullet = /^[-*â€¢]\s+/.test(line);
-    const content = line.replace(/^[-*â€¢]\s+/, '');
+    const isBullet = /^[-*•]\s+/.test(line);
+    const content = line.replace(/^[-*•]\s+/, '');
     const parseInline = (str) => {
       const parts = str.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
       return parts.map((part, j) => {
@@ -87,7 +87,7 @@ const renderMarkdown = (text) => {
     };
     if (isBullet) return (
       <div key={i} className="flex gap-2 mt-1">
-        <span className="text-green-600 font-bold mt-0.5">â€¢</span>
+        <span className="text-green-600 font-bold mt-0.5">•</span>
         <span>{parseInline(content)}</span>
       </div>
     );
@@ -273,7 +273,7 @@ const Home = ({ onOpenScanner }) => {
     }
   };
 
-  // â”€â”€ Notification read-state helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ————————————————————————————————— Notification read-state helpers —————————————————————————————————
   const getReadIds = () => {
     try { return new Set(JSON.parse(localStorage.getItem('scanora_read_notifs') || '[]')); }
     catch { return new Set(); }
@@ -366,13 +366,13 @@ const Home = ({ onOpenScanner }) => {
           let body = '';
 
           if (dLeft === 3 || dLeft === 2) {
-            title = `\uD83E\uDD57 Jangan Lupa ${fruitName} Kamu!`;
+            title = `🥗 Jangan Lupa ${fruitName} Kamu!`;
             body = `Mengingatkan: ${fruitName} kamu tinggal ${dLeft} hari lagi sebelum mulai membusuk.`;
           } else if (dLeft === 1) {
-            title = `\u26A0\uFE0F ${fruitName} Hampir Busuk!`;
+            title = `⚠️ ${fruitName} Hampir Busuk!`;
             body = `Perhatian! ${fruitName} yang kamu simpan sisa 1 hari lagi.`;
           } else if (dLeft === 0) {
-            title = `\uD83D\uDEA8 Hari Terakhir untuk ${fruitName}!`;
+            title = `🚨 Hari Terakhir untuk ${fruitName}!`;
             body = `${fruitName} kamu diperkirakan sudah mencapai batas maksimal kesegarannya hari ini.`;
           }
 
@@ -435,9 +435,9 @@ const Home = ({ onOpenScanner }) => {
   const total = impact.consumed !== '-' ? impact.consumed + impact.discarded : 0;
   const saveRate = total > 0 ? Math.round((impact.consumed / total) * 100) : null;
   const prideMsg = saveRate === null ? null
-    : saveRate >= 80 ? 'Luar biasa! Hampir semua buahmu terselamatkan. \uD83C\uDF1F'
-      : saveRate >= 50 ? 'Lumayan! Terus kurangi pemborosan ya. \uD83D\uDC4D'
-        : 'Masih banyak yang dibuang. Yuk lebih bijak! \uD83D\uDE2C';
+    : saveRate >= 80 ? 'Luar biasa! Hampir semua buahmu terselamatkan. 🌟'
+      : saveRate >= 50 ? 'Lumayan! Terus kurangi pemborosan ya. 👍'
+        : 'Masih banyak yang dibuang. Yuk lebih bijak! 😬';
 
   const { viewport } = useViewport();
   const isDesktop = viewport === 'desktop';
@@ -614,7 +614,7 @@ const Home = ({ onOpenScanner }) => {
         </div>
 
         {loading ? (
-        <div className="space-y-3">
+          <div className="space-y-3">
             {[...Array(3)].map((_, i) => (
               <div key={i} className="bg-white dark:bg-gray-800 p-4 rounded-2xl flex items-center gap-4 shadow-sm border border-gray-100 dark:border-gray-700">
                 <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-xl flex-shrink-0 animate-pulse" />
@@ -660,7 +660,7 @@ const Home = ({ onOpenScanner }) => {
                         <Camera size={14} />
                         {item.added_at ? new Date(item.added_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }) : '-'}
                       </span>
-                      <span className="text-gray-300 text-sm flex-shrink-0">\u00B7</span>
+                      <span className="text-gray-300 text-sm flex-shrink-0">·</span>
                       <span className={`text-sm font-bold truncate ${dotColor === 'bg-red-main' ? 'text-red-main' : dotColor === 'bg-orange-main' ? 'text-orange-main' : 'text-scanora-green'}`}>
                         {item.daysLeft === 0 ? 'Hari ini!' : `Sisa ${item.daysLeft} hari`}
                       </span>
@@ -676,7 +676,7 @@ const Home = ({ onOpenScanner }) => {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-8 px-4 text-center border border-dashed border-gray-200 dark:border-gray-700 rounded-2xl bg-gray-50 dark:bg-gray-800/50">
-            <p className="text-gray-500 dark:text-gray-500 text-sm mb-3">Semua buah masih aman! \uD83C\uDF3F</p>
+            <p className="text-gray-500 dark:text-gray-500 text-sm mb-3">Semua buah masih aman! 🌿</p>
             {urgentItems.length === 0 && (
               <button onClick={() => onOpenScanner?.() || document.getElementById('viewport-toggle-btn')?.click()} className="bg-scanora-green text-white font-bold py-2 px-4 rounded-xl text-xs shadow-md active:scale-95 transition-all cursor-pointer">Scan Buah Sekarang</button>
             )}

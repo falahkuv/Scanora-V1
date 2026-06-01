@@ -51,7 +51,7 @@ const getConditionLabel = (condition) => {
 const getConditionBadgeStyle = (condition) => {
   const c = (condition || '').toLowerCase();
   if (c === 'unripe') return 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300';
-  if (c === 'ripe')   return 'bg-orange-main text-white';
+  if (c === 'ripe')   return 'bg-orange-100 dark:bg-orange-900/40 text-orange-main dark:text-orange-400';
   if (c === 'rotten') return 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300';
   return 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300';
 };
@@ -273,9 +273,9 @@ const FruitDetailModal = ({
                 {!aiSuggestion && !aiLoading && (
                   <button
                     onClick={onRequestAI}
-                    className="w-full min-h-[44px] bg-scanora-green hover:bg-scanora-dark border border-transparent text-white font-semibold rounded-2xl flex items-center justify-center gap-2 text-sm active:scale-95 transition-all cursor-pointer"
+                    className="w-full min-h-[44px] bg-green-50 dark:bg-green-900/10 hover:bg-green-100 dark:hover:bg-green-900/20 border border-scanora-green text-scanora-green font-semibold rounded-2xl flex items-center justify-center gap-2 text-sm active:scale-95 transition-all cursor-pointer"
                   >
-                    <Sparkles size={16} className="text-white" />
+                    <Sparkles size={16} className="text-scanora-green" />
                     Minta Saran AI
                   </button>
                 )}
@@ -297,8 +297,7 @@ const FruitDetailModal = ({
 
                 {aiSuggestion && !aiLoading && (
                   <div
-                    className="bg-green-50 dark:bg-green-950/30 rounded-2xl p-4 border border-green-100 dark:border-green-800"
-                    style={{ borderLeft: '4px solid #17b341' }}
+                    className="bg-transparent rounded-2xl p-4 border border-scanora-green"
                   >
                     <h4 className="font-bold text-scanora-green text-sm flex items-center gap-1.5 mb-3">
                       <Sparkles size={14} /> Chef Scanora Menyarankan

@@ -27,9 +27,9 @@ const dictionary = {
     successScore: { en: 'Rescue Score', id: 'Skor Penyelamatan' },
     emptyStats: { en: 'Start consuming or discarding items to generate your analytics.', id: 'Mulai konsumsi atau buang buah untuk melihat statistikmu!' },
     prideMsg: {
-      excellent: { en: 'Excellent! You have successfully minimized food waste.', id: 'Luar biasa! Hampir semua buahmu terselamatkan. \uD83C\uDF1F' },
-      good: { en: 'Good progress. Continue to reduce your food waste.', id: 'Lumayan! Terus kurangi pemborosan ya. \uD83D\uDC4D' },
-      bad: { en: 'High waste rate detected. Consider improving your consumption habits.', id: 'Masih banyak yang dibuang. Yuk lebih bijak! \uD83D\uDE2C' }
+      excellent: { en: 'Excellent! You have successfully minimized food waste.', id: 'Luar biasa! Hampir semua buahmu terselamatkan. 🌟' },
+      good: { en: 'Good progress. Continue to reduce your food waste.', id: 'Lumayan! Terus kurangi pemborosan ya. 👍' },
+      bad: { en: 'High waste rate detected. Consider improving your consumption habits.', id: 'Masih banyak yang dibuang. Yuk lebih bijak! 😬' }
     },
     disclaimer: { en: 'Estimations are based on optimal conditions. Actual states may vary. Rescan to update data.', id: 'Estimasi berdasarkan skenario terbaik. Kondisi asli bisa berbeda. Foto ulang untuk update.' }
   },
