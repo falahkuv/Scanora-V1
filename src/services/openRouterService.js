@@ -38,7 +38,7 @@ Aturan Format Wajib:
 - Kesegaran: ${freshnessScore}%
 
 Berdasarkan data di atas, berikan saran spesifik:
-- Jika "Mentah" (mentah / 100%): Berikan 1 trik penyimpanan ajaib agar buah ini matang sempurna dan manis.
+- Jika "Mentah" (mentah / 100%): Berikan 1 trik penyimpanan ajaib agar buah ini matang sempurna (Catatan: Jeruk umumnya tidak matang setelah dipetik, berikan saran penanganan alternatif).
 - Jika "Matang" (matang / 65-100%): 
   1. Jika skor masih tinggi (>85%), sarankan konsumsi segar. 
   2. Jika skor mulai rendah (<85%), berikan peringatan urgensi ("Segera habiskan!") atau sarankan untuk dimakan langsung dan 1 ide resep penyelamat kilat (misal: smoothies/olahan lainnya).

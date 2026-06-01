@@ -20,18 +20,18 @@
 // ─────────────────────────────────────────────────────────────────────────────
 const SHELF_LIFE_RULES = {
   banana: {
-    unripe: { min: 5, max: 5, label: "Perkiraan Matang" },
-    ripe:   { min: 2, max: 2, label: "Baik Sebelum" },
+    unripe: { min: 2, max: 7, label: "Perkiraan Matang" },
+    ripe:   { min: 2, max: 3, label: "Baik Sebelum" },
     rotten: { min: 0, max: 0, label: "Kedaluwarsa" },
   },
   apple: {
-    unripe: { min: 3, max: 3, label: "Perkiraan Matang" },
-    ripe:   { min: 5, max: 5, label: "Baik Sebelum" },
+    unripe: { min: 1, max: 3, label: "Perkiraan Matang" },
+    ripe:   { min: 5, max: 7, label: "Baik Sebelum" },
     rotten: { min: 0, max: 0, label: "Kedaluwarsa" },
   },
   orange: {
     unripe: { min: 0, max: 0, label: "Tidak Akan Matang" },
-    ripe:   { min: 14, max: 14, label: "Baik Sebelum" },
+    ripe:   { min: 10, max: 14, label: "Baik Sebelum" },
     rotten: { min: 0, max: 0, label: "Kedaluwarsa" },
   },
 };

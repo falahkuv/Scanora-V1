@@ -2,6 +2,12 @@
 
 Semua perubahan yang signifikan pada proyek Scanora akan didokumentasikan dalam file ini.
 
+## [v1.10.1] - 2026-06-02
+### Changed
+- **Dynamic Shelf Life Estimation**: Mengubah logika `SHELF_LIFE_RULES` di `freshnessService` dari jumlah hari statis menjadi rentang dinamis (`min` dan `max` berbeda). Kini estimasi tanggal kedaluwarsa benar-benar dihitung proporsional mengikuti *freshness score* AI.
+- **Offline Suggestions**: Menyesuaikan fallback teks offline untuk Apel (1-3 hari) dan Jeruk (keterangan bahwa jeruk mentah tidak bisa matang setelah dipetik) agar selaras dengan sistem.
+- **Prompt AI Anti-Halusinasi**: Memperbarui instruksi internal model OpenRouter untuk mencegah AI mengarang cara fiktif saat ditugaskan memberi saran pada buah jeruk yang masih mentah.
+
 ## [v1.10.0] - 2026-06-02
 ### Added
 - **Push Notifications Architecture**: Mengimplementasikan endpoint pendaftaran *web push* (`POST /api/notifications/subscribe`) lengkap dengan skema `PushSubscription` di database (Prisma) serta Service Worker khusus (`push-sw.js`) untuk mendengarkan notifikasi secara *background*.

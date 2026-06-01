@@ -1,11 +1,11 @@
 {
   "Apel": {
-    "Mentah": "Simpan di suhu ruang selama 1-2 hari agar lebih matang.",
+    "Mentah": "Simpan di suhu ruang selama 1-3 hari agar lebih matang.",
     "Matang": "Apel matang! Simpan di kulkas agar tahan lama atau jadikan jus segar.",
     "Busuk": "Apel ini sudah membusuk. Anda bisa menjadikannya bahan kompos."
   },
   "Jeruk": {
-    "Mentah": "Simpan di suhu ruang dan hindari sinar matahari langsung agar matang.",
+    "Mentah": "Jeruk umumnya tidak akan matang lagi setelah dipetik. Sebaiknya segera diolah.",
     "Matang": "Segera konsumsi selagi segar! Cocok untuk diperas menjadi es jeruk.",
     "Busuk": "Sudah tidak layak konsumsi. Buang ke tempat sampah organik untuk kompos."
   },
