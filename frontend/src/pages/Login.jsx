@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Leaf, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import api from '../api';
 import { supabase } from '../lib/supabaseClient';
 
@@ -46,8 +46,8 @@ const Login = () => {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center px-6 py-6 transition-colors">
         <div className="text-center">
-          <div className="w-14 h-14 bg-scanora-green/10 rounded-2xl flex items-center justify-center text-scanora-green mx-auto mb-4">
-            <Leaf size={28} />
+          <div className="w-14 h-14 bg-scanora-green/10 rounded-2xl flex items-center justify-center mx-auto mb-4 overflow-hidden">
+            <img src="/images/splashscreenicon.png" alt="Scanora" className="w-full h-full object-cover scale-125" />
           </div>
           <p className="text-gray-600 dark:text-gray-300 font-semibold">Memproses login...</p>
         </div>
@@ -93,11 +93,11 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center px-6 py-6 transition-colors">
+    <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col justify-center px-6 py-6 transition-colors">
       <div className="w-full max-w-sm mx-auto">
         <div className="flex justify-center mb-6">
-          <div className="w-16 h-16 bg-scanora-green/10 rounded-2xl flex items-center justify-center text-scanora-green">
-            <Leaf size={32} />
+          <div className="w-16 h-16 bg-scanora-green/10 rounded-2xl flex items-center justify-center overflow-hidden">
+            <img src="/images/splashscreenicon.png" alt="Scanora" className="w-full h-full object-cover scale-125" />
           </div>
         </div>
         <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-2">Masuk</h2>
@@ -138,7 +138,13 @@ const Login = () => {
           </div>
 
           <div className="flex justify-end">
-            <button type="button" className="text-sm text-scanora-green font-medium">Lupa Password?</button>
+            <button
+              type="button"
+              onClick={() => navigate('/forgot-password')}
+              className="text-sm text-scanora-green font-medium"
+            >
+              Lupa Password?
+            </button>
           </div>
 
           {errorMessage && (

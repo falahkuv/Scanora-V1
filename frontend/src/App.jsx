@@ -9,6 +9,8 @@ import Inventory from './pages/Inventory';
 import Profile from './pages/Profile';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Onboarding from './pages/Onboarding';
 import ImpactStats from './pages/ImpactStats';
 import ScannerSheet from './components/ScannerSheet';
@@ -17,7 +19,7 @@ import { initializeAuth } from './api';
 import { ViewportProvider, useViewport } from './context/ViewportContext';
 
 // Pages where nav should NOT appear
-const NO_NAV_PATHS = ['/login', '/register', '/onboarding'];
+const NO_NAV_PATHS = ['/login', '/register', '/forgot-password', '/reset-password', '/onboarding'];
 
 // ─── Inner shell: needs Router context for useLocation ───────────────────────
 function AppShell({ isScannerOpen, setIsScannerOpen, isAppEntering, isSplashVisible }) {
@@ -86,6 +88,8 @@ function AppShell({ isScannerOpen, setIsScannerOpen, isAppEntering, isSplashVisi
                 <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/login"      element={<Login />} />
                 <Route path="/register"   element={<Register />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password"  element={<ResetPassword />} />
                 <Route path="/stats"      element={<ImpactStats />} />
                 <Route path="*"           element={<Navigate to="/" replace />} />
               </Routes>
@@ -96,6 +100,8 @@ function AppShell({ isScannerOpen, setIsScannerOpen, isAppEntering, isSplashVisi
               <Routes>
                 <Route path="/login"      element={null} />
                 <Route path="/register"   element={null} />
+                <Route path="/forgot-password" element={null} />
+                <Route path="/reset-password"  element={null} />
                 <Route path="/profile"    element={null} />
                 <Route path="/onboarding" element={null} />
                 <Route path="*" element={<BottomNav onOpenScanner={() => setIsScannerOpen(true)} />} />

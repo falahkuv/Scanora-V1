@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Leaf, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import api from '../api';
 
 const Register = () => {
@@ -38,12 +38,12 @@ const Register = () => {
     <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col justify-center px-6 py-6 transition-colors">
       <div className="w-full max-w-sm mx-auto">
         <div className="flex justify-center mb-6">
-          <div className="w-16 h-16 bg-scanora-green/10 rounded-2xl flex items-center justify-center text-scanora-green">
-            <Leaf size={32} />
+          <div className="w-16 h-16 bg-scanora-green/10 rounded-2xl flex items-center justify-center overflow-hidden">
+            <img src="/images/splashscreenicon.png" alt="Scanora" className="w-full h-full object-cover scale-125" />
           </div>
         </div>
         <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-2">Daftar Akun</h2>
-        <p className="text-center text-gray-500 dark:text-gray-400 mb-8">Bergabung dan selamatkan makanan hari ini!</p>
+        <p className="text-center text-gray-500 dark:text-gray-400 mb-8">Yuk daftar dan mulai pantau buah kamu!</p>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
           <div>
