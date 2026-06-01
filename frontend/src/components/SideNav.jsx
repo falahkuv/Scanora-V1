@@ -18,10 +18,10 @@ const SideNav = ({ onOpenScanner }) => {
   const profileImage = user.profile_image || user.profileImage;
 
   const mainNavItems = [
-    { path: '/',          icon: Home,           label: t('nav.home') },
-    { path: '/inventory', icon: Salad,          label: t('nav.inventory'), action: () => navigate('/inventory', { state: { tab: 'inventory' } }) },
-    { path: '/history',   icon: History,        label: t('nav.history'),   action: () => navigate('/inventory', { state: { tab: 'history' } }) },
-    { path: '/stats',     icon: ChartColumnBig, label: t('nav.stats') },
+    { path: '/', icon: Home, label: t('nav.home') },
+    { path: '/inventory', icon: Salad, label: t('nav.inventory'), action: () => navigate('/inventory', { state: { tab: 'inventory' } }) },
+    { path: '/history', icon: History, label: t('nav.history'), action: () => navigate('/inventory', { state: { tab: 'history' } }) },
+    { path: '/stats', icon: ChartColumnBig, label: t('nav.stats') },
   ];
 
   const handleNavClick = (item) => {
@@ -48,9 +48,8 @@ const SideNav = ({ onOpenScanner }) => {
     <aside className="w-64 h-full bg-white dark:bg-gray-900 border-r border-gray-100 dark:border-gray-800 flex flex-col py-5 px-3 flex-shrink-0 shadow-sm transition-colors">
 
       {/* ── Logo ── */}
-      <div className="flex items-center gap-2 px-4 mb-6">
-        <img src="/mascots/orange_ripe.png" alt="Logo" className="w-10 h-auto drop-shadow-sm" />
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white drop-shadow-sm ml-2">Scanora</h1>
+      <div className="flex justify-center px-4 mb-6">
+        <img src="/LOGO_Scanora_Color_Long.png" alt="Scanora Logo" className="h-20 w-auto object-contain object-center drop-shadow-sm" />
       </div>
 
       {/* ── Scan Buah CTA (prominent, at the top) ── */}

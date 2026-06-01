@@ -4,12 +4,6 @@ import { ArrowRight } from 'lucide-react';
 
 const ACCENT_COLOR = '#12b981';
 const TEXT_MUTED = '#7a7a7a';
-const DOT_INACTIVE = '#d8d8d8';
-const BG_TOP = '#FAFAFA';
-const BG_BOTTOM = '#FAFAFA';
-const CARD_BASE = '#f3f3f3';
-const CARD_ACCENT = '#e1ead8';
-  const CARD_BG = '#ecf8f3';
 
 const slides = [
   {
@@ -61,10 +55,9 @@ const Onboarding = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col max-w-md mx-auto relative overflow-hidden">
+    <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col max-w-md mx-auto relative overflow-hidden transition-colors">
       <div
-        className="absolute inset-0"
-        style={{ background: `linear-gradient(180deg, ${BG_TOP} 0%, ${BG_BOTTOM} 100%)` }}
+        className="absolute inset-0 bg-gray-50 dark:bg-gray-900 transition-colors"
       />
 
       <div className="relative z-10 px-6 pt-7" />
@@ -72,8 +65,7 @@ const Onboarding = () => {
       <div className="relative z-10 flex-1 flex flex-col items-center px-6 pb-16">
         <div className="w-full mt-6">
           <div
-            className="relative w-full h-[330px] rounded-[28px] overflow-hidden border border-gray-100"
-            style={{ backgroundColor: CARD_BG }}
+            className="relative w-full h-[330px] rounded-[28px] overflow-hidden border border-gray-100 dark:border-gray-800 bg-[#ecf8f3] dark:bg-gray-800 transition-colors"
           >
             {slide.image ? (
               <img
@@ -91,11 +83,11 @@ const Onboarding = () => {
           key={index}
           className={`text-center max-w-[320px] ${hasSwiped ? 'animate-swipe-swap' : ''}`}
         >
-          <h1 className="text-[28px] font-extrabold text-black leading-tight whitespace-pre-line">
+          <h1 className="text-[28px] font-extrabold text-black dark:text-white leading-tight whitespace-pre-line transition-colors">
             {slide.title}
             {slide.tail}
           </h1>
-          <p className="mt-3 text-sm leading-relaxed" style={{ color: TEXT_MUTED }}>
+          <p className="mt-3 text-sm leading-relaxed text-gray-500 dark:text-gray-400 transition-colors">
             {slide.body}
           </p>
         </div>
@@ -104,9 +96,8 @@ const Onboarding = () => {
           {slides.map((_, i) => (
             <span
               key={i}
-              className="h-2 rounded-full transition-all"
+              className={`h-2 rounded-full transition-all ${i === index ? 'bg-scanora-green' : 'bg-gray-300 dark:bg-gray-700'}`}
               style={{
-                backgroundColor: i === index ? ACCENT_COLOR : DOT_INACTIVE,
                 width: i === index ? '16px' : '8px'
               }}
             />

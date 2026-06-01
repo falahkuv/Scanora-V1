@@ -2,6 +2,23 @@
 
 Semua perubahan yang signifikan pada proyek Scanora akan didokumentasikan dalam file ini.
 
+## [v1.10.0] - 2026-06-02
+### Added
+- **Push Notifications Architecture**: Mengimplementasikan endpoint pendaftaran *web push* (`POST /api/notifications/subscribe`) lengkap dengan skema `PushSubscription` di database (Prisma) serta Service Worker khusus (`push-sw.js`) untuk mendengarkan notifikasi secara *background*.
+- **Daily Notification Cron Job**: Menambahkan endpoint *serverless-friendly* (`POST /api/cron/daily-notify`) yang bertugas mengirim notifikasi otomatis setiap jam 08:00 WIB untuk memberitahu user jika buah mereka siap matang, perlu segera dikonsumsi, atau sudah busuk.
+- **Dark Mode di Onboarding**: Layar selamat datang kini sepenuhnya mendukung mode gelap secara dinamis mengikuti preferensi sistem.
+
+### Changed
+- **Asset Integrasi**: Mengganti teks statis logo di Sidebar dengan gambar aset `LOGO_Scanora_Color_Long.png` yang responsif.
+- **Badge Kondisi UI**: Lencana status buah ("Matang", "Mentah", "Busuk") di halaman Inventori diselaraskan menggunakan palet warna solid *Light Mode* agar lebih mencolok terlepas dari tema aktif aplikasi.
+- **Statistic Distribusi Buah Alignment**: Konten pada kolom *Distribusi Buah* sekarang rata atas (`justify-start`) agar judul tabel tidak bergeser turun ketika jumlah daftar buah sedikit.
+
+### Fixed
+- **Shortcut Mode Tabrakan**: Mencegah tabrakan antara fungsi internal browser dengan pintasan *shortcut* aplikasi dengan memperbarui kombinasi hotkey (`Shift + Alt + 9/0`).
+- **PWA Status Bar Mismatch**: Menyinkronkan tema *Status Bar* Android/iOS melalui tag `theme-color` yang diperbarui secara dinamis saat pergantian mode gelap/terang.
+- **Onboarding UX Flow**: Menonaktifkan login otomatis sebagai tamu (*Guest Account*); semua user baru kini secara eksplisit harus memilih akun (Google OAuth) atau melalui halaman Onboarding terlebih dahulu.
+
+
 ## [v1.9.4] - 2026-06-02
 ### Added
 - **AI Chef Scanora Suggestion Box**: UI baru yang mendetail di `FruitDetailModal` dengan state *loading* khusus, animasi, dan format *markdown*.

@@ -129,9 +129,22 @@ function App() {
   const [isAppEntering, setIsAppEntering] = useState(() => !!sessionStorage.getItem('scanora_first_load'));
 
   useEffect(() => {
+    const updateThemeColor = (isDark) => {
+      let metaThemeColor = document.querySelector('meta[name="theme-color"]');
+      if (!metaThemeColor) {
+        metaThemeColor = document.createElement('meta');
+        metaThemeColor.name = 'theme-color';
+        document.head.appendChild(metaThemeColor);
+      }
+      metaThemeColor.content = isDark ? '#111827' : '#f9fafb';
+    };
+
     // ── Restore Theme ──
     if (localStorage.getItem('theme') === 'dark') {
       document.documentElement.classList.add('dark');
+      updateThemeColor(true);
+    } else {
+      updateThemeColor(false);
     }
 
     initializeAuth().then(() => setIsAuthReady(true));
@@ -139,12 +152,14 @@ function App() {
     // ── Dev: keyboard notification triggers & Hotkeys ──
     const handleKeyDown = (e) => {
       // Dark Mode Hotkeys
-      if (e.altKey && e.key === '9') {
+      if (e.shiftKey && e.altKey && e.key === '9') {
         document.documentElement.classList.remove('dark');
         localStorage.setItem('theme', 'light');
-      } else if (e.altKey && e.key === '0') {
+        updateThemeColor(false);
+      } else if (e.shiftKey && e.altKey && e.key === '0') {
         document.documentElement.classList.add('dark');
         localStorage.setItem('theme', 'dark');
+        updateThemeColor(true);
       }
 
       if (e.key.toLowerCase() === 'p') {

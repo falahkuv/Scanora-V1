@@ -40,10 +40,10 @@ const getConditionLabel = (condition) => {
 
 const getConditionBadgeStyle = (condition) => {
   const c = (condition || '').toLowerCase();
-  if (c === 'unripe') return 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300';
-  if (c === 'ripe') return 'bg-orange-100 dark:bg-orange-900/40 text-orange-main dark:text-orange-400';
-  if (c === 'rotten') return 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300';
-  return 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300';
+  if (c === 'unripe') return 'bg-green-100 text-green-700';
+  if (c === 'ripe') return 'bg-orange-100 text-orange-main';
+  if (c === 'rotten') return 'bg-red-100 text-red-700';
+  return 'bg-gray-100 text-gray-600';
 };
 
 const calculateDaysLeft = (reminderAt) => {
@@ -592,8 +592,8 @@ const Inventory = () => {
       </div>
 
       {/* ── Category Filter Pills (Inventori tab only) ── */}
-      {activeTab === 'inventory' && (
-        <div className="px-4 pt-3 pb-1 flex gap-2 overflow-x-clip no-scrollbar">
+      {!isDesktop && activeTab === 'inventory' && (
+        <div className="px-4 pt-3 pb-1 flex gap-2 overflow-x-auto no-scrollbar">
           {[
             { key: 'all', label: 'Semua', count: inventoryData.length, active: 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white', inactive: 'border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 bg-transparent' },
             { key: 'ripe', label: 'Ripe', count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'ripe').length, active: 'bg-orange-main text-white border border-transparent', inactive: 'border border-current text-orange-main bg-transparent' },

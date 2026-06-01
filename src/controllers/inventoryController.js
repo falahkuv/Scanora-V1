@@ -202,14 +202,13 @@ const getInventoryMonthlyStats = asyncHandler(async (req, res) => {
   items.forEach(item => {
     const date = item.outcomeAt ? new Date(item.outcomeAt) : new Date(item.addedAt);
     
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-    const month = monthNames[date.getMonth()];
+    const monthStr = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
-    const key = `${month}-${year}`;
+    const key = `${year}-${monthStr}`;
 
     if (!monthsMap[key]) {
       monthsMap[key] = {
-        name: month,
+        name: monthStr,
         year: year,
         consumed: 0,
         discarded: 0,
@@ -264,10 +263,9 @@ const getInventoryMonthlyStats = asyncHandler(async (req, res) => {
     };
   });
 
-  const monthIndex = { 'Jan':0, 'Feb':1, 'Mar':2, 'Apr':3, 'Mei':4, 'Jun':5, 'Jul':6, 'Agu':7, 'Sep':8, 'Okt':9, 'Nov':10, 'Des':11 };
   result.sort((a, b) => {
     if (a.year !== b.year) return a.year - b.year;
-    return monthIndex[a.name] - monthIndex[b.name];
+    return parseInt(a.name) - parseInt(b.name);
   });
 
   return sendSuccess(res, "Monthly stats retrieved", result);

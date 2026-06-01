@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight, ChevronDown, TrendingUp, Utensils, Trash2, Star, BarChart2 } from 'lucide-react';
 import { useViewport } from '../context/ViewportContext';
 import api from '../api';
@@ -17,48 +18,48 @@ ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels);
 // ── Mock Data ───────────────────────────────────────────────────────────────────
 const mockMonthlyData = [
   {
-    name: 'Jan', year: 2026, consumed: 12, discarded: 4,
+    name: '01', year: 2026, consumed: 12, discarded: 4,
     topFruit: { name: 'Pisang', count: 7, img: '/mascots/banana_ripe.png' },
     distribution: [
-      { name: 'Pisang', consumed: 7, discarded: 2, color: '#fdc107' },
-      { name: 'Apel', consumed: 3, discarded: 1, color: '#bb0006' },
-      { name: 'Jeruk', consumed: 2, discarded: 1, color: '#f87305' },
+      { name: 'Pisang', consumed: 7, discarded: 2, color: '#eab308' },
+      { name: 'Apel', consumed: 3, discarded: 1, color: '#ef4444' },
+      { name: 'Jeruk', consumed: 2, discarded: 1, color: '#f97316' },
     ]
   },
   {
-    name: 'Feb', year: 2026, consumed: 19, discarded: 8,
+    name: '02', year: 2026, consumed: 19, discarded: 8,
     topFruit: { name: 'Apel', count: 11, img: '/mascots/apple_ripe.png' },
     distribution: [
-      { name: 'Pisang', consumed: 8, discarded: 3, color: '#fdc107' },
-      { name: 'Apel', consumed: 11, discarded: 5, color: '#bb0006' },
-      { name: 'Jeruk', consumed: 0, discarded: 0, color: '#f87305' },
+      { name: 'Pisang', consumed: 8, discarded: 3, color: '#eab308' },
+      { name: 'Apel', consumed: 11, discarded: 5, color: '#ef4444' },
+      { name: 'Jeruk', consumed: 0, discarded: 0, color: '#f97316' },
     ]
   },
   {
-    name: 'Mar', year: 2026, consumed: 15, discarded: 2,
+    name: '03', year: 2026, consumed: 15, discarded: 2,
     topFruit: { name: 'Jeruk', count: 9, img: '/mascots/orange_ripe.png' },
     distribution: [
-      { name: 'Pisang', consumed: 4, discarded: 1, color: '#fdc107' },
-      { name: 'Apel', consumed: 2, discarded: 1, color: '#bb0006' },
-      { name: 'Jeruk', consumed: 9, discarded: 0, color: '#f87305' },
+      { name: 'Pisang', consumed: 4, discarded: 1, color: '#eab308' },
+      { name: 'Apel', consumed: 2, discarded: 1, color: '#ef4444' },
+      { name: 'Jeruk', consumed: 9, discarded: 0, color: '#f97316' },
     ]
   },
   {
-    name: 'Apr', year: 2026, consumed: 22, discarded: 5,
+    name: '04', year: 2026, consumed: 22, discarded: 5,
     topFruit: { name: 'Pisang', count: 13, img: '/mascots/banana_ripe.png' },
     distribution: [
-      { name: 'Pisang', consumed: 13, discarded: 2, color: '#fdc107' },
-      { name: 'Apel', consumed: 6, discarded: 2, color: '#bb0006' },
-      { name: 'Jeruk', consumed: 3, discarded: 1, color: '#f87305' },
+      { name: 'Pisang', consumed: 13, discarded: 2, color: '#eab308' },
+      { name: 'Apel', consumed: 6, discarded: 2, color: '#ef4444' },
+      { name: 'Jeruk', consumed: 3, discarded: 1, color: '#f97316' },
     ]
   },
   {
-    name: 'Mei', year: 2026, consumed: 28, discarded: 3,
+    name: '05', year: 2026, consumed: 28, discarded: 3,
     topFruit: { name: 'Pisang', count: 16, img: '/mascots/banana_ripe.png' },
     distribution: [
-      { name: 'Pisang', consumed: 16, discarded: 1, color: '#fdc107' },
-      { name: 'Apel', consumed: 8, discarded: 1, color: '#bb0006' },
-      { name: 'Jeruk', consumed: 4, discarded: 1, color: '#f87305' },
+      { name: 'Pisang', consumed: 16, discarded: 1, color: '#eab308' },
+      { name: 'Apel', consumed: 8, discarded: 1, color: '#ef4444' },
+      { name: 'Jeruk', consumed: 4, discarded: 1, color: '#f97316' },
     ]
   },
 ];
@@ -68,6 +69,19 @@ export default function Statistic() {
   const navigate = useNavigate();
   const { viewport } = useViewport();
   const isDesktop = viewport === 'desktop';
+  const { t, i18n } = useTranslation();
+
+  const formatMonthYear = (monthStr, yearNum) => {
+    if (!monthStr || monthStr.length > 2) return `${monthStr} ${yearNum}`;
+    const d = new Date(yearNum, parseInt(monthStr) - 1, 1);
+    return new Intl.DateTimeFormat(i18n.language === 'id' ? 'id-ID' : 'en-US', { month: 'long', year: 'numeric' }).format(d);
+  };
+  
+  const formatMonth = (monthStr) => {
+    if (!monthStr || monthStr.length > 2) return monthStr;
+    const d = new Date(2000, parseInt(monthStr) - 1, 1);
+    return new Intl.DateTimeFormat(i18n.language === 'id' ? 'id-ID' : 'en-US', { month: 'short' }).format(d);
+  };
 
   const [monthlyData, setMonthlyData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -263,7 +277,7 @@ export default function Statistic() {
             <ChevronLeft size={20} />
           </button>
           <div className="flex items-center px-2 font-bold text-gray-700 dark:text-gray-200 text-sm">
-            {current.name} {current.year}
+            {formatMonthYear(current.name, current.year)}
           </div>
           <button
             onClick={() => setMonthIdx(i => Math.min(monthlyData.length - 1, i + 1))}
@@ -281,7 +295,7 @@ export default function Statistic() {
         {/* ── Month Title — centered ── */}
         <div className="text-center pt-2">
           <p className="text-xs font-semibold text-gray-400 mb-1">Performa bulan ini:</p>
-          <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white">{current.name} {current.year}</h2>
+          <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white">{formatMonthYear(current.name, current.year)}</h2>
         </div>
 
         {/* ── Main Grid: Dikonsumsi | Dibuang | Tingkat Keberhasilan ── */}
@@ -315,7 +329,7 @@ export default function Statistic() {
         {/* ── Row: Legend + Pie Chart + Top Fruit ── */}
         <div className="grid grid-cols-3 gap-3">
           {/* Legend */}
-          <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4 shadow-sm flex flex-col justify-center">
+          <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4 shadow-sm flex flex-col justify-start h-full">
             <p className="text-xs font-semibold text-gray-400 mb-3">Distribusi Buah</p>
             <div className="space-y-2">
               {current.distribution.filter(d => d.consumed + d.discarded > 0).map(d => (
@@ -331,7 +345,7 @@ export default function Statistic() {
           </div>
 
           {/* Pie Chart: distribution */}
-          <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4 shadow-sm flex flex-col items-center justify-center">
+          <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4 shadow-sm flex flex-col items-center justify-center h-full">
             <div className="w-full" style={{ height: '130px' }}>
               {pieTotal > 0 ? (
                 <Pie data={pieData} options={pieOptions} />
@@ -395,12 +409,10 @@ export default function Statistic() {
                 style={{ minHeight: '160px' }}
               >
                 <div className="z-10">
-                  <p className="text-[11px] text-gray-400 font-semibold truncate">Skor Penyelamatan Terbaik</p>
+                  <p className="text-[11px] text-gray-400 font-semibold truncate">Skor Keberhasilan Terbaik</p>
+                  <p className="text-xl font-bold text-gray-800 dark:text-white mt-1">{formatMonthYear(monthlyData[bestMonthIdx].name, monthlyData[bestMonthIdx].year)}</p>
                 </div>
-                <p className="absolute bottom-4 left-4 text-sm font-bold text-gray-400 dark:text-gray-500 z-10 leading-tight text-left">
-                  {monthlyData[bestMonthIdx].name}<br />{monthlyData[bestMonthIdx].year}
-                </p>
-                <p className={`absolute bottom-4 right-4 text-5xl font-extrabold leading-none z-10 ${scoreColor} text-right`}>
+                <p className={`absolute bottom-4 right-4 text-6xl font-extrabold leading-none z-10 ${scoreColor} text-right`}>
                   {bestScore}%
                 </p>
               </button>
@@ -438,7 +450,7 @@ export default function Statistic() {
                   const isFocused = i === monthIdx;
                   return (
                     <button
-                      key={m.name}
+                      key={formatMonth(m.name)}
                       onClick={() => setMonthIdx(i)}
                       className={`flex-1 flex flex-col items-center gap-1 transition-all active:scale-95 rounded-t-lg cursor-pointer ${isFocused ? 'opacity-100' : 'opacity-40 hover:opacity-70'}`}
                     >
@@ -461,7 +473,7 @@ export default function Statistic() {
                         </div>
                       </div>
                       <span className={`text-[10px] font-bold ${isFocused ? 'text-scanora-green' : 'text-gray-400'}`}>
-                        {m.name}
+                        {formatMonth(m.name)}
                       </span>
                     </button>
                   );
@@ -481,6 +493,6 @@ export default function Statistic() {
         </div>
 
       </div>
-    </div>
+    </div >
   );
 }

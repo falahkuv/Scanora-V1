@@ -16,6 +16,7 @@ model User {
   createdAt DateTime      @default(now()) @map("created_at")
   scans     ScanHistory[]
   inventory Inventory[]
+  pushSubscriptions PushSubscription[]
 
   @@map("users")
 }
@@ -50,4 +51,16 @@ model Inventory {
   scan           ScanHistory? @relation(fields: [scanId], references: [id], onDelete: SetNull)
 
   @@map("inventory")
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid @map("user_id")
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("push_subscriptions")
 }

@@ -549,7 +549,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
                 <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mb-4">
                   <X size={32} />
                 </div>
-                <h2 className="text-xl font-bold text-gray-900 mb-2">Gagal Memindai</h2>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Gagal Memindai</h2>
                 <p className="text-gray-500 text-sm mb-6">{errorMsg}</p>
                 <div className="flex gap-4">
                   <button
