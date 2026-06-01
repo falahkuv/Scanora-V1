@@ -69,7 +69,8 @@ const normalizeFreshnessScore = (score, condition, fruitType) => {
   const cond = normalizeCondition(condition, fruitType);
   if (cond === "rotten") return 0; // rotten has no freshness
   const raw = score > 1 ? score / 100 : score;
-  return Math.max(0, Math.min(1, raw));
+  // Jangan biarkan mentah/matang memiliki skor di bawah 10% (0.1) dari awal
+  return Math.max(0.1, Math.min(1, raw));
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -137,7 +138,12 @@ const calculateCurrentFreshnessScore = (initialScore, condition, fruitType, maxD
   // Linear decay: score reaches 0 exactly at maxDays (expiry)
   // current = initialScore × (1 - daysElapsed / maxDays)
   const decayRatio = daysElapsed / maxDays;
-  const current = score * (1 - decayRatio);
+  let current = score * (1 - decayRatio);
+
+  // Jika belum jatuh tempo (decayRatio < 1), batas bawah aman adalah 10%
+  if (decayRatio < 1 && current < 0.1) {
+    current = 0.1;
+  }
 
   return Math.max(0, Math.min(1.0, Math.round(current * 100) / 100));
 };
