@@ -16,7 +16,7 @@ const dictionary = {
   // Home
   home: {
     greeting: { en: 'Hello, {{name}}!', id: 'Halo, {{name}}!' },
-    subtitle: { en: 'Manage and rescue your food efficiently.', id: 'Ayo selamatkan makanan hari ini.' },
+    subtitle: { en: 'Manage and rescue your food efficiently.', id: 'Ayo pantau kualitas buahmu hari ini.' },
     notifications: { en: 'Notifications', id: 'Notifikasi' },
     monthlyPerformance: { en: 'Monthly Performance', id: 'Performa Bulan Ini' },
     viewStats: { en: 'View Analytics', id: 'Lihat Statistik' },

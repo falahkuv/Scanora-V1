@@ -593,7 +593,7 @@ const Inventory = () => {
 
       {/* ── Category Filter Pills (Inventori tab only) ── */}
       {!isDesktop && activeTab === 'inventory' && (
-        <div className="px-4 pt-3 pb-1 flex gap-2 overflow-x-auto no-scrollbar">
+        <div className="px-4 pt-3 pb-12 flex gap-2 overflow-x-auto no-scrollbar">
           {[
             { key: 'all', label: 'Semua', count: inventoryData.length, active: 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white', inactive: 'border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 bg-transparent' },
             { key: 'ripe', label: 'Ripe', count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'ripe').length, active: 'bg-orange-main text-white border border-transparent', inactive: 'border border-current text-orange-main bg-transparent' },

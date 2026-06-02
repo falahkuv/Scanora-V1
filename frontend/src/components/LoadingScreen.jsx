@@ -8,9 +8,8 @@ const LoadingScreen = ({ isAuthReady, isExiting, onDone }) => {
   const [progress, setProgress] = useState(0);
   const [hasCompleted, setHasCompleted] = useState(false);
 
-  // Detect dark mode so the splash bg matches the app root
-  const isDark = document.documentElement.classList.contains('dark') ||
-    window.matchMedia('(prefers-color-scheme: dark)').matches;
+  // Detect dark mode using the exact same logic as the app to avoid mismatch
+  const isDark = localStorage.getItem('theme') === 'dark';
 
   useEffect(() => {
     const timer = setTimeout(() => setShowLogo(true), 1200);
