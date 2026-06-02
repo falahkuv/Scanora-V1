@@ -71,7 +71,12 @@ const Login = () => {
       api.defaults.headers.common.Authorization = `Bearer ${token}`;
       navigate('/');
     } catch (error) {
-      setErrorMessage(error.response?.data?.message || 'Login gagal. Coba lagi.');
+      const msg = error.response?.data?.message || 'Login gagal. Coba lagi.';
+      if (msg.toLowerCase().includes('validation error')) {
+        setErrorMessage('Invalid email or password.');
+      } else {
+        setErrorMessage(msg);
+      }
     } finally {
       setIsSubmitting(false);
     }

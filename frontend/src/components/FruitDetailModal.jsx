@@ -281,16 +281,18 @@ const FruitDetailModal = ({
                 )}
 
                 {aiLoading && (
-                  <div className="w-full min-h-[44px] bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 rounded-2xl flex flex-col items-center justify-center gap-2 px-4 py-3 overflow-hidden">
-                    <div className="flex items-center gap-3 w-full">
-                      <div className="w-5 h-5 border-2 border-green-400 border-t-transparent rounded-full animate-spin flex-shrink-0" />
-                      <p className="text-sm text-green-700 dark:text-green-400 font-medium animate-pulse">Scanora sedang berpikir...</p>
+                  <div className="w-full bg-white dark:bg-gray-800 border border-scanora-green/30 rounded-2xl p-4 shadow-[0_0_15px_rgba(34,197,94,0.1)] relative overflow-hidden">
+                    <div className="absolute inset-0 bg-scanora-green/5 animate-pulse" />
+                    <div className="relative z-10 flex items-center gap-3 mb-3">
+                      <div className="w-8 h-8 rounded-full bg-scanora-green/20 flex items-center justify-center animate-pulse">
+                        <Sparkles size={16} className="text-scanora-green" />
+                      </div>
+                      <p className="text-sm font-bold text-scanora-green animate-pulse">Chef Scanora sedang menganalisa...</p>
                     </div>
-                    <div className="w-full h-1 bg-green-100 dark:bg-green-900/40 rounded-full overflow-hidden">
-                      <div className="h-full bg-green-400 rounded-full" style={{ width: '40%', animation: 'indeterminate 1.5s ease-in-out infinite' }} />
-                    </div>
-                    <div className="animate-pulse flex flex-col gap-2 mt-2 w-full">
-                      <div className="h-3 bg-green-200/60 dark:bg-green-800/30 rounded-full w-full" />
+                    <div className="relative z-10 space-y-2.5">
+                      <div className="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-full animate-pulse" />
+                      <div className="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-5/6 animate-pulse" />
+                      <div className="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-4/6 animate-pulse" />
                     </div>
                   </div>
                 )}

@@ -4,11 +4,15 @@ const asyncHandler = require('../middleware/asyncHandler');
 const { sendSuccess } = require('../services/responseService');
 const { getFreshnessData } = require('../services/freshnessService');
 
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT,
-  process.env.VAPID_PUBLIC_KEY,
-  process.env.VAPID_PRIVATE_KEY
-);
+if (process.env.VAPID_SUBJECT && process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+  webpush.setVapidDetails(
+    process.env.VAPID_SUBJECT,
+    process.env.VAPID_PUBLIC_KEY,
+    process.env.VAPID_PRIVATE_KEY
+  );
+} else {
+  console.warn('VAPID keys are not fully set in environment variables. Web push notifications will be disabled.');
+}
 
 // POST /api/notifications/subscribe
 const subscribe = asyncHandler(async (req, res) => {
@@ -51,8 +55,8 @@ const unsubscribe = asyncHandler(async (req, res) => {
   sendSuccess(res, 'Unsubscribed successfully');
 });
 
-// POST /api/cron/daily-notify
-const dailyNotify = asyncHandler(async (req, res) => {
+// Function to run the actual notification job, separated from Express req/res
+const runDailyNotificationJob = async () => {
   // Find all active inventory items
   const items = await prisma.inventory.findMany({
     where: { outcome: null },
@@ -63,14 +67,11 @@ const dailyNotify = asyncHandler(async (req, res) => {
     }
   });
 
-  const now = new Date();
-  
   const notifications = [];
 
   for (const item of items) {
     if (!item.user.pushSubscriptions.length) continue;
 
-    // Use freshnessService to get current status
     const data = getFreshnessData(
       item.fruitType, 
       item.condition, 
@@ -82,13 +83,11 @@ const dailyNotify = asyncHandler(async (req, res) => {
     let body = '';
 
     if (data.isExpired) {
-      // Rotten
       if (item.condition !== 'rotten') {
         title = `⚠️ Yah, ${data.fruitName} kamu membusuk!`;
         body = `Buah ${data.fruitName} yang kamu simpan sudah melewati batas waktu kelayakan.`;
       }
     } else {
-      // Check if expiring in 1 or 2 days
       const daysLeft = data.daysLeft;
       if (daysLeft === 1) {
         title = `🚨 Peringatan: ${data.fruitName} segera membusuk!`;
@@ -97,9 +96,6 @@ const dailyNotify = asyncHandler(async (req, res) => {
         title = `🍏 ${data.fruitName} sedang sangat segar!`;
         body = `Waktu terbaik untuk memakan ${data.fruitName} kamu adalah sekarang. Tinggal 2 hari lagi.`;
       } else if (item.condition === 'unripe' && daysLeft === 0) {
-        // Just ripened? No, daysLeft for unripe is days until ripe.
-        // Actually, freshnessService daysLeft for unripe is days UNTIL ripe.
-        // So if daysLeft === 0, it means it is ripening today.
         title = `🍌 ${data.fruitName} kamu sudah matang!`;
         body = `Yey! ${data.fruitName} kamu sekarang sudah matang dan siap dinikmati.`;
       }
@@ -119,7 +115,6 @@ const dailyNotify = asyncHandler(async (req, res) => {
     }
   }
 
-  // Send all notifications
   let successCount = 0;
   for (const notif of notifications) {
     try {
@@ -128,7 +123,6 @@ const dailyNotify = asyncHandler(async (req, res) => {
     } catch (err) {
       console.error('Push notification failed:', err);
       if (err.statusCode === 410 || err.statusCode === 404) {
-        // Subscription expired/removed, delete it
         await prisma.pushSubscription.deleteMany({
           where: { endpoint: notif.subscription.endpoint }
         });
@@ -136,11 +130,18 @@ const dailyNotify = asyncHandler(async (req, res) => {
     }
   }
 
+  return successCount;
+};
+
+// POST /api/cron/daily-notify
+const dailyNotify = asyncHandler(async (req, res) => {
+  const successCount = await runDailyNotificationJob();
   res.json({ success: true, message: `Sent ${successCount} notifications` });
 });
 
 module.exports = {
   subscribe,
   unsubscribe,
-  dailyNotify
+  dailyNotify,
+  runDailyNotificationJob
 };

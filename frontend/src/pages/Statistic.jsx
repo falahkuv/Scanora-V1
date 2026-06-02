@@ -249,7 +249,7 @@ export default function Statistic() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 transition-colors relative">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-44 transition-colors relative">
 
       {/* ── Header ── */}
       <div className="bg-white dark:bg-gray-800 px-6 pt-6 pb-4 shadow-sm z-10 sticky top-0 border-b border-gray-100 dark:border-gray-700 flex items-center gap-4">
@@ -327,33 +327,57 @@ export default function Statistic() {
         </div>
 
         {/* ── Row: Legend + Pie Chart + Top Fruit ── */}
-        <div className="grid grid-cols-3 gap-3">
-          {/* Legend */}
-          <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4 shadow-sm flex flex-col justify-start h-full">
-            <p className="text-xs font-semibold text-gray-400 mb-3">Distribusi Buah</p>
-            <div className="space-y-2">
-              {current.distribution.filter(d => d.consumed + d.discarded > 0).map(d => (
-                <div key={d.name} className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
-                    <span className="text-gray-600 dark:text-gray-300 font-medium">{d.name}</span>
+        <div className={`grid ${!isDesktop ? 'grid-cols-2' : 'grid-cols-3'} gap-3`}>
+          {!isDesktop ? (
+            <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4 shadow-sm flex flex-col justify-between h-full">
+              <div className="w-full flex-1 flex items-center justify-center" style={{ minHeight: '110px' }}>
+                {pieTotal > 0 ? (
+                  <Pie data={pieData} options={pieOptions} />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-gray-300 text-xs">Tidak ada data</div>
+                )}
+              </div>
+              <div className="mt-4 flex gap-3 overflow-x-auto no-scrollbar pb-1">
+                {current.distribution.filter(d => d.consumed + d.discarded > 0).map(d => (
+                  <div key={d.name} className="flex items-center gap-1.5 flex-shrink-0 bg-gray-50 dark:bg-gray-700/50 px-2 py-1.5 rounded-lg">
+                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
+                    <span className="text-[10px] text-gray-600 dark:text-gray-300 font-bold whitespace-nowrap">
+                      {d.name} ({d.consumed + d.discarded})
+                    </span>
                   </div>
-                  <span className="text-gray-400 font-semibold">{d.consumed + d.discarded} buah</span>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Legend */}
+              <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4 shadow-sm flex flex-col justify-start h-full">
+                <p className="text-xs font-semibold text-gray-400 mb-3">Distribusi Buah</p>
+                <div className="space-y-2">
+                  {current.distribution.filter(d => d.consumed + d.discarded > 0).map(d => (
+                    <div key={d.name} className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
+                        <span className="text-gray-600 dark:text-gray-300 font-medium">{d.name}</span>
+                      </div>
+                      <span className="text-gray-400 font-semibold">{d.consumed + d.discarded} buah</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
 
-          {/* Pie Chart: distribution */}
-          <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4 shadow-sm flex flex-col items-center justify-center h-full">
-            <div className="w-full" style={{ height: '130px' }}>
-              {pieTotal > 0 ? (
-                <Pie data={pieData} options={pieOptions} />
-              ) : (
-                <div className="flex items-center justify-center h-full text-gray-300 text-xs">Tidak ada data</div>
-              )}
-            </div>
-          </div>
+              {/* Pie Chart: distribution */}
+              <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4 shadow-sm flex flex-col items-center justify-center h-full">
+                <div className="w-full" style={{ height: '130px' }}>
+                  {pieTotal > 0 ? (
+                    <Pie data={pieData} options={pieOptions} />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-gray-300 text-xs">Tidak ada data</div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Top Fruit this month */}
           <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4 shadow-sm relative overflow-hidden flex flex-col justify-between" style={{ minHeight: '160px' }}>
@@ -412,7 +436,7 @@ export default function Statistic() {
                   <p className="text-[11px] text-gray-400 font-semibold truncate">Skor Keberhasilan Terbaik</p>
                   <p className="text-xl font-bold text-gray-800 dark:text-white mt-1">{formatMonthYear(monthlyData[bestMonthIdx].name, monthlyData[bestMonthIdx].year)}</p>
                 </div>
-                <p className={`absolute bottom-4 right-4 text-6xl font-extrabold leading-none z-10 ${scoreColor} text-right`}>
+                <p className={`absolute bottom-4 right-4 text-5xl sm:text-6xl font-extrabold leading-none z-10 ${scoreColor} text-right`}>
                   {bestScore}%
                 </p>
               </button>
