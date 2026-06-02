@@ -449,7 +449,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
 
           {/* Help Popup — slides up below the top controls */}
           <div
-            className={`absolute left-4 right-4 z-40 transition-all duration-300 ease-out ${showHelpPopup ? 'top-28 opacity-100 pointer-events-auto' : 'top-24 opacity-0 pointer-events-none'}`}
+            className={`absolute px-8 left-4 right-4 z-40 transition-all duration-300 ease-out ${showHelpPopup ? 'top-28 opacity-100 pointer-events-auto' : 'top-24 opacity-0 pointer-events-none'}`}
             onClick={e => e.stopPropagation()}
           >
             <div className="bg-white/95 backdrop-blur-md rounded-2xl px-5 py-4 shadow-2xl border border-white/20">

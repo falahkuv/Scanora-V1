@@ -21,6 +21,14 @@ import { ViewportProvider, useViewport } from './context/ViewportContext';
 // Pages where nav should NOT appear
 const NO_NAV_PATHS = ['/login', '/register', '/forgot-password', '/reset-password', '/onboarding'];
 
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+};
+
 // ─── Inner shell: needs Router context for useLocation ───────────────────────
 function AppShell({ isScannerOpen, setIsScannerOpen, isAppEntering, isSplashVisible }) {
   const { layout, compactWidth, windowWidth, isFullscreen } = useViewport();
@@ -82,15 +90,15 @@ function AppShell({ isScannerOpen, setIsScannerOpen, isAppEntering, isSplashVisi
 
             <main className="flex-1 overflow-y-auto no-scrollbar w-full">
               <Routes>
-                <Route path="/" element={<Home onOpenScanner={() => setIsScannerOpen(true)} />} />
-                <Route path="/inventory" element={<Inventory />} />
-                <Route path="/profile" element={<Profile />} />
+                <Route path="/" element={<ProtectedRoute><Home onOpenScanner={() => setIsScannerOpen(true)} /></ProtectedRoute>} />
+                <Route path="/inventory" element={<ProtectedRoute><Inventory /></ProtectedRoute>} />
+                <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                <Route path="/stats" element={<ProtectedRoute><Statistic /></ProtectedRoute>} />
                 <Route path="/onboarding" element={<Onboarding />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/stats" element={<Statistic />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </main>
