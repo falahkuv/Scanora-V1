@@ -144,12 +144,12 @@ const FruitDetailModal = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"
       onClick={onClose}
     >
       <div
         className="bg-white dark:bg-gray-800 rounded-3xl w-full max-w-md shadow-2xl transform transition-all animate-slide-up flex flex-col overflow-hidden relative"
-        style={{ maxHeight: '90dvh' }}
+        style={{ maxHeight: '85dvh' }}
         onClick={e => e.stopPropagation()}
       >
         {/* ── Close button ── */}
