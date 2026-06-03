@@ -157,9 +157,8 @@ function App() {
 
     initializeAuth().then(() => setIsAuthReady(true));
 
-    // ── Dev: keyboard notification triggers & Hotkeys ──
+    // ── Dev: Dark Mode Hotkeys (Shift+Alt+9 = light, Shift+Alt+0 = dark) ──
     const handleKeyDown = (e) => {
-      // Dark Mode Hotkeys
       if (e.shiftKey && e.altKey && e.key === '9') {
         document.documentElement.classList.remove('dark');
         localStorage.setItem('theme', 'light');
@@ -168,33 +167,6 @@ function App() {
         document.documentElement.classList.add('dark');
         localStorage.setItem('theme', 'dark');
         updateThemeColor(true);
-      }
-
-      if (e.key.toLowerCase() === 'p') {
-        if ('Notification' in window) {
-          Notification.requestPermission().then(perm => alert(`Status Izin Notifikasi: ${perm}`));
-        }
-        return;
-      }
-      const mockDate = new Date();
-      mockDate.setDate(mockDate.getDate() - 5);
-      const savedDateStr = mockDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long' });
-      const caseMap = {
-        '1': { title: "🥗 Jangan Lupa Apel🍎 Kamu!", body: `Apel🍎 yang kamu simpan sejak ${savedDateStr} tinggal 3 hari lagi.` },
-        '2': { title: "⚠️ Pisang🍌 Hampir Busuk!", body: `Pisang🍌 yang kamu simpan sejak ${savedDateStr} sisa 1 hari lagi.` },
-        '3': { title: "🚨 HARI TERAKHIR Jeruk🍊!", body: `Jeruk🍊 yang kamu simpan sejak ${savedDateStr} mencapai batas HARI INI.` },
-        '4': { title: "✨ Apel🍎 Matang Besok!", body: `Apel🍎 yang kamu simpan sejak ${savedDateStr} matang dalam 1 hari lagi.` },
-        '5': { title: "😋 Pisang🍌 Sudah Matang!", body: `Pisang🍌 yang kamu simpan sejak ${savedDateStr} HARI INI sudah matang.` },
-      };
-      if (caseMap[e.key]) {
-        window.dispatchEvent(new CustomEvent('scanora:testNotif', { detail: `Memproses Notifikasi Case ${e.key}...` }));
-        setTimeout(() => {
-          if ('Notification' in window && Notification.permission === 'granted') {
-            new Notification(caseMap[e.key].title, { body: caseMap[e.key].body });
-          } else {
-            alert(`[Notif Diblokir]\nTitle: ${caseMap[e.key].title}\nBody: ${caseMap[e.key].body}\n\nTekan 'P' untuk request permission.`);
-          }
-        }, 3000);
       }
     };
     window.addEventListener('keydown', handleKeyDown);

@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { X, HelpCircle, ImageIcon, RefreshCw, Zap, ZapOff, CheckCircle, CircleX, ChevronDown, Check, Camera, Bot, Sparkles, Ban } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import imageCompression from 'browser-image-compression';
 import api from '../api';
 import { getCachedSuggestion, saveSuggestionToCache } from '../lib/aiSuggestionCache';
 
 const ScannerSheet = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
   const [scanState, setScanState] = useState('camera');
   const [result, setResult] = useState(null);
   const [errorMsg, setErrorMsg] = useState('');
@@ -77,7 +79,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
       }
     } catch (err) {
       console.error('Camera error:', err);
-      setErrorMsg('Kamera tidak dapat diakses. Coba upload foto dari galeri.');
+      setErrorMsg(t('scanner.cameraError'));
     }
   };
 
@@ -144,7 +146,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
         const isValidFruit = ['apple', 'banana', 'orange', 'apel', 'pisang', 'jeruk'].includes(fruitType);
         if (!isValidFruit) {
           setResult(null);
-          showToast('Objek tidak dikenali, silakan coba lagi.', 'error');
+          showToast(t('scanner.unrecognized'), 'error');
           setScanState('camera');
           setCapturedImage(null);
           startCamera();
@@ -245,7 +247,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
     if (!result || isSaving) return;
 
     if (result.condition?.toLowerCase() === 'rotten') {
-      showToast('Buah sudah busuk — tidak bisa disimpan ke Inventori', 'error');
+      showToast(t('scanner.rottenBlocked'), 'error');
       return;
     }
 
@@ -385,7 +387,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
                 {/* Hint label below viewfinder */}
                 <div className="absolute z-10 pointer-events-none" style={{ top: 'calc(50% + 100px)' }}>
                   <p className="text-white/90 text-xs font-medium bg-black/60 backdrop-blur-md px-5 py-2 rounded-full">
-                    Arahkan ke buah
+                    {t('scanner.pointAtFruit')}
                   </p>
                 </div>
               </>
@@ -395,7 +397,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
             {scanState === 'scanning' && (
               <div className="absolute inset-0 bg-black/60 z-20 flex flex-col items-center justify-center gap-4">
                 <RefreshCw className="w-16 h-16 text-scanora-green animate-spin" strokeWidth={1.5} />
-                <p className="text-white font-medium animate-pulse">Menganalisis dengan AI...</p>
+                <p className="text-white font-medium animate-pulse">{t('scanner.analyzing')}</p>
               </div>
             )}
 
@@ -407,7 +409,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
                   onClick={() => fileInputRef.current?.click()}
                   className="flex items-center gap-2 bg-white/20 text-white px-5 py-2.5 rounded-full text-sm font-medium"
                 >
-                  <ImageIcon size={16} /> Upload dari Galeri
+                  <ImageIcon size={16} /> {t('scanner.uploadGallery')}
                 </button>
               </div>
             )}
@@ -455,7 +457,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
             <div className="bg-white/95 backdrop-blur-md rounded-2xl px-5 py-4 shadow-2xl border border-white/20">
               <div className="flex items-start justify-between gap-3">
                 <p className="text-gray-800 text-sm font-medium leading-relaxed flex-1">
-                  Arahkan apel, jeruk, atau pisang ke bingkai pemindai. Atau pilih foto dari galeri.
+                   {t('scanner.helpText')}
                 </p>
                 <button
                   onClick={() => setShowHelpPopup(false)}
@@ -477,7 +479,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
                 onClick={() => fileInputRef.current?.click()}
                 disabled={scanState === 'scanning'}
                 className="w-16 h-16 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white disabled:opacity-40 hover:bg-black/60 active:scale-95 transition-all"
-                title="Pilih dari Galeri"
+                title={t('scanner.gallery')}
               >
                 <ImageIcon size={28} />
               </button>
@@ -501,7 +503,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
                 }}
                 disabled={scanState === 'scanning'}
                 className="w-16 h-16 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white disabled:opacity-40 hover:bg-black/60 active:scale-95 transition-all"
-                title="Ganti Kamera"
+                title={t('scanner.flipCamera')}
               >
                 <RefreshCw size={28} />
               </button>
@@ -549,20 +551,20 @@ const ScannerSheet = ({ isOpen, onClose }) => {
                 <div className="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mb-4">
                   <X size={32} />
                 </div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Gagal Memindai</h2>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{t('scanner.scanFailed')}</h2>
                 <p className="text-gray-500 text-sm mb-6">{errorMsg}</p>
                 <div className="flex gap-4">
                   <button
                     onClick={() => { setErrorMsg(''); setScanState('camera'); setCapturedImage(null); startCamera(); }}
                     className="px-5 min-h-[44px] flex items-center justify-center bg-gray-100 rounded-full text-gray-700 font-medium text-sm"
                   >
-                    Coba Kamera
+                    {t('scanner.tryAgain')}
                   </button>
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     className="px-5 min-h-[44px] bg-scanora-green text-white rounded-full font-medium text-sm flex items-center justify-center gap-1"
                   >
-                    <ImageIcon size={14} /> Galeri
+                    <ImageIcon size={14} /> {t('scanner.gallery')}
                   </button>
                 </div>
               </div>
@@ -572,10 +574,9 @@ const ScannerSheet = ({ isOpen, onClose }) => {
                 <div className="flex items-center justify-between mt-2">
                   {/* Left Col: Fruit Name & Ripeness — 1 row */}
                   <div className="flex flex-row items-center gap-3 text-left">
-                    <h2 className="text-3xl font-bold text-gray-900 dark:text-white capitalize">{result.fruit_type}</h2>
+                    <h2 className="text-3xl font-bold text-gray-900 dark:text-white capitalize">{t(`fruit.${normalizeFruitType(result.fruit_type)}`)}</h2>
                     <div className={`inline-flex items-center px-3 py-1.5 rounded-full font-semibold w-fit text-sm capitalize ${condColor.bg} ${condColor.text}`}>
-                      {result.condition?.toLowerCase() !== 'rotten' && <span className={`w-2 h-2 rounded-full mr-2 ${condColor.dot}`}></span>}
-                      {result.condition}
+                      {t(`condition.${result.condition?.toLowerCase()}`)}
                     </div>
                   </div>
 
@@ -611,7 +612,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
                 <div className="mt-6">
                   <div className="bg-green-50 dark:bg-scanora-green/10 rounded-2xl p-5 mb-6 border border-green-100 dark:border-scanora-green/20">
                     <h3 className="font-semibold text-scanora-dark dark:text-scanora-green mb-3 flex items-center gap-2">
-                      <Sparkles size={18} className="text-scanora-green" /> AI Chef Scanora
+                      <Sparkles size={18} className="text-scanora-green" /> {t('scanner.aiChef')}
                     </h3>
 
                     {/* Not yet requested */}
@@ -621,7 +622,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
                         className="w-full py-2.5 bg-green-50 dark:bg-green-900/10 border border-scanora-green text-scanora-green font-semibold rounded-xl text-sm hover:bg-green-100 dark:hover:bg-green-900/20 active:scale-95 transition-all cursor-pointer relative overflow-hidden"
                       >
                         <span className="relative z-10 flex items-center justify-center gap-2">
-                          <Sparkles size={18} className="text-scanora-green" /> Minta Saran AI
+                          <Sparkles size={18} className="text-scanora-green" /> {t('details.aiSuggestion')}
                         </span>
                       </button>
                     )}
@@ -631,7 +632,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
                       <div className="space-y-3">
                         <div className="flex items-center gap-3 mb-2">
                           <div className="w-5 h-5 border-2 border-green-400 dark:border-scanora-green border-t-transparent rounded-full animate-spin flex-shrink-0" />
-                          <p className="text-sm text-green-700 dark:text-scanora-green font-medium animate-pulse">Scanora sedang berpikir...</p>
+                          <p className="text-sm text-green-700 dark:text-scanora-green font-medium animate-pulse">{t('details.aiThinking')}</p>
                         </div>
                         <div className="w-full h-1 bg-green-100 dark:bg-gray-700 rounded-full overflow-hidden">
                           <div className="h-full bg-green-400 rounded-full" style={{ width: '40%', animation: 'indeterminate 1.5s ease-in-out infinite' }} />
@@ -654,7 +655,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
                       <div className="mt-3 bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2">
                         <Ban className="text-red-main flex-shrink-0 mt-0.5" size={16} />
                         <p className="text-xs text-red-600 font-medium leading-relaxed">
-                          Buah sudah busuk. Hanya buah Unripe atau Ripe yang dapat disimpan ke Inventori
+                          {t('scanner.rottenBlocked')}
                         </p>
                       </div>
                     )}
@@ -664,7 +665,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
                   <div className="flex items-center gap-4 bg-gray-100/80 dark:bg-gray-700/50 border border-gray-200/70 dark:border-gray-600 rounded-2xl px-4 py-3 mb-5">
                     <Bot size={16} className="text-gray-400 dark:text-gray-500 flex-shrink-0 mt-0.5" />
                     <p className="text-[12px] text-gray-500 dark:text-gray-400 leading-relaxed">
-                      AI hanya menilai visual dan tidak bisa 100% akurat
+                       {t('scanner.aiDisclaimer')}
                     </p>
                   </div>
 
@@ -673,14 +674,14 @@ const ScannerSheet = ({ isOpen, onClose }) => {
                       onClick={closeCard}
                       className="flex-1 min-h-[44px] py-3.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white font-semibold rounded-xl flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95 transition-all cursor-pointer"
                     >
-                      Tutup
+                      {t('scanner.close')}
                     </button>
                     <button
                       onClick={handleSaveToInventory}
                       disabled={isSaving || result.condition?.toLowerCase() === 'rotten'}
                       className="flex-1 min-h-[44px] py-3.5 bg-scanora-green text-white font-semibold rounded-xl shadow-lg shadow-scanora-green/30 flex items-center justify-center hover:bg-scanora-dark active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
-                      {isSaving ? 'Menyimpan...' : result.condition?.toLowerCase() === 'rotten' ? 'Tidak Bisa Disimpan' : 'Simpan ke Inventori'}
+                      {isSaving ? t('scanner.saving') : result.condition?.toLowerCase() === 'rotten' ? t('scanner.cannotSave') : t('scanner.saveToInventory')}
                     </button>
                   </div>
                 </div>

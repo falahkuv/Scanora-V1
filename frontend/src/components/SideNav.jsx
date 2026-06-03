@@ -58,7 +58,7 @@ const SideNav = ({ onOpenScanner }) => {
         className="flex flex-col items-center justify-center gap-1.5 mb-6 py-4 bg-scanora-green text-white rounded-2xl font-bold text-sm hover:bg-scanora-dark active:scale-95 transition-all shadow-xl shadow-scanora-green/25 w-full cursor-pointer"
       >
         <Camera size={28} strokeWidth={2.5} />
-        <span className="text-center leading-tight">Scan Buah</span>
+        <span className="text-center leading-tight">{t('nav.scanFruit')}</span>
       </button>
 
       {/* ── Main Nav ── */}

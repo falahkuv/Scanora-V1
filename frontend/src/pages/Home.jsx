@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { User, AlertCircle, X, Trash2, Salad, Sprout, ImageOff, Bell, Camera, BarChart2, Package, Utensils } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import FruitDetailModal from '../components/FruitDetailModal';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
@@ -195,6 +196,7 @@ const NotificationItem = ({ notif, onDelete, onClick }) => {
 
 const Home = ({ onOpenScanner }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [urgentItems, setUrgentItems] = useState([]);
   const [inventoryItems, setInventoryItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -435,9 +437,9 @@ const Home = ({ onOpenScanner }) => {
   const total = impact.consumed !== '-' ? impact.consumed + impact.discarded : 0;
   const saveRate = total > 0 ? Math.round((impact.consumed / total) * 100) : null;
   const prideMsg = saveRate === null ? null
-    : saveRate >= 80 ? 'Luar biasa! Hampir semua buahmu terselamatkan. 🌟'
-      : saveRate >= 50 ? 'Lumayan! Terus kurangi pemborosan ya. 👍'
-        : 'Masih banyak yang dibuang. Yuk lebih bijak! 😬';
+    : saveRate >= 80 ? t('home.prideMsg.excellent')
+      : saveRate >= 50 ? t('home.prideMsg.good')
+        : t('home.prideMsg.bad');
 
   const { viewport } = useViewport();
   const isDesktop = viewport === 'desktop';
@@ -452,8 +454,8 @@ const Home = ({ onOpenScanner }) => {
       {/* Header */}
       <header className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white dark:text-white">Halo, {firstName}!</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">Ayo selamatkan makanan hari ini.</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('home.greeting', { name: firstName })}</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{t('home.subtitle')}</p>
         </div>
         <div className="flex gap-4">
           <Tooltip content="Notifikasi" placement="bottom">
@@ -463,7 +465,7 @@ const Home = ({ onOpenScanner }) => {
                 ${isDesktop ? 'gap-2 px-4 h-11 rounded-xl text-sm font-semibold' : 'w-12 h-12'}`}
             >
               <Bell size={isDesktop ? 18 : 24} />
-              {isDesktop && <span>Notifikasi</span>}
+              {isDesktop && <span>{t('home.notifications')}</span>}
               {notifications.some(n => !n.isRead) && (
                 <div className={`absolute bg-red-500 rounded-full border-2 border-white dark:border-gray-800 dark:border-gray-800 dark:border-gray-800
                   ${isDesktop ? 'top-2 right-2 w-2 h-2' : 'top-3 right-3 w-2.5 h-2.5'}`} />
@@ -497,13 +499,13 @@ const Home = ({ onOpenScanner }) => {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Sprout className="text-scanora-green" size={20} />
-            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 dark:text-gray-200">Performa Bulan Ini</h2>
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">{t('home.monthlyPerformance')}</h2>
           </div>
           <button
             onClick={() => navigate('/stats')}
             className="px-3 py-1.5 bg-gray-100 text-gray-500 dark:text-gray-500 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-500 dark:hover:bg-gray-700 rounded-full text-sm font-bold transition-all active:scale-95"
           >
-            Lihat Statistik
+            {t('home.viewStats')}
           </button>
         </div>
         <div className="bg-transparent">
@@ -515,7 +517,7 @@ const Home = ({ onOpenScanner }) => {
                 </div>
                 <div>
                   <p className="text-3xl font-extrabold leading-none text-green-700">{impact.consumed}</p>
-                  <p className="text-green-700 text-xs font-medium mt-1">Dikonsumsi</p>
+                  <p className="text-green-700 text-xs font-medium mt-1">{t('home.consumed')}</p>
                 </div>
               </div>
               <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 flex items-center gap-4">
@@ -524,7 +526,7 @@ const Home = ({ onOpenScanner }) => {
                 </div>
                 <div>
                   <p className="text-3xl font-extrabold leading-none text-red-700">{impact.discarded}</p>
-                  <p className="text-red-700 text-xs font-medium mt-1">Dibuang</p>
+                  <p className="text-red-700 text-xs font-medium mt-1">{t('home.discarded')}</p>
                 </div>
               </div>
               <div className="bg-orange-500/10 border border-orange-500/20 rounded-2xl p-4 flex items-center gap-4">
@@ -533,13 +535,13 @@ const Home = ({ onOpenScanner }) => {
                 </div>
                 <div>
                   <p className="text-3xl font-extrabold leading-none text-orange-700">{impact.saved}</p>
-                  <p className="text-orange-700 text-xs font-medium mt-1">Disimpan</p>
+                  <p className="text-orange-700 text-xs font-medium mt-1">{t('home.saved')}</p>
                 </div>
               </div>
               {saveRate !== null ? (
                 <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4 flex flex-col justify-center shadow-sm">
                   <div className="flex justify-between items-center mb-2">
-                    <p className="text-gray-500 dark:text-gray-500 text-xs font-semibold">Skor Keberhasilan</p>
+                    <p className="text-gray-500 dark:text-gray-500 text-xs font-semibold">{t('home.successScore')}</p>
                     <p className="text-scanora-green font-bold text-sm">{saveRate}%</p>
                   </div>
                   <div className="w-full h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -549,7 +551,7 @@ const Home = ({ onOpenScanner }) => {
                 </div>
               ) : (
                 <div className="bg-white border border-gray-100 rounded-2xl p-4 flex items-center justify-center shadow-sm">
-                  <p className="text-gray-500 dark:text-gray-500 text-sm">Mulai konsumsi atau buang buah untuk melihat statistikmu!</p>
+                  <p className="text-gray-500 dark:text-gray-500 text-sm">{t('home.emptyStats')}</p>
                 </div>
               )}
             </div>
@@ -562,7 +564,7 @@ const Home = ({ onOpenScanner }) => {
                   </div>
                   <div className={isTablet ? 'flex flex-col text-left' : ''}>
                     <p className={`${isTablet ? 'text-xl' : 'text-2xl'} font-extrabold leading-none text-green-700`}>{impact.consumed}</p>
-                    <p className={`text-green-700 text-[10px] font-medium ${isTablet ? 'mt-0.5' : 'mt-1'}`}>Dikonsumsi</p>
+                    <p className={`text-green-700 text-[10px] font-medium ${isTablet ? 'mt-0.5' : 'mt-1'}`}>{t('home.consumed')}</p>
                   </div>
                 </div>
                 <div className={`bg-red-500/10 border border-red-500/20 backdrop-blur-md rounded-xl p-3 ${isTablet ? 'flex items-center gap-4' : 'text-center'}`}>
@@ -571,7 +573,7 @@ const Home = ({ onOpenScanner }) => {
                   </div>
                   <div className={isTablet ? 'flex flex-col text-left' : ''}>
                     <p className={`${isTablet ? 'text-xl' : 'text-2xl'} font-extrabold leading-none text-red-700`}>{impact.discarded}</p>
-                    <p className={`text-red-700 text-[10px] font-medium ${isTablet ? 'mt-0.5' : 'mt-1'}`}>Dibuang</p>
+                    <p className={`text-red-700 text-[10px] font-medium ${isTablet ? 'mt-0.5' : 'mt-1'}`}>{t('home.discarded')}</p>
                   </div>
                 </div>
                 <div className={`bg-orange-main/15 border border-orange-main/20 backdrop-blur-md rounded-xl p-3 ${isTablet ? 'flex items-center gap-4' : 'text-center'}`}>
@@ -580,14 +582,14 @@ const Home = ({ onOpenScanner }) => {
                   </div>
                   <div className={isTablet ? 'flex flex-col text-left' : ''}>
                     <p className={`${isTablet ? 'text-xl' : 'text-2xl'} font-extrabold leading-none text-orange-main`}>{impact.saved}</p>
-                    <p className={`text-orange-main text-[10px] font-medium ${isTablet ? 'mt-0.5' : 'mt-1'}`}>Disimpan</p>
+                    <p className={`text-orange-main text-[10px] font-medium ${isTablet ? 'mt-0.5' : 'mt-1'}`}>{t('home.saved')}</p>
                   </div>
                 </div>
               </div>
               {saveRate !== null ? (
                 <div className="bg-white dark:bg-gray-800 rounded-xl p-3 border border-gray-100 dark:border-gray-700 shadow-sm">
                   <div className="flex justify-between items-center mb-1.5">
-                    <p className="text-gray-500 dark:text-gray-500 text-xs font-semibold">Skor Keberhasilan</p>
+                    <p className="text-gray-500 dark:text-gray-500 text-xs font-semibold">{t('home.successScore')}</p>
                     <p className="text-scanora-green font-bold text-sm">{saveRate}%</p>
                   </div>
                   <div className="w-full h-2 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
@@ -597,7 +599,7 @@ const Home = ({ onOpenScanner }) => {
                 </div>
               ) : (
                 <div className="bg-white dark:bg-gray-800 rounded-xl p-3 text-center border border-gray-100 dark:border-gray-700 shadow-sm">
-                  <p className="text-gray-500 dark:text-gray-500 text-xs">Mulai konsumsi atau buang buah dari inventori untuk melihat statistikmu!</p>
+                  <p className="text-gray-500 dark:text-gray-500 text-xs">{t('home.emptyStats')}</p>
                 </div>
               )}
             </>
@@ -610,7 +612,7 @@ const Home = ({ onOpenScanner }) => {
         <div className="flex items-center gap-2 mb-4">
           {/* AlertCircle with orange-main */}
           <AlertCircle className="text-orange-main" size={20} />
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 dark:text-gray-200">Segera Konsumsi {!loading && `(${urgentItems.length})`}</h2>
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200">{t('home.urgentConsume')} {!loading && `(${urgentItems.length})`}</h2>
         </div>
 
         {loading ? (
@@ -654,7 +656,7 @@ const Home = ({ onOpenScanner }) => {
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     {/* Fruit name: 18px */}
-                    <h3 className="font-bold text-gray-900 dark:text-white capitalize leading-tight" style={{ fontSize: '18px' }}>{getFruitLabel(item.fruit_type)}</h3>
+                    <h3 className="font-bold text-gray-900 dark:text-white capitalize leading-tight" style={{ fontSize: '18px' }}>{t(`fruit.${normalizeFruit(item.fruit_type)}`)}</h3>
                     <div className="flex items-center gap-2 mt-1 overflow-hidden whitespace-nowrap">
                       <span className="text-sm text-gray-400 dark:text-gray-500 flex items-center gap-1.5 flex-shrink-0">
                         <Camera size={14} />
@@ -662,7 +664,7 @@ const Home = ({ onOpenScanner }) => {
                       </span>
                       <span className="text-gray-300 text-sm flex-shrink-0">·</span>
                       <span className={`text-sm font-bold truncate ${dotColor === 'bg-red-main' ? 'text-red-main' : dotColor === 'bg-orange-main' ? 'text-orange-main' : 'text-scanora-green'}`}>
-                        {item.daysLeft === 0 ? 'Hari ini!' : `Sisa ${item.daysLeft} hari`}
+                        {item.daysLeft === 0 ? t('home.today') : t('home.daysLeftShort', { count: item.daysLeft })}
                       </span>
                     </div>
                   </div>
@@ -676,9 +678,9 @@ const Home = ({ onOpenScanner }) => {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-8 px-4 text-center border border-dashed border-gray-200 dark:border-gray-700 rounded-2xl bg-gray-50 dark:bg-gray-800/50">
-            <p className="text-gray-500 dark:text-gray-500 text-sm mb-3">Semua buah masih aman! 🌿</p>
+            <p className="text-gray-500 dark:text-gray-500 text-sm mb-3">{t('home.allFruitsSafe')}</p>
             {urgentItems.length === 0 && (
-              <button onClick={() => onOpenScanner?.() || document.getElementById('viewport-toggle-btn')?.click()} className="bg-scanora-green text-white font-bold py-2 px-4 rounded-xl text-xs shadow-md active:scale-95 transition-all cursor-pointer">Scan Buah Sekarang</button>
+              <button onClick={() => onOpenScanner?.() || document.getElementById('viewport-toggle-btn')?.click()} className="bg-scanora-green text-white font-bold py-2 px-4 rounded-xl text-xs shadow-md active:scale-95 transition-all cursor-pointer">{t('home.scanFruitNow')}</button>
             )}
           </div>
         )}
@@ -718,21 +720,21 @@ const Home = ({ onOpenScanner }) => {
         isDesktop ? (
           <div className="fixed inset-0 z-50" onClick={() => setShowNotifications(false)}>
             <div
-              className="absolute top-20 right-8 w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden animate-slide-up"
+              className="absolute top-20 right-8 w-96 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 flex flex-col overflow-hidden animate-slide-up"
               style={{ maxHeight: '480px' }}
               onClick={e => e.stopPropagation()}
             >
-              <div className="p-4 border-b border-gray-100 flex justify-between items-center">
+              <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
                 <h2 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                  <Bell size={16} /> Notifikasi
+                  <Bell size={16} /> {t('home.notifications')}
                 </h2>
                 <div className="flex items-center gap-4">
                   {notifications.length > 0 && (
                     <button onClick={handleClearAll} className="text-xs font-semibold text-red-500 hover:text-red-600 min-h-[36px] px-3 rounded-lg hover:bg-red-50 transition-all">
-                      Hapus Semua
+                      {t('home.clearAll')}
                     </button>
                   )}
-                  <button onClick={() => setShowNotifications(false)} className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-500 active:scale-95 transition-all">
+                  <button onClick={() => setShowNotifications(false)} className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-500 dark:text-gray-400 active:scale-95 transition-all">
                     <X size={16} />
                   </button>
                 </div>
@@ -741,7 +743,7 @@ const Home = ({ onOpenScanner }) => {
                 {notifications.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-10 text-gray-400 dark:text-gray-400 dark:text-gray-500">
                     <Bell size={36} className="mb-3 opacity-20" />
-                    <p className="text-sm">Belum ada notifikasi.</p>
+                    <p className="text-sm">{t('home.noNotif')}</p>
                   </div>
                 ) : notifications.map(notif => (
                   <NotificationItem
@@ -758,13 +760,13 @@ const Home = ({ onOpenScanner }) => {
           <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm animate-fade-in" onClick={() => setShowNotifications(false)}>
             <div className="bg-gray-50 dark:bg-gray-900 w-full h-[85vh] rounded-t-3xl shadow-2xl flex flex-col animate-slide-up" onClick={e => e.stopPropagation()}>
               <div className="p-4 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-white dark:bg-gray-800 rounded-t-3xl shadow-sm">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white dark:text-white flex items-center gap-2">
-                  <Bell size={20} /> Inbox Notifikasi
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  <Bell size={20} /> {t('home.inboxNotif')}
                 </h2>
                 <div className="flex items-center gap-4">
                   {notifications.length > 0 && (
                     <button onClick={handleClearAll} className="text-xs font-semibold text-red-500 hover:text-red-600 active:scale-95 transition-all min-h-[44px] px-4 flex items-center justify-center rounded-lg hover:bg-red-50">
-                      Hapus Semua
+                      {t('home.clearAll')}
                     </button>
                   )}
                   <button onClick={() => setShowNotifications(false)} className="w-11 h-11 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-600 dark:text-gray-300 active:scale-95 transition-all">
@@ -776,7 +778,7 @@ const Home = ({ onOpenScanner }) => {
                 {notifications.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full text-gray-400 dark:text-gray-400 dark:text-gray-500">
                     <Bell size={48} className="mb-4 opacity-20" />
-                    <p className="font-medium text-sm">Belum ada notifikasi.</p>
+                    <p className="font-medium text-sm">{t('home.noNotif')}</p>
                   </div>
                 ) : notifications.map(notif => (
                   <NotificationItem

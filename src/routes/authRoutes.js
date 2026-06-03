@@ -36,4 +36,10 @@ router.post(
 
 router.get("/me", authenticateToken, authController.me);
 
+router.patch(
+  "/profile",
+  authenticateToken,
+  authController.updateProfile
+);
+
 module.exports = router;

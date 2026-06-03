@@ -3,11 +3,20 @@
 Semua perubahan yang signifikan pada proyek Scanora akan didokumentasikan dalam file ini.
 
 ## [v1.10.1] - 2026-06-02
+### Added
+- **Language Pref Sync**: Menambahkan preferensi bahasa di database agar *Cron job* notifikasi harian otomatis menggunakan bahasa yang dipilih pengguna (ID/EN) saat mengirim *push notification*.
+- **Inline Spinner AI**: Menambahkan animasi *loading spinner* pada tombol "Saran AI" agar umpan balik langsung terlihat tanpa transisi *skeleton* yang terlalu mendadak.
+
 ### Changed
 - **Dynamic Shelf Life Estimation**: Mengubah logika `SHELF_LIFE_RULES` di `freshnessService` dari jumlah hari statis menjadi rentang dinamis (`min` dan `max` berbeda). Kini estimasi tanggal kedaluwarsa benar-benar dihitung proporsional mengikuti *freshness score* AI.
 - **Offline Suggestions**: Menyesuaikan fallback teks offline untuk Apel (1-3 hari) dan Jeruk (keterangan bahwa jeruk mentah tidak bisa matang setelah dipetik) agar selaras dengan sistem.
 - **Prompt AI Anti-Halusinasi**: Memperbarui instruksi internal model OpenRouter untuk mencegah AI mengarang cara fiktif saat ditugaskan memberi saran pada buah jeruk yang masih mentah.
 - **Freshness Score Floor**: Menetapkan batas bawah (*floor limit*) skor kesegaran sebesar 10% untuk buah yang belum melewati masa kedaluwarsa. Hal ini mencegah UI menampilkan informasi membingungkan seperti "0% Hari ini" padahal buah belum sepenuhnya busuk.
+
+### Fixed
+- **Notification Dark Mode**: Memperbaiki pewarnaan *dropdown* Notifikasi di *Desktop* agar otomatis beradaptasi dengan *Dark Mode*.
+- **Responsive Viewport Flow**: Mengubah ambang batas deteksi *Desktop* menjadi `> 768px`. Kini, *Sidebar* akan tetap ada di tampilan *Tablet*, sementara *Navbar* bawah hanya aktif di perangkat *Mobile*. Mengatasi *bug* tombol mengambang (*floating*) yang saling tumpang tindih.
+- **Statistic Fruit Translation**: Mengimplementasikan `normalizeFruit()` pada halaman Statistik sehingga nama buah pada *Fruit Distribution* selalu sinkron dengan sistem translasi (i18n).
 
 ## [v1.10.0] - 2026-06-02
 ### Added

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { History, Salad, Apple, Banana, Citrus, SquareCheck, SquareX, ImageOff, Package, ArrowUp, ArrowDown, CalendarArrowUp, CalendarArrowDown } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useLocation, useNavigate } from 'react-router-dom';
 import FruitDetailModal from '../components/FruitDetailModal';
 import api from '../api';
@@ -57,62 +58,62 @@ const calculateDaysLeft = (reminderAt) => {
  * - unripe: always green, "Matang X Hari Lagi!"
  * - ripe/rotten: color-coded by days left
  */
-const getCountdownConfig = (condition, daysLeft) => {
+const getCountdownConfig = (condition, daysLeft, t) => {
   const cond = (condition || '').toLowerCase();
 
   if (cond === 'rotten' || cond === 'discarded') {
-    return { bg: 'bg-red-main', text: 'text-white', btnText: 'Tidak Layak', isExpired: true };
+    return { bg: 'bg-red-main', text: 'text-white', btnText: t('details.countdown.unfit', { defaultValue: 'Tidak Layak' }), isExpired: true };
   }
 
   if (cond === 'unripe') {
     if (daysLeft === null) {
-      return { bg: 'bg-red-main', text: 'text-white', btnText: 'Tidak Akan Matang', isExpired: true };
+      return { bg: 'bg-red-main', text: 'text-white', btnText: t('details.countdown.notRipe'), isExpired: true };
     }
     if (daysLeft <= 0) {
-      return { bg: 'bg-scanora-green', text: 'text-white', btnText: 'Siap Matang', isExpired: false };
+      return { bg: 'bg-scanora-green', text: 'text-white', btnText: t('details.countdown.ready'), isExpired: false };
     }
-    return { bg: 'bg-scanora-green', text: 'text-white', btnText: `Matang ${daysLeft} Hari Lagi`, isExpired: false };
+    return { bg: 'bg-scanora-green', text: 'text-white', btnText: t('details.countdown.daysToRipe', { count: daysLeft }), isExpired: false };
   }
 
   // cond === 'ripe'
   if (daysLeft === null || daysLeft < 0) {
-    return { bg: 'bg-red-main', text: 'text-white', btnText: 'Kedaluwarsa', isExpired: true };
+    return { bg: 'bg-red-main', text: 'text-white', btnText: t('details.countdown.expired'), isExpired: true };
   }
 
   if (daysLeft === 0) {
-    return { bg: 'bg-red-main', text: 'text-white', btnText: `Hari ini!`, isExpired: false };
+    return { bg: 'bg-red-main', text: 'text-white', btnText: t('details.countdown.today', { defaultValue: 'Hari ini!' }), isExpired: false };
   }
-  if (daysLeft === 1) {
-    return { bg: 'bg-red-main', text: 'text-white', btnText: `Sisa 1 Hari Lagi`, isExpired: false };
-  }
-  if (daysLeft > 1) {
-    return { bg: 'bg-orange-main', text: 'text-white', btnText: `Sisa ${daysLeft} Hari Lagi`, isExpired: false };
-  }
-
-  return { bg: 'bg-red-main', text: 'text-white', btnText: 'Tidak Layak', isExpired: true };
+  return { bg: daysLeft === 1 ? 'bg-red-main' : 'bg-orange-main', text: 'text-white', btnText: t('details.countdown.daysLeft', { count: daysLeft }), isExpired: false };
 };
 
 /** Short date: "11 Mei 2026" */
-const formatShortDate = (dateStr) => {
+const formatShortDate = (dateStr, lang = 'id') => {
   if (!dateStr) return '-';
   const d = new Date(dateStr);
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
   const fullYear = d.getFullYear();
+  if (lang === 'en') {
+    return d.toLocaleString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
   return `${d.getDate()} ${months[d.getMonth()]} ${fullYear}`;
 };
 
 /** Captured date: "27 Mei" */
-const formatCapturedDate = (dateStr) => {
+const formatCapturedDate = (dateStr, lang = 'id') => {
   if (!dateStr) return '-';
   const d = new Date(dateStr);
+  if (lang === 'en') {
+    return d.toLocaleString('en-US', { day: 'numeric', month: 'short' });
+  }
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
   return `${d.getDate()} ${months[d.getMonth()]}`;
 };
 
-const formatDate = (dateStr) => {
+const formatDate = (dateStr, lang = 'id') => {
   if (!dateStr) return '';
   const d = new Date(dateStr);
-  return d.toLocaleString('id-ID', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  const locale = lang === 'en' ? 'en-US' : 'id-ID';
+  return d.toLocaleString(locale, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 };
 
 /** Percent badge for freshness score. */
@@ -159,9 +160,9 @@ const renderMarkdown = (text) => {
 
 // ─── Card Component ────────────────────────────────────────────────────────────
 
-const InventoryCard = ({ item, onClick, isTablet }) => {
+const InventoryCard = ({ item, onClick, isTablet, t, lang }) => {
   const daysLeft = calculateDaysLeft(item.reminder_at);
-  const countdown = getCountdownConfig((item.condition_latest || item.condition), daysLeft);
+  const countdown = getCountdownConfig((item.condition_latest || item.condition), daysLeft, t);
 
   if (isTablet) {
     // Tablet: horizontal card — photo left, info right
@@ -175,7 +176,7 @@ const InventoryCard = ({ item, onClick, isTablet }) => {
         <div className={`relative bg-gray-100 flex-shrink-0 w-[130px]`}>
           {/* Condition Badge */}
           <span className={`absolute top-2 left-2 px-2 py-1 z-20 rounded-md text-sm font-bold shadow-sm leading-none capitalize ${getConditionBadgeStyle((item.condition_latest || item.condition))}`}>
-            {getConditionLabel((item.condition_latest || item.condition))}
+            {t(`condition.${(item.condition_latest || item.condition).toLowerCase()}`)}
           </span>
           {item.image_url ? (
             <img
@@ -198,10 +199,10 @@ const InventoryCard = ({ item, onClick, isTablet }) => {
           <div>
             <div className="flex items-center justify-between mb-1">
               <h3 className="text-fruit-name-sm font-bold text-gray-900 dark:text-white capitalize">
-                {getFruitLabel(item.fruit_type)}
+                {t(`fruit.${normalizeFruit(item.fruit_type)}`)}
               </h3>
               <span className="text-xs font-bold text-gray-500 bg-white/80 px-2 py-0.5 rounded-md">
-                {formatCapturedDate(item.added_at)}
+                {formatCapturedDate(item.added_at, lang)}
               </span>
             </div>
             <div className="flex items-center gap-1.5">
@@ -211,8 +212,8 @@ const InventoryCard = ({ item, onClick, isTablet }) => {
                 <SquareX size={13} className="text-gray-400" />
               )}
               <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">
-                {(item.condition_latest || item.condition) === 'unripe' ? 'Matang: ' : 'Busuk: '}
-                {item.reminder_at ? formatShortDate(item.reminder_at) : '-'}
+                {(item.condition_latest || item.condition) === 'unripe' ? t('inventory.ripening') : t('inventory.spoiling')}
+                {item.reminder_at ? formatShortDate(item.reminder_at, lang) : '-'}
               </span>
             </div>
           </div>
@@ -220,7 +221,7 @@ const InventoryCard = ({ item, onClick, isTablet }) => {
           <div className="flex gap-2 mt-2">
             <div className="flex-1">
               <div className={`w-full flex items-center justify-center rounded-md py-2 text-base font-bold whitespace-nowrap overflow-hidden ${countdown.bg} ${countdown.text}`}>
-                <span className="truncate px-1">{countdown.btnText}</span>
+                <span className="truncate px-1">{(item.condition_latest || item.condition) === 'unripe' || !countdown.isExpired ? countdown.btnText : countdown.btnText}</span>
               </div>
             </div>
             <div className="w-16">
@@ -251,12 +252,12 @@ const InventoryCard = ({ item, onClick, isTablet }) => {
         <div className={`relative bg-gray-100 flex-shrink-0 rounded-xl overflow-hidden aspect-square`}>
           {/* Condition Badge — min 14px */}
           <span className={`absolute top-2 left-2 px-2 py-1 z-20 rounded-md text-[14px] font-bold shadow-sm leading-none capitalize ${getConditionBadgeStyle((item.condition_latest || item.condition))}`}>
-            {getConditionLabel((item.condition_latest || item.condition))}
+            {t(`condition.${(item.condition_latest || item.condition).toLowerCase()}`)}
           </span>
 
           {/* Captured date */}
           <span className="absolute top-2 right-2 px-2 py-1 z-20 bg-white/90 backdrop-blur rounded-md text-[11px] font-bold text-gray-700 shadow-sm">
-            {formatCapturedDate(item.added_at)}
+            {formatCapturedDate(item.added_at, lang)}
           </span>
 
           {/* Real photo (full width) */}
@@ -277,7 +278,7 @@ const InventoryCard = ({ item, onClick, isTablet }) => {
             style={{ display: item.image_url ? 'none' : 'flex' }}
           >
             <ImageOff size={40} className="text-gray-400" strokeWidth={1.5} />
-            <span className="text-xs font-medium text-gray-400 text-center leading-tight px-2 mt-1">Gambar tidak ditemukan</span>
+            <span className="text-xs font-medium text-gray-400 text-center leading-tight px-2 mt-1">{t('inventory.imageNotFound')}</span>
           </div>
         </div>
 
@@ -294,7 +295,7 @@ const InventoryCard = ({ item, onClick, isTablet }) => {
       <div className="px-2 pt-1 pb-1 flex flex-col gap-1.5 flex-1 mt-1">
         {/* Fruit name — text-fruit-name semantic class */}
         <h3 className="text-fruit-name font-bold text-gray-900 dark:text-white leading-tight capitalize">
-          {getFruitLabel(item.fruit_type)}
+          {t(`fruit.${normalizeFruit(item.fruit_type)}`)}
         </h3>
 
         {/* Date — min 14px */}
@@ -305,8 +306,8 @@ const InventoryCard = ({ item, onClick, isTablet }) => {
             <SquareX size={14} className="text-gray-400" />
           )}
           <span className="text-sm font-semibold text-gray-500 dark:text-gray-400">
-            {(item.condition_latest || item.condition) === 'unripe' ? 'Matang: ' : 'Busuk: '}
-            {item.reminder_at ? formatShortDate(item.reminder_at) : '-'}
+            {(item.condition_latest || item.condition) === 'unripe' ? t('inventory.ripening') : t('inventory.spoiling')}
+            {item.reminder_at ? formatShortDate(item.reminder_at, lang) : '-'}
           </span>
         </div>
 
@@ -329,6 +330,8 @@ const InventoryCard = ({ item, onClick, isTablet }) => {
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 
 const Inventory = () => {
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language || 'id';
   const location = useLocation();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(
@@ -550,13 +553,13 @@ const Inventory = () => {
               onClick={() => { setActiveTab('inventory'); navigate('/inventory', { state: { tab: 'inventory' }, replace: true }); setShowSortPopup(false); }}
               className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all active:scale-95 min-h-[44px] relative z-10 ${activeTab === 'inventory' ? 'text-scanora-dark dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}
             >
-              <Salad size={16} /> Inventori
+              <Salad size={16} /> {t('inventory.tabInventory')}
             </button>
             <button
               onClick={() => { setActiveTab('history'); navigate('/inventory', { state: { tab: 'history' }, replace: true }); setShowSortPopup(false); }}
               className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all active:scale-95 min-h-[44px] relative z-10 ${activeTab === 'history' ? 'text-scanora-dark dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}
             >
-              <History size={16} /> Riwayat
+              <History size={16} /> {t('inventory.tabHistory')}
             </button>
           </div>
           <div className="bg-gray-100 dark:bg-gray-900 p-1 rounded-xl flex transition-colors">
@@ -566,7 +569,7 @@ const Inventory = () => {
             >
               {effectiveWidth > 500 && (
                 <span className="text-left flex-1">
-                  {sortConfig.key === 'priority' ? 'Freshness Score' : 'Tanggal Foto'}
+                  {sortConfig.key === 'priority' ? t('inventory.sortFreshness') : t('inventory.sortDate')}
                 </span>
               )}
               {getSortIcon()}
@@ -578,11 +581,11 @@ const Inventory = () => {
               <div className="fixed inset-0 z-[199]" onClick={() => setShowSortPopup(false)} />
               <div className="absolute top-[60px] right-0 bg-white dark:bg-gray-800 rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.15)] border border-gray-100 dark:border-gray-700 p-2 min-w-[200px] flex flex-col gap-1 z-[200]">
                 <button onClick={() => handleSortSelect('priority')} className={`text-left px-3 py-2.5 text-sm rounded-lg flex justify-between items-center min-h-[44px] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700`}>
-                  <span>Freshness Score</span>
+                  <span>{t('inventory.sortFreshness')}</span>
                   {sortConfig.key === 'priority' && sortConfig.direction === 'asc' ? <ArrowDown size={14} /> : <ArrowUp size={14} className={sortConfig.key === 'priority' ? '' : 'text-gray-400'} />}
                 </button>
                 <button onClick={() => handleSortSelect('date')} className={`text-left px-3 py-2.5 text-sm rounded-lg flex justify-between items-center min-h-[44px] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700`}>
-                  <span>Tanggal Foto</span>
+                  <span>{t('inventory.sortDate')}</span>
                   {sortConfig.key === 'date' && sortConfig.direction === 'asc' ? <CalendarArrowDown size={14} /> : <CalendarArrowUp size={14} className={sortConfig.key === 'date' ? '' : 'text-gray-400'} />}
                 </button>
               </div>
@@ -595,10 +598,10 @@ const Inventory = () => {
       {!isDesktop && activeTab === 'inventory' && (
         <div className="px-4 pt-3 pb-12 flex gap-2 overflow-x-auto no-scrollbar">
           {[
-            { key: 'all', label: 'Semua', count: inventoryData.length, active: 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white', inactive: 'border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 bg-transparent' },
-            { key: 'ripe', label: 'Ripe', count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'ripe').length, active: 'bg-orange-main text-white border border-transparent', inactive: 'border border-current text-orange-main bg-transparent' },
-            { key: 'unripe', label: 'Unripe', count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'unripe').length, active: 'bg-scanora-green text-white border border-transparent', inactive: 'border border-current text-scanora-green bg-transparent' },
-            { key: 'rotten', label: 'Rotten', count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'rotten').length, active: 'bg-red-main text-white border border-transparent', inactive: 'border border-current text-red-main bg-transparent' },
+            { key: 'all', label: t('condition.all'), count: inventoryData.length, active: 'bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white', inactive: 'border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 bg-transparent' },
+            { key: 'ripe', label: t('condition.ripe'), count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'ripe').length, active: 'bg-orange-main text-white border border-transparent', inactive: 'border border-current text-orange-main bg-transparent' },
+            { key: 'unripe', label: t('condition.unripe'), count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'unripe').length, active: 'bg-scanora-green text-white border border-transparent', inactive: 'border border-current text-scanora-green bg-transparent' },
+            { key: 'rotten', label: t('condition.rotten'), count: inventoryData.filter(i => (i.condition_latest || i.condition) === 'rotten').length, active: 'bg-red-main text-white border border-transparent', inactive: 'border border-current text-red-main bg-transparent' },
           ].map(pill => (
             <button
               key={pill.key}
@@ -629,19 +632,19 @@ const Inventory = () => {
                 }`}
             />
             <button onClick={() => { setActiveTab('inventory'); navigate('/inventory', { state: { tab: 'inventory' }, replace: true }); setShowSortPopup(false); }} className={`flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-full min-h-[44px] transition-all active:scale-95 relative z-10 ${activeTab === 'inventory' ? 'text-scanora-dark dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}`}>
-              <Salad size={16} /> <span className="hidden sm:inline">Inventori</span>
+              <Salad size={16} /> <span className="hidden lg:inline">{t('inventory.tabInventory')}</span>
             </button>
             <button onClick={() => { setActiveTab('history'); navigate('/inventory', { state: { tab: 'history' }, replace: true }); setShowSortPopup(false); }} className={`flex items-center gap-2 px-5 py-2 text-sm font-semibold rounded-full min-h-[44px] transition-all active:scale-95 relative z-10 ${activeTab === 'history' ? 'text-scanora-dark dark:text-white' : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'}`}>
-              <History size={16} /> <span className="hidden sm:inline">Riwayat</span>
+              <History size={16} /> <span className="hidden lg:inline">{t('inventory.tabHistory')}</span>
             </button>
           </div>
           <div className="bg-gray-100/90 dark:bg-gray-800/90 backdrop-blur-md p-1.5 rounded-full flex border border-gray-200 dark:border-gray-700 transition-colors">
             <button
               onClick={() => setShowSortPopup(!showSortPopup)}
-              className="h-[44px] flex items-center justify-between gap-2 px-4 rounded-full active:scale-95 transition-all bg-white dark:bg-gray-700 text-scanora-green text-sm font-semibold min-w-[44px] md:min-w-[170px]"
+              className="h-[44px] flex items-center justify-between gap-2 px-4 rounded-full active:scale-95 transition-all bg-white dark:bg-gray-700 text-scanora-green text-sm font-semibold min-w-[44px] lg:min-w-[170px]"
             >
-              <span className="hidden md:inline text-left flex-1">
-                {sortConfig.key === 'priority' ? 'Freshness Score' : 'Tanggal Foto'}
+              <span className="hidden lg:inline text-left flex-1">
+                {sortConfig.key === 'priority' ? t('inventory.sortFreshness') : t('inventory.sortDate')}
               </span>
               {getSortIcon()}
             </button>
@@ -652,11 +655,11 @@ const Inventory = () => {
               <div className="fixed inset-0 z-[199]" onClick={() => setShowSortPopup(false)} />
               <div className="absolute bottom-16 right-0 bg-white dark:bg-gray-800 rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.15)] border border-gray-100 dark:border-gray-700 p-2 min-w-[200px] flex flex-col gap-1 z-[200]">
                 <button onClick={() => handleSortSelect('priority')} className={`text-left px-3 py-2.5 text-sm rounded-lg flex justify-between items-center min-h-[44px] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700`}>
-                  <span>Freshness Score</span>
+                  <span>{t('inventory.sortFreshness')}</span>
                   {sortConfig.key === 'priority' && sortConfig.direction === 'asc' ? <ArrowDown size={14} /> : <ArrowUp size={14} className={sortConfig.key === 'priority' ? '' : 'text-gray-400'} />}
                 </button>
                 <button onClick={() => handleSortSelect('date')} className={`text-left px-3 py-2.5 text-sm rounded-lg flex justify-between items-center min-h-[44px] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700`}>
-                  <span>Tanggal Foto</span>
+                  <span>{t('inventory.sortDate')}</span>
                   {sortConfig.key === 'date' && sortConfig.direction === 'asc' ? <CalendarArrowDown size={14} /> : <CalendarArrowUp size={14} className={sortConfig.key === 'date' ? '' : 'text-gray-400'} />}
                 </button>
               </div>
@@ -666,7 +669,7 @@ const Inventory = () => {
       </div>
 
       {/* Content */}
-      <div className="p-4 flex-1 flex flex-col">
+      <div className="p-4 pb-24 flex-1 flex flex-col">
         {loading ? (() => {
           const skeletonCols = effectiveWidth >= 1100 ? 4 : effectiveWidth >= 780 ? 3 : effectiveWidth >= 500 ? 2 : 1;
           const gridClass = skeletonCols === 4 ? 'grid-cols-4' : skeletonCols === 3 ? 'grid-cols-3' : skeletonCols === 2 ? 'grid-cols-2' : 'grid-cols-1';
@@ -709,7 +712,7 @@ const Inventory = () => {
                   : 'grid-cols-1'
               }`}>
               {filteredInventory.map(item => (
-                <InventoryCard key={item.id} item={item} onClick={() => setSelectedItem(item)} />
+                <InventoryCard key={item.id} item={item} onClick={() => setSelectedItem(item)} t={t} lang={lang} />
               ))}
             </div>
           ) : (
@@ -720,10 +723,10 @@ const Inventory = () => {
                 <Citrus size={46} className="text-orange-400/40 -scale-x-100 -scale-y-100" strokeWidth={1.5} />
               </div>
               <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">
-                {conditionFilter === 'all' ? 'Inventori kamu masih kosong' : `Buah status ${conditionFilter} tidak ditemukan`}
+                {conditionFilter === 'all' ? t('inventory.emptyInventoryFull') : t('inventory.emptyByStatus', { status: t(`condition.${conditionFilter}`) })}
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed max-w-[260px]">
-                {conditionFilter === 'all' ? 'Kalau kamu simpan ke Inventori maka aplikasi akan bisa memberi kamu notifikasi pengingat.' : 'Coba ganti filter atau scan buah baru.'}
+                {conditionFilter === 'all' ? t('inventory.emptyInventoryTip') : t('inventory.tryFilter')}
               </p>
             </div>
           );
@@ -742,10 +745,10 @@ const Inventory = () => {
                   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
                   let key;
-                  if (diffDays === 0) key = 'Hari Ini';
-                  else if (diffDays === 1) key = 'Kemarin';
-                  else if (diffDays <= 7) key = '7 Hari Terakhir';
-                  else key = d.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+                  if (diffDays === 0) key = t('inventory.groupToday');
+                  else if (diffDays === 1) key = t('inventory.groupYesterday');
+                  else if (diffDays <= 7) key = t('inventory.groupLast7Days');
+                  else key = d.toLocaleString(lang === 'en' ? 'en-US' : 'id-ID', { month: 'long', year: 'numeric' });
 
                   if (!acc[key]) acc[key] = [];
                   acc[key].push(item);
@@ -776,11 +779,11 @@ const Inventory = () => {
                           </div>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-gray-900 dark:text-white capitalize">{getFruitLabel(item.fruit_type)}</h3>
-                          <p className="text-xs text-gray-400">{formatDate(item.scanned_at)}</p>
+                          <h3 className="font-semibold text-gray-900 dark:text-white capitalize">{t(`fruit.${normalizeFruit(item.fruit_type)}`)}</h3>
+                          <p className="text-xs text-gray-400">{formatDate(item.scanned_at, lang)}</p>
                         </div>
                         <span className={`text-xs font-semibold px-0 py-1 rounded-md capitalize flex-shrink-0 text-center min-w-[72px] ${getConditionBadgeStyle((item.condition_latest || item.condition))}`}>
-                          {getConditionLabel((item.condition_latest || item.condition))}
+                          {t(`condition.${(item.condition_latest || item.condition).toLowerCase()}`)}
                         </span>
                       </div>
                     ))}
@@ -791,9 +794,9 @@ const Inventory = () => {
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center py-16 px-4 text-center">
               <History size={48} className="text-gray-300 mb-6" strokeWidth={1.5} />
-              <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">Belum ada riwayat scan</h3>
+              <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-2">{t('inventory.emptyHistoryFull')}</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed max-w-[260px]">
-                Setiap hasil scan buah yang dilakukan akan tersimpan ke sini.
+                {t('inventory.emptyHistoryTip')}
               </p>
             </div>
           )
