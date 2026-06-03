@@ -8,7 +8,6 @@ const { supabase } = require("../config/supabase");
 const asyncHandler = require("../middleware/asyncHandler");
 const { toScanResponse } = require("../services/formatService");
 const { sendSuccess } = require("../services/responseService");
-// const { getGeminiSuggestion } = require("../services/geminiService");
 const { getAISuggestion } = require("../services/openRouterService");
 const { calculateReminderAt } = require("../services/freshnessService");
 
