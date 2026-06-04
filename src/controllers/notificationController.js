@@ -57,13 +57,14 @@ const unsubscribe = asyncHandler(async (req, res) => {
 
 // Function to run the actual notification job, separated from Express req/res
 const runDailyNotificationJob = async () => {
-  // Find all active inventory items
+  // Find all active inventory items (outcome: null = still in inventory)
   const items = await prisma.inventory.findMany({
     where: { outcome: null },
     include: {
       user: {
         include: { pushSubscriptions: true }
-      }
+      },
+      scan: true  // Include scan to get actual freshnessScore
     }
   });
 
@@ -72,32 +73,79 @@ const runDailyNotificationJob = async () => {
   for (const item of items) {
     if (!item.user.pushSubscriptions.length) continue;
 
+    const freshnessScore = item.scan?.freshnessScore ?? 75;
     const data = getFreshnessData(
-      item.fruitType, 
-      item.condition, 
-      item.scan?.freshnessScore ?? 75, 
-      item.addedAt
+      item.fruitType,
+      item.condition,
+      freshnessScore,
+      item.addedAt,
+      item.reminderAt
     );
+
+    // Calculate daysLeft from reminderAt returned by getFreshnessData
+    const daysLeft = data.reminderAt
+      ? Math.ceil((new Date(data.reminderAt) - new Date()) / (1000 * 60 * 60 * 24))
+      : null;
+
+    const lang = item.user.language || 'id';
+
+    // Derive fruit display name
+    const ft = (item.fruitType || '').toLowerCase();
+    let baseFruitName = item.fruitType;
+    if (lang === 'en') {
+      baseFruitName = ft.includes('banana') || ft.includes('pisang') ? 'Banana'
+        : ft.includes('apple') || ft.includes('apel') ? 'Apple'
+        : ft.includes('orange') || ft.includes('jeruk') ? 'Orange'
+        : item.fruitType;
+    } else {
+      baseFruitName = ft.includes('banana') || ft.includes('pisang') ? 'Pisang'
+        : ft.includes('apple') || ft.includes('apel') ? 'Apel'
+        : ft.includes('orange') || ft.includes('jeruk') ? 'Jeruk'
+        : item.fruitType;
+    }
+
+    const addedDate = new Date(item.addedAt);
+    const day = addedDate.getDate();
+    let monthStr = '';
+    if (lang === 'en') {
+      monthStr = addedDate.toLocaleString('en-US', { month: 'short' });
+    } else {
+      const idMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+      monthStr = idMonths[addedDate.getMonth()];
+    }
+    const fruitName = `${baseFruitName} (${day} ${monthStr})`;
 
     let title = '';
     let body = '';
 
-    if (data.isExpired) {
-      if (item.condition !== 'rotten') {
-        title = `⚠️ Yah, ${data.fruitName} kamu membusuk!`;
-        body = `Buah ${data.fruitName} yang kamu simpan sudah melewati batas waktu kelayakan.`;
+    // Trigger 1: Unripe → ripened today (daysLeft <= 0)
+    if (item.condition === 'unripe' && daysLeft !== null && daysLeft <= 0) {
+      if (lang === 'en') {
+        title = `🎉 Your ${fruitName} is ripe!`;
+        body = `The ${fruitName} you saved is now ready to eat. Enjoy!`;
+      } else {
+        title = `🎉 ${fruitName} kamu sudah matang!`;
+        body = `${fruitName} yang kamu simpan sekarang sudah siap dinikmati. Yuk konsumsi segera!`;
       }
-    } else {
-      const daysLeft = data.daysLeft;
-      if (daysLeft === 1) {
-        title = `🚨 Peringatan: ${data.fruitName} segera membusuk!`;
-        body = `Cepat konsumsi ${data.fruitName} kamu, besok kemungkinan sudah tidak segar lagi!`;
-      } else if (daysLeft === 2) {
-        title = `🍏 ${data.fruitName} sedang sangat segar!`;
-        body = `Waktu terbaik untuk memakan ${data.fruitName} kamu adalah sekarang. Tinggal 2 hari lagi.`;
-      } else if (item.condition === 'unripe' && daysLeft === 0) {
-        title = `🍌 ${data.fruitName} kamu sudah matang!`;
-        body = `Yey! ${data.fruitName} kamu sekarang sudah matang dan siap dinikmati.`;
+    }
+    // Trigger 2: Ripe → 3 days left (early warning)
+    else if (item.condition === 'ripe' && daysLeft === 3) {
+      if (lang === 'en') {
+        title = `🥗 Don't forget your ${fruitName}!`;
+        body = `Your ${fruitName} has only 3 days left before spoiling. Consume it soon!`;
+      } else {
+        title = `🥗 Jangan Lupa ${fruitName}!`;
+        body = `${fruitName} kamu tinggal 3 hari lagi sebelum membusuk. Segera konsumsi!`;
+      }
+    }
+    // Trigger 3: Ripe → 1 day left (urgent)
+    else if (item.condition === 'ripe' && daysLeft === 1) {
+      if (lang === 'en') {
+        title = `🚨 Last day for ${fruitName}!`;
+        body = `Your ${fruitName} has only 1 day left! Consume it now before it's too late.`;
+      } else {
+        title = `🚨 Hari Terakhir ${fruitName}!`;
+        body = `${fruitName} kamu hanya tersisa 1 hari lagi! Konsumsi sekarang sebelum terlambat.`;
       }
     }
 

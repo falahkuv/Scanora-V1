@@ -9,8 +9,8 @@ const FULLSCREEN_THRESHOLD = 0.95; // >95% of window = fullscreen
 
 /** Derive layout from pixel width */
 const computeLayoutFromWidth = (px) => {
-  if (px >= 1024) return 'desktop';
-  if (px >= 640)  return 'tablet';
+  if (px > 768) return 'desktop';
+  if (px >= 640) return 'tablet';
   return 'mobile';
 };
 

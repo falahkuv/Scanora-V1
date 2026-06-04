@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, CheckCircle, XCircle } from 'lucide-react';
 import api from '../api';
+import { supabase } from '../lib/supabaseClient';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -11,10 +12,24 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [passwordTouched, setPasswordTouched] = useState(false);
+
+  const passwordMinLength = 8;
+  const isPasswordValid = password.length >= passwordMinLength;
+  const showPasswordHint = passwordTouched && password.length > 0;
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     setErrorMessage('');
+
+    // Client-side validation before hitting server
+    if (!isPasswordValid) {
+      setPasswordTouched(true);
+      setErrorMessage(`Password minimal ${passwordMinLength} karakter. Saat ini hanya ${password.length} karakter.`);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const response = await api.post('/auth/register', { name, email, password });
@@ -28,9 +43,40 @@ const Register = () => {
       api.defaults.headers.common.Authorization = `Bearer ${token}`;
       navigate('/');
     } catch (error) {
-      setErrorMessage(error.response?.data?.message || 'Registrasi gagal. Coba lagi.');
+      // Parse express-validator array errors if present
+      const serverErrors = error.response?.data?.data?.errors;
+      if (serverErrors?.length) {
+        setErrorMessage(serverErrors.map(e => e.msg).join(' • '));
+      } else {
+        const msg = error.response?.data?.message || '';
+        if (msg.toLowerCase().includes('email already in use') || msg.toLowerCase().includes('already')) {
+          setErrorMessage('Email ini sudah terdaftar. Coba masuk atau gunakan email lain.');
+        } else if (!navigator.onLine) {
+          setErrorMessage('Tidak ada koneksi internet. Periksa jaringanmu dan coba lagi.');
+        } else if (!error.response) {
+          setErrorMessage('Tidak dapat terhubung ke server. Coba beberapa saat lagi.');
+        } else {
+          setErrorMessage(msg || 'Registrasi gagal. Coba lagi.');
+        }
+      }
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleSignup = async () => {
+    setErrorMessage('');
+    setIsGoogleLoading(true);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/login`,
+        queryParams: { prompt: 'select_account' }
+      },
+    });
+    if (error) {
+      setErrorMessage('Daftar dengan Google gagal. Coba lagi.');
+      setIsGoogleLoading(false);
     }
   };
 
@@ -77,8 +123,15 @@ const Register = () => {
                 type={showPassword ? 'text' : 'password'}
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 pr-12 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-scanora-green transition-colors"
+                onChange={(e) => { setPassword(e.target.value); setPasswordTouched(true); }}
+                onBlur={() => setPasswordTouched(true)}
+                className={`w-full px-4 py-3 pr-12 rounded-xl border bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 transition-colors
+                  ${showPasswordHint
+                    ? isPasswordValid
+                      ? 'border-green-400 focus:ring-green-400'
+                      : 'border-red-400 focus:ring-red-400'
+                    : 'border-gray-200 dark:border-gray-700 focus:ring-scanora-green'
+                  }`}
                 required
               />
               <button
@@ -89,11 +142,21 @@ const Register = () => {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
+            {/* Real-time password hint */}
+            {showPasswordHint && (
+              <div className={`flex items-center gap-1.5 mt-1.5 text-xs font-medium transition-all ${isPasswordValid ? 'text-green-600' : 'text-red-500'}`}>
+                {isPasswordValid
+                  ? <><CheckCircle size={13} /> Password sudah cukup kuat</>
+                  : <><XCircle size={13} /> Minimal {passwordMinLength} karakter ({password.length}/{passwordMinLength})</>
+                }
+              </div>
+            )}
           </div>
 
           {errorMessage && (
-            <div className="text-sm text-red-main bg-red-50 border border-red-100 rounded-xl px-4 py-3">
-              {errorMessage}
+            <div className="text-sm text-red-main bg-red-50 border border-red-100 rounded-xl px-4 py-3 flex items-start gap-2">
+              <XCircle size={16} className="flex-shrink-0 mt-0.5 text-red-main" />
+              <span>{errorMessage}</span>
             </div>
           )}
 
@@ -113,8 +176,9 @@ const Register = () => {
 
           <button
             type="button"
-            onClick={() => navigate('/')}
-            className="w-full py-3.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold flex justify-center items-center gap-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all active:scale-95"
+            onClick={handleGoogleSignup}
+            disabled={isGoogleLoading}
+            className="w-full py-3.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold flex justify-center items-center gap-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -122,7 +186,7 @@ const Register = () => {
               <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
               <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
             </svg>
-            Daftar dengan Google
+            {isGoogleLoading ? 'Menghubungkan...' : 'Daftar dengan Google'}
           </button>
         </form>
 

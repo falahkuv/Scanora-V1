@@ -71,11 +71,20 @@ const Login = () => {
       api.defaults.headers.common.Authorization = `Bearer ${token}`;
       navigate('/');
     } catch (error) {
-      const msg = error.response?.data?.message || 'Login gagal. Coba lagi.';
-      if (msg.toLowerCase().includes('validation error')) {
-        setErrorMessage('Invalid email or password.');
+      const serverErrors = error.response?.data?.data?.errors;
+      if (serverErrors?.length) {
+        setErrorMessage(serverErrors.map(e => e.msg).join(' • '));
       } else {
-        setErrorMessage(msg);
+        const msg = error.response?.data?.message || '';
+        if (msg.toLowerCase().includes('invalid email or password') || msg.toLowerCase().includes('validation error')) {
+          setErrorMessage('Email atau password salah. Periksa kembali dan coba lagi.');
+        } else if (!navigator.onLine) {
+          setErrorMessage('Tidak ada koneksi internet. Periksa jaringanmu dan coba lagi.');
+        } else if (!error.response) {
+          setErrorMessage('Tidak dapat terhubung ke server. Coba beberapa saat lagi.');
+        } else {
+          setErrorMessage(msg || 'Login gagal. Coba lagi.');
+        }
       }
     } finally {
       setIsSubmitting(false);

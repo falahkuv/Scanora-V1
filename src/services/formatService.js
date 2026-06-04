@@ -5,7 +5,8 @@ const toUserResponse = (user) => ({
   name: user.name,
   email: user.email,
   created_at: user.createdAt,
-  profile_image: user.profileImage || null
+  profile_image: user.profileImage || null,
+  language: user.language || 'id'
 });
 
 const toScanResponse = (scan) => ({

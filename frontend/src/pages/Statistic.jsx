@@ -15,6 +15,14 @@ import ChartDataLabels from 'chartjs-plugin-datalabels';
 
 ChartJS.register(ArcElement, Tooltip, Legend, ChartDataLabels);
 
+const normalizeFruit = (type) => {
+  const t = (type || '').toLowerCase();
+  if (t.includes('pisang') || t.includes('banana')) return 'banana';
+  if (t.includes('apel') || t.includes('apple')) return 'apple';
+  if (t.includes('jeruk') || t.includes('orange')) return 'orange';
+  return 'unknown';
+};
+
 // ── Mock Data ───────────────────────────────────────────────────────────────────
 const mockMonthlyData = [
   {
@@ -128,7 +136,7 @@ export default function Statistic() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 dark:text-gray-300 font-bold p-6 text-center">
         <div className="w-10 h-10 border-4 border-scanora-green border-t-transparent rounded-full animate-spin mb-4" />
-        <p>Mengumpulkan data statistikmu...</p>
+        <p>{t('nav.loading')}</p>
       </div>
     );
   }
@@ -143,10 +151,10 @@ export default function Statistic() {
               <ChevronLeft size={24} />
             </button>
           )}
-          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Statistik Performa</h1>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">{t('nav.stats')}</h1>
           {isDesktop && (
             <button onClick={() => navigate(-1)} className="ml-auto px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-300 transition-colors active:scale-95">
-              Tutup
+              {t('details.close')}
             </button>
           )}
         </div>
@@ -156,12 +164,12 @@ export default function Statistic() {
           <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mb-6">
             <BarChart2 size={40} className="text-gray-400" />
           </div>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Belum Ada Data Statistik</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{t('home.viewStats')}</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-8 max-w-[250px]">
-            Statistik akan muncul setelah kamu membuang atau mengonsumsi buah dari inventori.
+            {t('home.emptyStats')}
           </p>
           <button onClick={() => navigate('/inventory')} className="px-6 py-3 bg-scanora-green text-white font-bold rounded-xl active:scale-95 transition-all shadow-md">
-            Cek Inventori
+            {t('home.checkInventory')}
           </button>
         </div>
       </div>
@@ -258,10 +266,10 @@ export default function Statistic() {
             <ChevronLeft size={24} />
           </button>
         )}
-        <h1 className="text-xl font-bold text-gray-900 dark:text-white">Statistik Performa</h1>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-white">{t('nav.stats')}</h1>
         {isDesktop && (
           <button onClick={() => navigate(-1)} className="ml-auto px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-300 transition-colors active:scale-95">
-            Tutup
+            {t('details.close')}
           </button>
         )}
       </div>
@@ -294,7 +302,7 @@ export default function Statistic() {
 
         {/* ── Month Title — centered ── */}
         <div className="text-center pt-2">
-          <p className="text-xs font-semibold text-gray-400 mb-1">Performa bulan ini:</p>
+          <p className="text-xs font-semibold text-gray-400 mb-1">{t('home.monthPerformance')}</p>
           <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white">{formatMonthYear(current.name, current.year)}</h2>
         </div>
 
@@ -306,7 +314,7 @@ export default function Statistic() {
               <Utensils size={20} className="text-green-700" />
             </div>
             <p className="text-3xl font-extrabold leading-none text-green-700">{current.consumed}</p>
-            <p className="text-green-700 text-xs font-semibold mt-1.5">Dikonsumsi</p>
+            <p className="text-green-700 text-xs font-semibold mt-1.5">{t('home.consumed')}</p>
           </div>
           {/* Dibuang */}
           <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-4 flex flex-col items-center text-center">
@@ -314,7 +322,7 @@ export default function Statistic() {
               <Trash2 size={20} className="text-red-main" />
             </div>
             <p className="text-3xl font-extrabold leading-none text-red-main">{current.discarded}</p>
-            <p className="text-red-main text-xs font-semibold mt-1.5">Dibuang</p>
+            <p className="text-red-main text-xs font-semibold mt-1.5">{t('home.discarded')}</p>
           </div>
           {/* Skor Keberhasilan */}
           <div className="bg-scanora-green/10 border border-scanora-green/20 rounded-2xl p-4 flex flex-col items-center text-center">
@@ -322,7 +330,7 @@ export default function Statistic() {
               <TrendingUp size={20} className="text-scanora-green" />
             </div>
             <p className="text-3xl font-extrabold leading-none text-scanora-green">{saveRate}%</p>
-            <p className="text-scanora-green text-xs font-semibold mt-1.5">Skor Keberhasilan</p>
+            <p className="text-scanora-green text-xs font-semibold mt-1.5">{t('home.successScore')}</p>
           </div>
         </div>
 
@@ -342,7 +350,7 @@ export default function Statistic() {
                   <div key={d.name} className="flex items-center gap-1.5 flex-shrink-0 bg-gray-50 dark:bg-gray-700/50 px-2 py-1.5 rounded-lg">
                     <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
                     <span className="text-[10px] text-gray-600 dark:text-gray-300 font-bold whitespace-nowrap">
-                      {d.name} ({d.consumed + d.discarded})
+                      {t(`fruit.${normalizeFruit(d.name)}`, { defaultValue: d.name })} ({d.consumed + d.discarded})
                     </span>
                   </div>
                 ))}
@@ -352,15 +360,15 @@ export default function Statistic() {
             <>
               {/* Legend */}
               <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4 shadow-sm flex flex-col justify-start h-full">
-                <p className="text-xs font-semibold text-gray-400 mb-3">Distribusi Buah</p>
+                <p className="text-xs font-semibold text-gray-400 mb-3">{t('home.distribution')}</p>
                 <div className="space-y-2">
                   {current.distribution.filter(d => d.consumed + d.discarded > 0).map(d => (
                     <div key={d.name} className="flex items-center justify-between text-xs">
                       <div className="flex items-center gap-2">
                         <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
-                        <span className="text-gray-600 dark:text-gray-300 font-medium">{d.name}</span>
+                        <span className="text-gray-600 dark:text-gray-300 font-medium">{t(`fruit.${normalizeFruit(d.name)}`, { defaultValue: d.name })}</span>
                       </div>
-                      <span className="text-gray-400 font-semibold">{d.consumed + d.discarded} buah</span>
+                      <span className="text-gray-400 font-semibold">{d.consumed + d.discarded}</span>
                     </div>
                   ))}
                 </div>
@@ -382,10 +390,10 @@ export default function Statistic() {
           {/* Top Fruit this month */}
           <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4 shadow-sm relative overflow-hidden flex flex-col justify-between" style={{ minHeight: '160px' }}>
             <div className="z-10">
-              <p className="text-[11px] text-gray-400 font-semibold">Buah Favorit</p>
-              <p className="text-xl font-bold text-gray-800 dark:text-white mt-1">{current.topFruit.name}</p>
+              <p className="text-[11px] text-gray-400 font-semibold">{t('home.topFruit')}</p>
+              <p className="text-xl font-bold text-gray-800 dark:text-white mt-1">{t(`fruit.${normalizeFruit(current.topFruit.name)}`, { defaultValue: current.topFruit.name })}</p>
             </div>
-            <p className="text-xl text-gray-500 dark:text-gray-400 mt-4 z-10 font-bold">{current.topFruit.count} Kali</p>
+            <p className="text-xl text-gray-500 dark:text-gray-400 mt-4 z-10 font-bold">{current.topFruit.count} {t('home.times')}</p>
             <img
               src={current.topFruit.img}
               alt={current.topFruit.name}
@@ -397,7 +405,7 @@ export default function Statistic() {
 
         {/* ── Rekap Perjalanan Header ── */}
         <div className="text-center mt-8 mb-4">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white">Rekap Perjalanan:</h3>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white">{t('home.journeyRecap')}</h3>
         </div>
 
         {/* ── All-time insight cards ── */}
@@ -405,10 +413,10 @@ export default function Statistic() {
           {/* Buah Favorit Sepanjang Masa */}
           <div className="bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-2xl p-4 shadow-sm relative overflow-hidden flex flex-col justify-between" style={{ minHeight: '160px' }}>
             <div className="z-10">
-              <p className="text-[11px] text-gray-400 font-semibold truncate">Buah Terfavorit</p>
-              <p className="text-xl font-bold text-gray-800 dark:text-white mt-1">{allTimeFavFruit.name}</p>
+              <p className="text-[11px] text-gray-400 font-semibold truncate">{t('home.allTimeFav')}</p>
+              <p className="text-xl font-bold text-gray-800 dark:text-white mt-1">{t(`fruit.${normalizeFruit(allTimeFavFruit.name)}`, { defaultValue: allTimeFavFruit.name })}</p>
             </div>
-            <p className="text-xl text-gray-500 dark:text-gray-400 mt-4 z-10 font-bold">{allTimeFavFruit.count} Kali</p>
+            <p className="text-xl text-gray-500 dark:text-gray-400 mt-4 z-10 font-bold">{allTimeFavFruit.count} {t('home.times')}</p>
             <img
               src={allTimeFavFruit.img}
               alt={allTimeFavFruit.name}
@@ -433,7 +441,7 @@ export default function Statistic() {
                 style={{ minHeight: '160px' }}
               >
                 <div className="z-10">
-                  <p className="text-[11px] text-gray-400 font-semibold truncate">Skor Keberhasilan Terbaik</p>
+                  <p className="text-[11px] text-gray-400 font-semibold truncate">{t('home.bestScore')}</p>
                   <p className="text-xl font-bold text-gray-800 dark:text-white mt-1">{formatMonthYear(monthlyData[bestMonthIdx].name, monthlyData[bestMonthIdx].year)}</p>
                 </div>
                 <p className={`absolute bottom-4 right-4 text-5xl sm:text-6xl font-extrabold leading-none z-10 ${scoreColor} text-right`}>
@@ -451,7 +459,7 @@ export default function Statistic() {
             className="w-full flex items-center justify-between px-5 py-4 text-sm font-bold text-gray-800 dark:text-white dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 active:scale-95 transition-all"
           >
             <div className="flex items-center gap-2">
-              Lihat Bulan Lainnya
+              {t('home.seeMoreMonths')}
             </div>
             <ChevronDown
               size={18}
@@ -506,10 +514,10 @@ export default function Statistic() {
               {/* Legend */}
               <div className="flex gap-4 mt-3 justify-center">
                 <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-                  <div className="w-2.5 h-2.5 rounded-sm bg-scanora-green" /> Dikonsumsi
+                  <div className="w-2.5 h-2.5 rounded-sm bg-scanora-green" /> {t('home.consumed')}
                 </div>
                 <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
-                  <div className="w-2.5 h-2.5 rounded-sm bg-red-main/70" /> Dibuang
+                  <div className="w-2.5 h-2.5 rounded-sm bg-red-main/70" /> {t('home.discarded')}
                 </div>
               </div>
             </div>

@@ -19,6 +19,7 @@ const Profile = () => {
     return false;
   });
   const [showPwaModal, setShowPwaModal] = useState(false);
+  const [notifError, setNotifError] = useState('');
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const firstName = user.name || 'Sobat Scanora';
@@ -49,35 +50,48 @@ const Profile = () => {
     navigate('/onboarding');
   };
 
-  const toggleLanguage = () => {
+  const toggleLanguage = async () => {
     const newLang = i18n.language === 'en' ? 'id' : 'en';
     i18n.changeLanguage(newLang);
+    try {
+      await api.patch('/auth/profile', { language: newLang });
+      const updatedUser = { ...user, language: newLang };
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+    } catch (e) {
+      console.error('Failed to update language preference', e);
+    }
   };
 
   const toggleNotif = async () => {
+    setNotifError('');
     if (!notifEnabled) {
-      if ('Notification' in window && 'serviceWorker' in navigator) {
-        const perm = await Notification.requestPermission();
-        if (perm === 'granted') {
-          try {
-            const registration = await navigator.serviceWorker.ready;
-            const subscription = await registration.pushManager.subscribe({
-              userVisibleOnly: true,
-              applicationServerKey: import.meta.env.VITE_VAPID_PUBLIC_KEY
-            });
-            await api.post('/notifications/subscribe', { subscription });
-            setNotifEnabled(true);
-            localStorage.setItem('notificationsEnabled', 'true');
-          } catch (err) {
-            alert('Gagal mengaktifkan notifikasi: ' + err.message);
-          }
-        } else {
-          alert('Izin notifikasi ditolak. Silakan izinkan melalui pengaturan browser.');
-        }
-      } else {
-        alert('Browser ini tidak mendukung notifikasi.');
+      setNotifEnabled(true);
+      localStorage.setItem('notificationsEnabled', 'true');
+
+      if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+        setNotifError('Browser ini tidak mendukung notifikasi push.');
+        return;
+      }
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') {
+        setNotifError('Izin notifikasi ditolak. Aktifkan melalui pengaturan browser.');
+        return;
+      }
+      try {
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: import.meta.env.VITE_VAPID_PUBLIC_KEY
+        });
+        await api.post('/notifications/subscribe', { subscription });
+      } catch (err) {
+        console.error('Push subscribe error:', err);
+        setNotifError('Gagal mengaktifkan notifikasi. Pastikan browser mendukung Web Push.');
       }
     } else {
+      setNotifEnabled(false);
+      localStorage.setItem('notificationsEnabled', 'false');
+
       try {
         const registration = await navigator.serviceWorker.ready;
         const subscription = await registration.pushManager.getSubscription();
@@ -85,10 +99,9 @@ const Profile = () => {
           await subscription.unsubscribe();
           await api.post('/notifications/unsubscribe', { endpoint: subscription.endpoint });
         }
-        setNotifEnabled(false);
-        localStorage.setItem('notificationsEnabled', 'false');
       } catch (err) {
         console.error('Unsubscribe error', err);
+        setNotifError('Gagal menonaktifkan notifikasi push (Inbox tetap nonaktif).');
       }
     }
   };
@@ -136,7 +149,7 @@ const Profile = () => {
                 </p>
               </div>
             </div>
-            <p className="text-xs font-medium text-scanora-green bg-scanora-green/10 w-fit px-2.5 py-1 rounded-md">Sobat Scanora sejak {joinDate}</p>
+            <p className="text-xs font-medium text-scanora-green bg-scanora-green/10 w-fit px-2.5 py-1 rounded-md">{t('profile.member_since', { date: joinDate })}</p>
           </div>
         </div>
 
@@ -194,6 +207,14 @@ const Profile = () => {
               <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform ${notifEnabled ? 'translate-x-6' : 'translate-x-1'}`}></div>
             </button>
           </div>
+          {/* Inline error message for push notification */}
+          {notifError && (
+            <div className="px-4 pb-3">
+              <p className="text-xs text-red-500 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2 border border-red-100 dark:border-red-800">
+                ⚠️ {notifError}
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-6 transition-colors">
@@ -206,8 +227,8 @@ const Profile = () => {
                 <ChartColumnBig size={20} />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">Statistik Performa</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Lihat rekap pemindaian dan tingkat keberhasilan</p>
+                <h3 className="font-semibold text-gray-900 dark:text-white">{t('nav.stats')}</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t('profile.stats_desc')}</p>
               </div>
             </div>
             <ChevronLeft size={20} className="text-gray-400 rotate-180" />
@@ -222,8 +243,8 @@ const Profile = () => {
                 <Download size={20} />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">Install Aplikasi (PWA)</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Tambahkan Scanora ke Home Screen</p>
+                <h3 className="font-semibold text-gray-900 dark:text-white">{t('profile.install_pwa')}</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t('profile.install_pwa_desc')}</p>
               </div>
             </div>
           </div>
@@ -249,7 +270,7 @@ const Profile = () => {
           onClick={() => navigate('/home')}
           className="w-full mt-2 py-3.5 bg-scanora-green text-white font-bold rounded-2xl shadow-sm hover:bg-scanora-green/90 active:scale-[0.98] transition-all flex items-center justify-center"
         >
-          Kembali ke Beranda
+          {t('profile.back_to_home')}
         </button>
 
         {/* Footer App Version */}
@@ -277,18 +298,18 @@ const Profile = () => {
             <div className="w-16 h-16 bg-scanora-green/10 rounded-2xl flex items-center justify-center text-scanora-green mx-auto mb-4">
               <Download size={32} />
             </div>
-            <h3 className="text-xl font-bold text-center text-gray-900 dark:text-white mb-2">Install Scanora</h3>
+            <h3 className="text-xl font-bold text-center text-gray-900 dark:text-white mb-2">{t('profile.install_pwa')}</h3>
             <p className="text-center text-sm text-gray-500 dark:text-gray-400 mb-6">
-              Tambahkan Scanora ke layar beranda untuk pengalaman seperti aplikasi native.
+              {t('profile.install_pwa_desc_modal')}
             </p>
             
             <div className="space-y-4 mb-6">
               <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
-                <p className="text-sm font-bold text-gray-800 dark:text-gray-200 mb-1">🤖 Untuk Android (Chrome)</p>
+                <p className="text-sm font-bold text-gray-800 dark:text-gray-200 mb-1 flex items-center gap-2"><img src="https://cdn.simpleicons.org/android" className="w-4 h-4 dark:invert opacity-70" alt="Android" /> Untuk Android (Chrome)</p>
                 <p className="text-xs text-gray-600 dark:text-gray-400">1. Tap tombol titik tiga (⋮) di pojok kanan atas.<br/>2. Pilih <b>"Add to Home screen"</b> atau <b>"Install app"</b>.</p>
               </div>
               <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
-                <p className="text-sm font-bold text-gray-800 dark:text-gray-200 mb-1">🍎 Untuk iOS (Safari)</p>
+                <p className="text-sm font-bold text-gray-800 dark:text-gray-200 mb-1 flex items-center gap-2"><img src="https://cdn.simpleicons.org/apple" className="w-4 h-4 dark:invert opacity-70" alt="Apple" /> Untuk iOS (Safari)</p>
                 <p className="text-xs text-gray-600 dark:text-gray-400">1. Tap ikon Share (kotak dengan panah ke atas) di bawah.<br/>2. Scroll dan pilih <b>"Add to Home Screen"</b>.</p>
               </div>
             </div>
@@ -297,7 +318,7 @@ const Profile = () => {
               onClick={() => setShowPwaModal(false)}
               className="w-full py-3.5 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white font-bold rounded-xl active:scale-95 transition-all"
             >
-              Mengerti
+              {t('details.close')}
             </button>
           </div>
         </div>

@@ -18,6 +18,7 @@
  */
 
 import { X, Trash2, Utensils, Camera, SquareCheck, SquareX, ChevronRight, Sparkles, Bot } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -76,11 +77,15 @@ const getCountdownConfig = (condition, daysLeft) => {
   return { bg: 'bg-orange-main', text: 'text-white', btnText: `Sisa ${daysLeft} Hari Lagi` };
 };
 
-const formatShortDate = (dateStr) => {
+const formatShortDate = (dateStr, lang = 'id') => {
   if (!dateStr) return '-';
   const d = new Date(dateStr);
+  const fullYear = d.getFullYear();
+  if (lang === 'en') {
+    return d.toLocaleString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
   const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+  return `${d.getDate()} ${months[d.getMonth()]} ${fullYear}`;
 };
 
 /** Freshness score badge — keeps opacity background per design. */
@@ -138,9 +143,29 @@ const FruitDetailModal = ({
 }) => {
   if (!item) return null;
 
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language || 'id';
+
+  // Translated countdown text using i18n keys
+  const getCountdownText = (cond, days) => {
+    const c = (cond || '').toLowerCase();
+    if (c === 'rotten' || c === 'discarded') return t('details.countdown.unfit');
+    if (c === 'unripe') {
+      if (days === null) return t('details.countdown.notRipe');
+      if (days <= 0) return t('details.countdown.ready');
+      if (days === 1) return t('details.countdown.daysToRipe_one', { count: 1 });
+      return t('details.countdown.daysToRipe_other', { count: days });
+    }
+    if (days === null || days < 0) return t('details.countdown.expired');
+    if (days === 0) return t('details.countdown.today');
+    if (days === 1) return t('details.countdown.daysLeft_one');
+    return t('details.countdown.daysLeft_other', { count: days });
+  };
+
   const condition = item.condition_latest || item.condition;
   const daysLeft  = calculateDaysLeft(item.reminder_at);
   const countdown = getCountdownConfig(condition, daysLeft);
+  const countdownText = getCountdownText(condition, daysLeft);
 
   return (
     <div
@@ -192,10 +217,10 @@ const FruitDetailModal = ({
             <div className="flex items-center justify-between mb-4 mt-2">
               <div className="flex flex-row items-center gap-2">
                 <h2 className="text-3xl font-bold text-gray-900 dark:text-white capitalize leading-none">
-                  {getFruitLabel(item.fruit_type)}
+                  {t(`fruit.${normalizeFruit(item.fruit_type)}`)}
                 </h2>
                 <span className={`text-sm font-bold px-2 py-1 rounded-md capitalize leading-none ${getConditionBadgeStyle(condition)}`}>
-                  {getConditionLabel(condition)}
+                  {t(`condition.${(condition || '').toLowerCase()}`)}
                 </span>
               </div>
               <div className="relative w-20">
@@ -210,7 +235,7 @@ const FruitDetailModal = ({
             </div>
 
             {/* ── Detail Scan label ── */}
-            <p className="text-xs font-normal text-gray-400 dark:text-gray-500 text-center mb-2">Detail Scan:</p>
+            <p className="text-xs font-normal text-gray-400 dark:text-gray-500 text-center mb-2">{t('details.scanDetails')}</p>
 
             {/* ── Tab-specific detail card ── */}
             {activeTab === 'inventory' ? (
@@ -218,20 +243,20 @@ const FruitDetailModal = ({
                 <div className="flex flex-col gap-3 mb-4">
                   <p className="text-gray-500 dark:text-gray-400 font-medium text-sm flex items-center gap-2">
                     <Camera size={16} />
-                    <span>Tgl. Foto: {formatShortDate(item.added_at || item.created_at)}</span>
+                    <span>{t('details.dateAdded')}: {formatShortDate(item.added_at || item.created_at, lang)}</span>
                   </p>
                   <p className="text-gray-500 dark:text-gray-400 font-medium text-sm flex items-center gap-2">
                     {condition === 'unripe' ? <SquareCheck size={16} /> : <SquareX size={16} />}
                     <span>
-                      {condition === 'unripe' ? 'Tgl. Matang:' : 'Tgl. Batas Layak:'}{' '}
-                      {formatShortDate(item.reminder_at)}
+                      {condition === 'unripe' ? t('details.dateRipe') : t('details.dateExpire')}
+                      {formatShortDate(item.reminder_at, lang)}
                     </span>
                   </p>
                 </div>
                 <hr className="border-gray-200 dark:border-gray-600 mb-4" />
                 {/* Freshness score update row */}
                 <div className="flex items-center gap-3 mb-4">
-                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap">Update Freshness Score:</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap">{t('details.updateFreshness')}</p>
                   <div className="flex items-center gap-1 flex-1 min-w-0">
                     <div className="flex-1">
                       <ScoreBadge score={item.freshness_score_initial} className="py-2 text-sm" />
@@ -247,7 +272,7 @@ const FruitDetailModal = ({
                 </div>
                 {/* Countdown pill */}
                 <div className={`px-4 py-3 rounded-xl text-center text-base font-bold w-full ${countdown.bg} ${countdown.text}`}>
-                  {countdown.btnText}
+                  {countdownText}
                 </div>
               </div>
             ) : (
@@ -257,7 +282,7 @@ const FruitDetailModal = ({
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm font-medium flex-1">
                       <Camera size={16} />
-                      <span>Tgl. Foto: {formatShortDate(item.scanned_at)}</span>
+                      <span>{t('details.dateAdded')}: {formatShortDate(item.scanned_at, lang)}</span>
                     </div>
                     <div className="min-w-[80px]">
                       <ScoreBadge score={item.freshness_score} className="py-1.5 text-sm" />
@@ -270,39 +295,34 @@ const FruitDetailModal = ({
             {/* ── AI Suggestion Box (inventory only) ── */}
             {item.scan_id && activeTab === 'inventory' && (
               <div className="mb-4 mt-2">
-                {!aiSuggestion && !aiLoading && (
+                {!aiSuggestion && (
                   <button
                     onClick={onRequestAI}
-                    className="w-full min-h-[44px] bg-green-50 dark:bg-green-900/10 hover:bg-green-100 dark:hover:bg-green-900/20 border border-scanora-green text-scanora-green font-semibold rounded-2xl flex items-center justify-center gap-2 text-sm active:scale-95 transition-all cursor-pointer"
+                    disabled={aiLoading}
+                    className="w-full min-h-[44px] bg-green-50 dark:bg-green-900/10 hover:bg-green-100 dark:hover:bg-green-900/20 border border-scanora-green text-scanora-green font-semibold rounded-2xl flex items-center justify-center gap-2 text-sm active:scale-95 transition-all cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
                   >
-                    <Sparkles size={16} className="text-scanora-green" />
-                    Minta Saran AI
+                    {aiLoading ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-scanora-green border-t-transparent rounded-full animate-spin" />
+                        {t('scanner.analyzing')}
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles size={16} className="text-scanora-green" />
+                        {t('details.aiSuggestion')}
+                      </>
+                    )}
                   </button>
                 )}
 
-                {aiLoading && (
-                  <div className="w-full bg-white dark:bg-gray-800 border border-scanora-green/30 rounded-2xl p-4 shadow-[0_0_15px_rgba(34,197,94,0.1)] relative overflow-hidden">
-                    <div className="absolute inset-0 bg-scanora-green/5 animate-pulse" />
-                    <div className="relative z-10 flex items-center gap-3 mb-3">
-                      <div className="w-8 h-8 rounded-full bg-scanora-green/20 flex items-center justify-center animate-pulse">
-                        <Sparkles size={16} className="text-scanora-green" />
-                      </div>
-                      <p className="text-sm font-bold text-scanora-green animate-pulse">Chef Scanora sedang menganalisa...</p>
-                    </div>
-                    <div className="relative z-10 space-y-2.5">
-                      <div className="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-full animate-pulse" />
-                      <div className="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-5/6 animate-pulse" />
-                      <div className="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full w-4/6 animate-pulse" />
-                    </div>
-                  </div>
-                )}
+                {/* Remove the old skeleton loader entirely as the button spinner replaces its purpose */}
 
                 {aiSuggestion && !aiLoading && (
                   <div
                     className="bg-transparent rounded-2xl p-4 border border-scanora-green"
                   >
                     <h4 className="font-bold text-scanora-green text-sm flex items-center gap-1.5 mb-3">
-                      <Sparkles size={14} /> Chef Scanora Menyarankan
+                      <Sparkles size={14} /> {t('details.aiSuggestionTitle')}
                     </h4>
                     <div className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
                       {renderMarkdown(aiSuggestion)}
@@ -313,7 +333,7 @@ const FruitDetailModal = ({
                 {aiError && !aiLoading && (
                   <div className="bg-red-50 dark:bg-red-950/30 rounded-2xl p-4 border border-red-100 dark:border-red-800 flex items-center justify-between gap-2">
                     <p className="text-sm text-red-600 dark:text-red-400">{aiError}</p>
-                    <button onClick={onRequestAI} className="text-xs text-red-600 dark:text-red-400 font-bold underline">Coba Lagi</button>
+                    <button onClick={onRequestAI} className="text-xs text-red-600 dark:text-red-400 font-bold underline">{t('details.retryAI')}</button>
                   </div>
                 )}
               </div>
@@ -323,7 +343,7 @@ const FruitDetailModal = ({
             <div className="flex items-start gap-3 bg-gray-100/80 dark:bg-gray-700/40 border border-gray-200/70 dark:border-gray-600/50 rounded-2xl px-4 py-3 mb-5 mt-2">
               <Bot size={16} className="text-gray-400 dark:text-gray-500 flex-shrink-0 mt-0.5" />
               <p className="text-[12px] text-gray-500 dark:text-gray-400 leading-relaxed">
-                Estimasi berdasarkan skenario terbaik. Kondisi asli bisa berbeda. Foto ulang untuk update.
+                {t('home.disclaimer')}
               </p>
             </div>
 
@@ -338,13 +358,13 @@ const FruitDetailModal = ({
                 onClick={onDiscarded}
                 className="flex-1 min-h-[44px] bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 font-semibold rounded-xl hover:bg-red-200 dark:hover:bg-red-900/50 active:scale-95 transition-all text-sm flex items-center justify-center gap-2 cursor-pointer"
               >
-                <Trash2 size={16} /> Dibuang
+                <Trash2 size={16} /> {t('details.actionDiscarded')}
               </button>
               <button
                 onClick={onConsumed}
                 className="flex-1 min-h-[44px] bg-scanora-green text-white font-semibold rounded-xl hover:bg-scanora-dark active:scale-95 transition-all text-sm flex items-center justify-center gap-2 cursor-pointer"
               >
-                <Utensils size={16} /> Dikonsumsi
+                <Utensils size={16} /> {t('details.actionConsumed')}
               </button>
             </div>
           ) : (
@@ -352,7 +372,7 @@ const FruitDetailModal = ({
               <button
                 onClick={onDeleteHistory}
                 className="w-[20%] min-h-[44px] bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-xl flex items-center justify-center hover:bg-red-200 dark:hover:bg-red-900/50 active:scale-95 transition-all"
-                title="Hapus dari Riwayat"
+                title={t('details.deleteFromHistory')}
               >
                 <Trash2 size={20} />
               </button>
@@ -360,7 +380,7 @@ const FruitDetailModal = ({
                 onClick={onClose}
                 className="w-[80%] min-h-[44px] bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white font-semibold rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 active:scale-95 transition-all"
               >
-                Tutup
+                {t('details.close')}
               </button>
             </div>
           )}

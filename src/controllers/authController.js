@@ -158,6 +158,19 @@ const me = asyncHandler(async (req, res) => {
   return sendSuccess(res, "User profile", toUserResponse(user));
 });
 
+const updateProfile = asyncHandler(async (req, res) => {
+  const { language } = req.body;
+  const dataToUpdate = {};
+  if (language) dataToUpdate.language = language;
+
+  const user = await prisma.user.update({
+    where: { id: req.user.userId },
+    data: dataToUpdate
+  });
+
+  sendSuccess(res, "Profile updated successfully", toUserResponse(user));
+});
+
 const googleLogin = asyncHandler(async (req, res) => {
   const { accessToken } = req.body;
 
@@ -223,6 +236,7 @@ module.exports = {
   register,
   login,
   me,
+  updateProfile,
   googleLogin,
   resetPassword
 };
