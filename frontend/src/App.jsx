@@ -13,13 +13,14 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Onboarding from './pages/Onboarding';
 import Statistic from './pages/Statistic';
+import Dokumentasi from './pages/Dokumentasi';
 import ScannerSheet from './components/ScannerSheet';
 import LoadingScreen from './components/LoadingScreen';
 import { initializeAuth } from './api';
 import { ViewportProvider, useViewport } from './context/ViewportContext';
 
 // Pages where nav should NOT appear
-const NO_NAV_PATHS = ['/login', '/register', '/forgot-password', '/reset-password', '/onboarding'];
+const NO_NAV_PATHS = ['/login', '/register', '/forgot-password', '/reset-password', '/onboarding', '/dokumentasi'];
 
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
@@ -99,6 +100,7 @@ function AppShell({ isScannerOpen, setIsScannerOpen, isAppEntering, isSplashVisi
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/dokumentasi" element={<Dokumentasi />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </main>
@@ -112,6 +114,7 @@ function AppShell({ isScannerOpen, setIsScannerOpen, isAppEntering, isSplashVisi
                 <Route path="/reset-password" element={null} />
                 <Route path="/profile" element={null} />
                 <Route path="/onboarding" element={null} />
+                <Route path="/dokumentasi" element={null} />
                 <Route path="*" element={<BottomNav onOpenScanner={() => setIsScannerOpen(true)} />} />
               </Routes>
             )}

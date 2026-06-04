@@ -2,6 +2,15 @@
 
 Semua perubahan yang signifikan pada proyek Scanora akan didokumentasikan dalam file ini.
 
+## [v1.11.0] - 2026-06-05
+### Added
+- **Documentation Hub (`/dokumentasi`)**: Menambahkan halaman khusus ala Linktree untuk mengumpulkan semua tautan proyek, termasuk Repositori GitHub, Video Presentasi Pitching & Demo, dan sumber daya data (Kaggle & BPS). Halaman ini didesain mandiri (tanpa navigasi utama) dan mendukung pratinjau *iframe* (YouTube) dan gambar secara langsung.
+
+### Changed
+- **Logo Update**: Memperbarui format logo di Dokumentasi menjadi desain kontak/kotak (`LOGO_Scanora_Color_SquareCompact.png`).
+- **UI Enhancements**: Memperbarui ikon kategori Dokumentasi dan menghapus deskripsi detail pada Data Resources agar antarmuka lebih bersih.
+
+
 ## [v1.10.1] - 2026-06-02
 ### Added
 - **Language Pref Sync**: Menambahkan preferensi bahasa di database agar *Cron job* notifikasi harian otomatis menggunakan bahasa yang dipilih pengguna (ID/EN) saat mengirim *push notification*.
