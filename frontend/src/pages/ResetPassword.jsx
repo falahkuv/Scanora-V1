@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
+import api from '../api';
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -30,6 +31,13 @@ const ResetPassword = () => {
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
+
+      // Sync the new password to the app database so backend login works.
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token;
+      if (!accessToken) throw new Error('Sesi reset tidak valid. Coba minta link baru.');
+      await api.post('/auth/reset-password', { accessToken, password });
+
       await supabase.auth.signOut();
       navigate('/login', { replace: true });
     } catch (error) {

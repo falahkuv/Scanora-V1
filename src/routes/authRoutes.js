@@ -34,6 +34,16 @@ router.post(
   authController.googleLogin
 );
 
+router.post(
+  "/reset-password",
+  [
+    body("accessToken").notEmpty().withMessage("Access token is required"),
+    body("password").isLength({ min: 8 }).withMessage("Password must be at least 8 characters")
+  ],
+  validate,
+  authController.resetPassword
+);
+
 router.get("/me", authenticateToken, authController.me);
 
 module.exports = router;
