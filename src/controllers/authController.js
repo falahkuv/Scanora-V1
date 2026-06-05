@@ -99,6 +99,48 @@ const login = asyncHandler(async (req, res) => {
   });
 });
 
+const resetPassword = asyncHandler(async (req, res) => {
+  const { accessToken, password } = req.body;
+
+  if (!supabase) {
+    return res.status(500).json({
+      success: false,
+      message: "Supabase is not configured",
+      data: null
+    });
+  }
+
+  const { data, error } = await supabase.auth.getUser(accessToken);
+
+  if (error || !data?.user?.email) {
+    return res.status(401).json({
+      success: false,
+      message: "Invalid or expired reset session",
+      data: null
+    });
+  }
+
+  const email = data.user.email;
+  const name =
+    data.user.user_metadata?.full_name ||
+    data.user.user_metadata?.name ||
+    email.split("@")[0];
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  await prisma.user.upsert({
+    where: { email },
+    update: { password: hashedPassword },
+    create: {
+      name,
+      email,
+      password: hashedPassword,
+      profileImage: pickRandomProfileImage()
+    }
+  });
+
+  return sendSuccess(res, "Password updated successfully", null);
+});
+
 const me = asyncHandler(async (req, res) => {
   let user = await prisma.user.findUnique({
     where: { id: req.user.userId }
@@ -195,5 +237,6 @@ module.exports = {
   login,
   me,
   updateProfile,
-  googleLogin
+  googleLogin,
+  resetPassword
 };
