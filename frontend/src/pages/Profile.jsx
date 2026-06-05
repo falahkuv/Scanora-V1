@@ -6,6 +6,17 @@ import { useViewport } from '../context/ViewportContext';
 import { supabase } from '../lib/supabaseClient';
 import api from '../api';
 
+const urlBase64ToUint8Array = (base64String) => {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/\-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+};
+
 const Profile = () => {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
@@ -81,7 +92,7 @@ const Profile = () => {
         const registration = await navigator.serviceWorker.ready;
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: import.meta.env.VITE_VAPID_PUBLIC_KEY
+          applicationServerKey: urlBase64ToUint8Array(import.meta.env.VITE_VAPID_PUBLIC_KEY)
         });
         await api.post('/notifications/subscribe', { subscription });
       } catch (err) {
@@ -164,7 +175,7 @@ const Profile = () => {
                 <p className="text-xs text-gray-500 dark:text-gray-400">{t('profile.dark_mode_desc')}</p>
               </div>
             </div>
-            <button 
+            <button
               onClick={() => setIsDark(!isDark)}
               className={`w-12 h-6 rounded-full transition-colors relative flex items-center ${isDark ? 'bg-scanora-green' : 'bg-gray-200 dark:bg-gray-600'}`}
             >
@@ -182,7 +193,7 @@ const Profile = () => {
                 <p className="text-xs text-gray-500 dark:text-gray-400">{t('profile.language_desc')}</p>
               </div>
             </div>
-            <button 
+            <button
               onClick={toggleLanguage}
               className="px-4 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-bold text-sm rounded-full active:scale-95 transition-all"
             >
@@ -200,7 +211,7 @@ const Profile = () => {
                 <p className="text-xs text-gray-500 dark:text-gray-400 break-words">{i18n.language === 'en' ? 'Smart freshness reminders' : 'Pengingat pintar sebelum buah matang dan membusuk'}</p>
               </div>
             </div>
-            <button 
+            <button
               onClick={toggleNotif}
               className={`flex-shrink-0 w-12 h-6 rounded-full transition-colors relative flex items-center ${notifEnabled ? 'bg-scanora-green' : 'bg-gray-200 dark:bg-gray-600'}`}
             >
@@ -218,7 +229,7 @@ const Profile = () => {
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-6 transition-colors">
-          <div 
+          <div
             onClick={() => navigate('/stats')}
             className="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 active:bg-gray-100 dark:active:bg-gray-700 transition-colors border-b border-gray-100 dark:border-gray-700"
           >
@@ -234,7 +245,7 @@ const Profile = () => {
             <ChevronLeft size={20} className="text-gray-400 rotate-180" />
           </div>
 
-          <div 
+          <div
             onClick={installPwa}
             className="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 active:bg-gray-100 dark:active:bg-gray-700 transition-colors"
           >
@@ -251,7 +262,7 @@ const Profile = () => {
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden mb-6 transition-colors">
-          <div 
+          <div
             onClick={handleLogout}
             className="p-4 flex justify-between items-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 active:bg-gray-100 dark:active:bg-gray-700 transition-colors"
           >
@@ -280,7 +291,7 @@ const Profile = () => {
             <span className="font-bold tracking-wide">Scanora</span>
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-            v1.10.0 Beta &middot; Juni 2026
+            v1.11.1 Beta &middot; Juni 2026
           </p>
           <p className="text-xs italic text-gray-500 dark:text-gray-400 mb-3">
             "Choose Better, Waste Less."
@@ -302,18 +313,18 @@ const Profile = () => {
             <p className="text-center text-sm text-gray-500 dark:text-gray-400 mb-6">
               {t('profile.install_pwa_desc_modal')}
             </p>
-            
+
             <div className="space-y-4 mb-6">
               <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
-                <p className="text-sm font-bold text-gray-800 dark:text-gray-200 mb-1 flex items-center gap-2"><img src="https://cdn.simpleicons.org/android" className="w-4 h-4 dark:invert opacity-70" alt="Android" /> Untuk Android (Chrome)</p>
-                <p className="text-xs text-gray-600 dark:text-gray-400">1. Tap tombol titik tiga (⋮) di pojok kanan atas.<br/>2. Pilih <b>"Add to Home screen"</b> atau <b>"Install app"</b>.</p>
+                <p className="text-sm font-bold text-gray-800 dark:text-gray-200 mb-1 flex items-center gap-2"><img src="https://cdn.simpleicons.org/android/10b981" className="w-4 h-4" alt="Android" /> {t('profile.pwaAndroidTitle')}</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400" dangerouslySetInnerHTML={{ __html: `${t('profile.pwaAndroidStep1')}<br/>${t('profile.pwaAndroidStep2')}` }}></p>
               </div>
               <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 border border-gray-100 dark:border-gray-700">
-                <p className="text-sm font-bold text-gray-800 dark:text-gray-200 mb-1 flex items-center gap-2"><img src="https://cdn.simpleicons.org/apple" className="w-4 h-4 dark:invert opacity-70" alt="Apple" /> Untuk iOS (Safari)</p>
-                <p className="text-xs text-gray-600 dark:text-gray-400">1. Tap ikon Share (kotak dengan panah ke atas) di bawah.<br/>2. Scroll dan pilih <b>"Add to Home Screen"</b>.</p>
+                <p className="text-sm font-bold text-gray-800 dark:text-gray-200 mb-1 flex items-center gap-2"><img src="https://cdn.simpleicons.org/apple" className="w-4 h-4 dark:invert opacity-70" alt="Apple" /> {t('profile.pwaIosTitle')}</p>
+                <p className="text-xs text-gray-600 dark:text-gray-400" dangerouslySetInnerHTML={{ __html: `${t('profile.pwaIosStep1')}<br/>${t('profile.pwaIosStep2')}` }}></p>
               </div>
             </div>
-            
+
             <button
               onClick={() => setShowPwaModal(false)}
               className="w-full py-3.5 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white font-bold rounded-xl active:scale-95 transition-all"

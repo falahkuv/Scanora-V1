@@ -8,7 +8,7 @@ const dictionary = {
     home: { en: 'Home', id: 'Beranda' },
     inventory: { en: 'Inventory', id: 'Inventori' },
     history: { en: 'History', id: 'Riwayat' },
-    stats: { en: 'Stats', id: 'Statistik' },
+    stats: { en: 'Statistic', id: 'Statistik' },
     profile: { en: 'Profile', id: 'Profil' },
     loading: { en: 'Loading...', id: 'Memuat...' },
     scanFruit: { en: 'Scan Fruit', id: 'Scan Buah' }
@@ -44,9 +44,9 @@ const dictionary = {
     bestScore: { en: 'Best Save Score', id: 'Skor Keberhasilan Terbaik' },
     seeMoreMonths: { en: 'See Other Months', id: 'Lihat Bulan Lainnya' },
     prideMsg: {
-      excellent: { en: 'Excellent! You have successfully minimized food waste.', id: 'Luar biasa! Hampir semua buahmu terselamatkan. 🌟' },
-      good: { en: 'Good progress. Continue to reduce your food waste.', id: 'Lumayan! Terus kurangi pemborosan ya. 👍' },
-      bad: { en: 'High waste rate detected. Consider improving your consumption habits.', id: 'Masih banyak yang dibuang. Yuk lebih bijak! 😬' }
+      excellent: { en: 'Excellent! You have successfully minimized food waste.🌟', id: 'Luar biasa! Banyak buah yang berhasil dikonsumsi.🌟' },
+      good: { en: 'Good progress. Continue to reduce your food waste.👍', id: 'Lumayan! Terus kurangi pemborosan ya.👍' },
+      bad: { en: 'High waste rate detected. Consider improving your consumption habits.😬', id: 'Masih banyak yang dibuang. Yuk lebih bijak!😬' }
     },
     disclaimer: { en: 'Estimations are based on optimal conditions. Actual states may vary. Rescan to update data.', id: 'Estimasi berdasarkan skenario terbaik. Kondisi asli bisa berbeda. Foto ulang untuk update.' },
     // Extra home keys
@@ -58,7 +58,13 @@ const dictionary = {
     noNotif: { en: 'No notifications yet.', id: 'Belum ada notifikasi.' },
     today: { en: 'Today!', id: 'Hari ini!' },
     daysLeftShort: { en: '{{count}} days left', id: 'Sisa {{count}} hari' },
-    scannedOn: { en: 'Scanned', id: 'Difoto' }
+    scannedOn: { en: 'Scanned', id: 'Difoto' },
+    notifUrgent3Title: { en: '🥗 Don\'t Forget Your {{fruit}}!', id: '🥗 Jangan Lupa {{fruit}} Kamu!' },
+    notifUrgent3Body: { en: 'Your {{fruit}} has {{days}} days left before it starts to rot.', id: '{{fruit}} kamu tinggal {{days}} hari lagi sebelum mulai membusuk.' },
+    notifUrgent1Title: { en: '⚠️ {{fruit}} Almost Rotten!', id: '⚠️ {{fruit}} Hampir Busuk!' },
+    notifUrgent1Body: { en: 'Attention! The {{fruit}} you saved has only 1 day left.', id: 'Perhatian! {{fruit}} yang kamu simpan sisa 1 hari lagi.' },
+    notifUrgent0Title: { en: '🚨 Last Day for {{fruit}}!', id: '🚨 Hari Terakhir untuk {{fruit}}!' },
+    notifUrgent0Body: { en: 'Your {{fruit}} is estimated to have reached its maximum freshness limit today.', id: '{{fruit}} kamu diperkirakan sudah mencapai batas maksimal kesegarannya hari ini.' }
   },
 
   // Condition & Scan Status
@@ -116,6 +122,8 @@ const dictionary = {
     aiSuggestionTitle: { en: 'AI Recommendation', id: 'Saran Chef Scanora' },
     aiSuggestionLoading: { en: 'Chef Scanora is analyzing...', id: 'Chef Scanora sedang menganalisa...' },
     aiError: { en: 'Failed to get suggestion. Try again.', id: 'Gagal mendapatkan saran. Coba lagi.' },
+    aiNotAvailable: { en: 'AI suggestion is currently unavailable.', id: 'Saran AI tidak tersedia saat ini.' },
+    noSuggestion: { en: 'No suggestion available.', id: 'Tidak ada saran tersedia.' },
     retryAI: { en: 'Try Again', id: 'Coba Lagi' },
     actionDiscarded: { en: 'Discarded', id: 'Dibuang' },
     actionConsumed: { en: 'Consumed', id: 'Dikonsumsi' },
@@ -148,7 +156,7 @@ const dictionary = {
     cannotSave: { en: 'Cannot Save', id: 'Tidak Bisa Disimpan' },
     close: { en: 'Close', id: 'Tutup' },
     aiChef: { en: 'AI Chef Scanora', id: 'AI Chef Scanora' },
-    aiDisclaimer: { en: 'AI assesses visuals only and cannot be 100% accurate', id: 'AI hanya menilai visual dan tidak bisa 100% akurat' },
+    aiDisclaimer: { en: 'AI assesses visuals and may not be 100% accurate', id: 'AI menilai visual dan mungkin tidak 100% akurat' },
     rottenBlocked: { en: 'Fruit is rotten and cannot be saved to Inventory. Only Unripe or Ripe fruits can be saved.', id: 'Buah sudah busuk. Hanya buah Unripe atau Ripe yang dapat disimpan ke Inventori.' },
     unrecognized: { en: 'Object not recognized. Please try again.', id: 'Objek tidak dikenali, silakan coba lagi.' },
     savedSuccess: { en: 'Saved to Inventory!', id: 'Berhasil disimpan ke Inventori!' },
@@ -213,6 +221,12 @@ const dictionary = {
     install_pwa: { en: 'Install App (PWA)', id: 'Install Aplikasi (PWA)' },
     install_pwa_desc: { en: 'Add Scanora to Home Screen', id: 'Tambahkan Scanora ke Home Screen' },
     install_pwa_desc_modal: { en: 'Add Scanora to your home screen for a native app-like experience.', id: 'Tambahkan Scanora ke layar beranda untuk pengalaman seperti aplikasi native.' },
+    pwaAndroidTitle: { en: 'For Android (Chrome)', id: 'Untuk Android (Chrome)' },
+    pwaAndroidStep1: { en: '1. Tap the three-dot menu (⋮) in the top right corner.', id: '1. Tap tombol titik tiga (⋮) di pojok kanan atas.' },
+    pwaAndroidStep2: { en: '2. Select "Add to Home screen" or "Install app".', id: '2. Pilih <b>"Add to Home screen"</b> atau <b>"Install app"</b>.' },
+    pwaIosTitle: { en: 'For iOS (Safari)', id: 'Untuk iOS (Safari)' },
+    pwaIosStep1: { en: '1. Tap the Share icon (square with an up arrow) at the bottom.', id: '1. Tap ikon Share (kotak dengan panah ke atas) di bawah.' },
+    pwaIosStep2: { en: '2. Scroll and select "Add to Home Screen".', id: '2. Scroll dan pilih <b>"Add to Home Screen"</b>.' },
     member_since: { en: 'Scanora Buddy since {{date}}', id: 'Sobat Scanora sejak {{date}}' },
     back_to_home: { en: 'Back to Home', id: 'Kembali ke Beranda' }
   }

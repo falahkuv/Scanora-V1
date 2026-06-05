@@ -19,6 +19,7 @@ export default defineConfig({
         theme_color: '#10b981',
         background_color: '#ffffff',
         display: 'standalone',
+        gcm_sender_id: '103953800507',
         icons: [
           {
             src: 'icon-192x192.png',

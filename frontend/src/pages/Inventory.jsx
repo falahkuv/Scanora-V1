@@ -138,10 +138,17 @@ const renderMarkdown = (text) => {
     const content = line.replace(/^[-*•]\s+/, '');
     // parse inline bold/italic
     const parseInline = (str) => {
-      const parts = str.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g);
+      const parts = str.split(/(\*\*.*?\*\*|\*.*?\*|_[^_]+_)/g);
       return parts.map((part, j) => {
-        if (/^\*\*[^*]+\*\*$/.test(part)) return <strong key={j}>{part.slice(2, -2)}</strong>;
-        if (/^\*[^*]+\*$/.test(part)) return <em key={j}>{part.slice(1, -1)}</em>;
+        if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
+          return <strong key={j}>{part.slice(2, -2)}</strong>;
+        }
+        if (part.startsWith('*') && part.endsWith('*') && part.length >= 2) {
+          return <em key={j}>{part.slice(1, -1)}</em>;
+        }
+        if (part.startsWith('_') && part.endsWith('_') && part.length >= 2) {
+          return <em key={j}>{part.slice(1, -1)}</em>;
+        }
         return part;
       });
     };
@@ -518,11 +525,11 @@ const Inventory = () => {
       const res = await api.post(`/scan/${selectedItem.scan_id}/suggestion`, {
         freshness_score_latest: currentScore
       });
-      const newSuggestion = res.data?.data?.ai_suggestion || 'Tidak ada saran tersedia.';
+      const newSuggestion = res.data?.data?.ai_suggestion || t('details.noSuggestion');
       setAiSuggestion(newSuggestion);
       saveSuggestionToCache(selectedItem.scan_id, newSuggestion, currentScore, condition, daysLeft);
     } catch (err) {
-      if (!isBackground) setAiError('Gagal mendapatkan saran. Coba lagi.');
+      if (!isBackground) setAiError(t('details.aiError'));
     } finally {
       if (!isBackground) setAiLoading(false);
     }

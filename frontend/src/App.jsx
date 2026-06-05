@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import i18n from './i18n';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import BottomNav from './components/BottomNav';
 import SideNav from './components/SideNav';
@@ -160,16 +161,28 @@ function App() {
 
     initializeAuth().then(() => setIsAuthReady(true));
 
-    // ── Dev: Dark Mode Hotkeys (Shift+Alt+9 = light, Shift+Alt+0 = dark) ──
+    // ── Dev: Hotkeys (Shift+Alt+T = theme, Shift+Alt+L = language) ──
     const handleKeyDown = (e) => {
-      if (e.shiftKey && e.altKey && e.key === '9') {
-        document.documentElement.classList.remove('dark');
-        localStorage.setItem('theme', 'light');
-        updateThemeColor(false);
-      } else if (e.shiftKey && e.altKey && e.key === '0') {
-        document.documentElement.classList.add('dark');
-        localStorage.setItem('theme', 'dark');
-        updateThemeColor(true);
+      if (e.shiftKey && e.altKey && e.key.toLowerCase() === 't') {
+        const isDark = document.documentElement.classList.contains('dark');
+        if (isDark) {
+          document.documentElement.classList.remove('dark');
+          localStorage.setItem('theme', 'light');
+          updateThemeColor(false);
+        } else {
+          document.documentElement.classList.add('dark');
+          localStorage.setItem('theme', 'dark');
+          updateThemeColor(true);
+        }
+      } else if (e.shiftKey && e.altKey && e.key.toLowerCase() === 'l') {
+        const newLang = i18n.language === 'en' ? 'id' : 'en';
+        i18n.changeLanguage(newLang);
+        // If we also want to save the user preference in local storage/DB like Profile.jsx does:
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        if (user.id) {
+          user.language = newLang;
+          localStorage.setItem('user', JSON.stringify(user));
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);

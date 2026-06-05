@@ -2,6 +2,21 @@
 
 Semua perubahan yang signifikan pada proyek Scanora akan didokumentasikan dalam file ini.
 
+## [v1.11.1] - 2026-06-05
+### Added
+- **Global Hotkeys**: Menambahkan *shortcut* keyboard global yang aman (tanpa tabrakan dengan browser):
+  - `Shift + Alt + T`: Beralih antara *Light Mode* dan *Dark Mode*.
+  - `Shift + Alt + L`: Beralih antara Bahasa Indonesia dan Bahasa Inggris.
+- **PWA Installation i18n**: Dialog petunjuk instalasi PWA di halaman Profil kini mendukung bahasa Inggris secara penuh melalui *i18n*.
+
+### Changed
+- **AI Chef Localization**: Prompt internal model AI (OpenRouter) kini dinamis. Jika pengguna mengatur aplikasi ke Bahasa Inggris, instruksi sistem akan menggunakan *English prompt* secara ketat untuk mencegah respons campur aduk (bahasa gado-gado).
+- **Markdown Parsing Enhancement**: Memperbaiki fungsi `renderMarkdown` pada UI *ScannerSheet* dan *FruitDetailModal*. Teks tebal (menggunakan sintaks `**teks**`) dari respons AI kini berhasil diurai dan dirender secara visual (*bold*) dengan rapi dan tidak bocor sebagai teks mentah.
+- **Notification Contrast & i18n**: Memperbaiki warna teks notifikasi agar lebih kontras di atas latar belakang mode gelap (`dark:text-gray-300`). Judul notifikasi untuk nama buah ("Pisang", "Apel", "Jeruk") kini mendukung penerjemahan ke bahasa Inggris secara dinamis.
+
+### Fixed
+- **AI Suggestion State Reset**: Mengatasi *bug* krusial di komponen *Scanner*. Saat pengguna memindai buah lalu menyimpannya ke inventori, *state* teks rekomendasi AI sebelumnya kini langsung dibersihkan (reset), sehingga tidak muncul kembali saat memulai pemindaian untuk buah yang baru.
+
 ## [v1.11.0] - 2026-06-05
 ### Added
 - **Documentation Hub (`/dokumentasi`)**: Menambahkan halaman khusus ala Linktree untuk mengumpulkan semua tautan proyek, termasuk Repositori GitHub, Video Presentasi Pitching & Demo, dan sumber daya data (Kaggle & BPS). Halaman ini didesain mandiri (tanpa navigasi utama) dan mendukung pratinjau *iframe* (YouTube) dan gambar secara langsung.

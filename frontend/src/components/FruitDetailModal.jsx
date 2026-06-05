@@ -111,9 +111,16 @@ const renderMarkdown = (text) => {
     const isBullet = /^[-*•]\s+/.test(line);
     const content  = line.replace(/^[-*•]\s+/, '');
     const parseInline = (str) =>
-      str.split(/(\*\*[^*]+\*\*|\*[^*]+\*)/g).map((part, j) => {
-        if (/^\*\*[^*]+\*\*$/.test(part)) return <strong key={j}>{part.slice(2, -2)}</strong>;
-        if (/^\*[^*]+\*$/.test(part))     return <em key={j}>{part.slice(1, -1)}</em>;
+      str.split(/(\*\*.*?\*\*|\*.*?\*|_[^_]+_)/g).map((part, j) => {
+        if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
+          return <strong key={j}>{part.slice(2, -2)}</strong>;
+        }
+        if (part.startsWith('*') && part.endsWith('*') && part.length >= 2) {
+          return <em key={j}>{part.slice(1, -1)}</em>;
+        }
+        if (part.startsWith('_') && part.endsWith('_') && part.length >= 2) {
+          return <em key={j}>{part.slice(1, -1)}</em>;
+        }
         return part;
       });
     if (isBullet) return (

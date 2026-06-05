@@ -196,7 +196,7 @@ const ScannerSheet = ({ isOpen, onClose }) => {
       }
     } catch (err) {
       console.error('Failed to get AI suggestion', err);
-      setAiSuggestion('Saran AI tidak tersedia saat ini.');
+      setAiSuggestion(t('details.aiNotAvailable'));
     } finally {
       setIsLoadingTips(false);
     }
@@ -262,6 +262,8 @@ const ScannerSheet = ({ isOpen, onClose }) => {
       setScanState('camera');
       setCapturedImage(null);
       setResult(null);
+      setAiSuggestion('');
+      setIsLoadingTips(false);
       startCamera();
       const label = result.fruit_type.charAt(0).toUpperCase() + result.fruit_type.slice(1);
       const mascot = getMascotEmoji(result.fruit_type);
@@ -324,6 +326,35 @@ const ScannerSheet = ({ isOpen, onClose }) => {
     if (c === 'unripe') return { text: 'text-green-700', bg: 'bg-green-50', dot: 'bg-green-500', stroke: '#22c55e' };
     if (c === 'rotten') return { text: 'text-red-main', bg: 'bg-red-50', dot: 'bg-red-main', stroke: '#bb0006' };
     return { text: 'text-gray-700', bg: 'bg-gray-50', dot: 'bg-gray-500', stroke: '#9ca3af' };
+  };
+
+  const renderMarkdown = (text) => {
+    if (!text) return null;
+    return text.split('\n').map((line, i) => {
+      const isBullet = /^[-*•]\s+/.test(line);
+      const content = line.replace(/^[-*•]\s+/, '');
+      const parseInline = (str) =>
+        str.split(/(\*\*.*?\*\*|\*.*?\*|_[^_]+_)/g).map((part, j) => {
+          if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
+            return <strong key={j}>{part.slice(2, -2)}</strong>;
+          }
+          if (part.startsWith('*') && part.endsWith('*') && part.length >= 2) {
+            return <em key={j}>{part.slice(1, -1)}</em>;
+          }
+          if (part.startsWith('_') && part.endsWith('_') && part.length >= 2) {
+            return <em key={j}>{part.slice(1, -1)}</em>;
+          }
+          return part;
+        });
+      if (isBullet) return (
+        <div key={i} className="flex gap-2 mt-1">
+          <span className="text-scanora-green font-bold mt-0.5">•</span>
+          <span>{parseInline(content)}</span>
+        </div>
+      );
+      if (!line.trim()) return <div key={i} className="mt-2" />;
+      return <p key={i} className="mt-1">{parseInline(line)}</p>;
+    });
   };
 
   const condColor = getConditionColor(result?.condition);
@@ -645,8 +676,8 @@ const ScannerSheet = ({ isOpen, onClose }) => {
 
                     {/* AI result */}
                     {aiSuggestion && !isLoadingTips && (
-                      <div>
-                        <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line">{aiSuggestion}</p>
+                      <div className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                        {renderMarkdown(aiSuggestion)}
                       </div>
                     )}
 

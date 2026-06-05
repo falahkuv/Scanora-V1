@@ -258,7 +258,9 @@ const getScanSuggestion = asyncHandler(async (req, res) => {
   }
 
   // 3. Always generate fresh suggestion (no cache) — saran selalu sesuai kondisi terkini
-  const suggestion = await getAISuggestion(scan.fruitType, currentCondition, freshnessScoreToUse);
+  const user = await prisma.user.findUnique({ where: { id: req.user.userId } });
+  const language = user?.language || 'id';
+  const suggestion = await getAISuggestion(scan.fruitType, currentCondition, freshnessScoreToUse, language);
 
   // 4. Save to DB
   await prisma.scanHistory.update({

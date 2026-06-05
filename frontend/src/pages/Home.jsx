@@ -185,9 +185,9 @@ const NotificationItem = ({ notif, onDelete, onClick }) => {
       >
         <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${notif.isRead ? 'bg-transparent' : 'bg-scanora-green'}`} />
         <div className="flex-1">
-          <h4 className="font-bold text-gray-900 dark:text-white dark:text-white text-sm">{notif.title}</h4>
-          <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 leading-relaxed">{notif.message}</p>
-          <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 mt-2 block">{notif.date}</span>
+          <h4 className="font-bold text-gray-900 dark:text-white text-sm">{notif.title}</h4>
+          <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 leading-relaxed">{notif.message}</p>
+          <span className="text-[10px] font-bold text-gray-400 dark:text-gray-400 mt-2 block">{notif.date}</span>
         </div>
       </div>
     </div>
@@ -265,11 +265,11 @@ const Home = ({ onOpenScanner }) => {
       const res = await api.post(`/scan/${selectedItem.scan_id}/suggestion`, {
         freshness_score_latest: currentScore
       });
-      const newSuggestion = res.data?.data?.ai_suggestion || 'Tidak ada saran tersedia.';
+      const newSuggestion = res.data?.data?.ai_suggestion || t('details.noSuggestion');
       setAiSuggestion(newSuggestion);
       saveSuggestionToCache(selectedItem.scan_id, newSuggestion, currentScore, condition, daysLeft);
     } catch (err) {
-      if (!isBackground) setAiError('Gagal mendapatkan saran. Coba lagi.');
+      if (!isBackground) setAiError(t('details.aiError'));
     } finally {
       if (!isBackground) setAiLoading(false);
     }
@@ -363,19 +363,19 @@ const Home = ({ onOpenScanner }) => {
           const dLeft = calculateDaysLeft(item.reminder_at);
           if (dLeft === null || dLeft > 3 || dLeft < 0) return;
 
-          const fruitName = getFruitLabel(item.fruit_type);
+          const fruitName = t(`fruit.${normalizeFruit(item.fruit_type)}`);
           let title = '';
           let body = '';
 
           if (dLeft === 3 || dLeft === 2) {
-            title = `🥗 Jangan Lupa ${fruitName} Kamu!`;
-            body = `Mengingatkan: ${fruitName} kamu tinggal ${dLeft} hari lagi sebelum mulai membusuk.`;
+            title = t('home.notifUrgent3Title', { fruit: fruitName });
+            body = t('home.notifUrgent3Body', { fruit: fruitName, days: dLeft });
           } else if (dLeft === 1) {
-            title = `⚠️ ${fruitName} Hampir Busuk!`;
-            body = `Perhatian! ${fruitName} yang kamu simpan sisa 1 hari lagi.`;
+            title = t('home.notifUrgent1Title', { fruit: fruitName });
+            body = t('home.notifUrgent1Body', { fruit: fruitName });
           } else if (dLeft === 0) {
-            title = `🚨 Hari Terakhir untuk ${fruitName}!`;
-            body = `${fruitName} kamu diperkirakan sudah mencapai batas maksimal kesegarannya hari ini.`;
+            title = t('home.notifUrgent0Title', { fruit: fruitName });
+            body = t('home.notifUrgent0Body', { fruit: fruitName });
           }
 
           const addedDate = item.added_at || item.created_at;

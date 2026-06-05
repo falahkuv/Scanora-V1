@@ -7,7 +7,7 @@ Ini adalah aplikasi web *mobile-first* berbasis *Artificial Intelligence* (AI) y
 - **AI Scanner Asli:** Buka kamera, arahin ke buah, dan biarkan AI kita (pakai *TensorFlow*) nilai skor kesegarannya.
 - **Inventori Pintar:** Simpan hasil scan kamu, dan sistem bakal kasih tahu "Sisa berapa hari lagi nih buah layak dimakan?"
 - **Dashboard Impact:** Lacak berapa banyak buah yang udah berhasil kamu selamatkan bulan ini.
-- **No-Auth Ribet-ribet:** Buka aplikasinya dan langsung pakai! Identitas kamu otomatis diurus di belakang layar pakai `device_id`.
+- **Autentikasi Aman & Mudah:** Login tanpa ribet dengan Email/Password atau Google OAuth. Progres, riwayat, dan inventori buahmu aman tersimpan di cloud antar perangkat!
 
 ## 🛠️ Tech Stack Kita Nih
 - **Frontend:** React.js, Vite, Tailwind CSS v4 (Desain cakep, responsif abis).
